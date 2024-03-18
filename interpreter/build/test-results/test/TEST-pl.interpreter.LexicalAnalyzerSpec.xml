@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="pl.interpreter.LexicalAnalyzerSpec" tests="1" skipped="0" failures="0" errors="0" timestamp="2024-03-17T15:16:40" hostname="janek-Legion-Y540-15IRH-PG0" time="0.008">
+  <properties/>
+  <testcase name="must return correct identifier [token: a, #0]" classname="pl.interpreter.LexicalAnalyzerSpec" time="0.008"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

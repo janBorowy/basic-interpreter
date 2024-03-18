@@ -1,7 +1,3 @@
 package pl.interpreter;
 
-public class Token {
-
-    int tokenType;
-
-}
+record Token(TokenType type, String value, int row, int col) {}

@@ -1,13 +1,15 @@
 package pl.interpreter;
 
-import java.io.InputStream;
+import java.io.Reader;
+import lombok.NonNull;
 
 public class LexicalAnalyzer {
 
-    final InputStream inputStream;
 
-    public LexicalAnalyzer(InputStream inputStream) {
-        this.inputStream = inputStream;
+    final Reader reader;
+
+    public LexicalAnalyzer(@NonNull Reader reader) {
+        this.reader = reader;
     }
 
     public String getToken() {
