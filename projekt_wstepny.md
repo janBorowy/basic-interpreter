@@ -221,11 +221,10 @@ compoundStatement        ::= if
                            | match;
 initialization           ::= initializationSignature "=" value;
 assignment               ::= identifier, "=", value;
-return                   ::= "return ", value
-                           | "return";
+return                   ::= "return ", [value];
 while                    ::= "while", "(" condition ")", instruction;
 functionCall             ::= identifier, arguments;
-match                    ::= "match", "(", identifier, ")", "{", matchBranch, {matchBranch}, "}";
+match                    ::= "match", "(", value, ")", "{", matchBranch, {matchBranch}, "}";
 matchBranch              ::= userTypeIdentifier, " ", identifier, "->" instruction;
 expression               ::= term, {additionOperator, term};
 term                     ::= factor, {multiplicativeOperator, factor};
@@ -234,10 +233,8 @@ additionOperator         ::= "+"
 multiplicativeOperator   ::= "*"
                            | "/"
                            | "%";
-factor                   ::= constant
-                           | identifier
+factor                   ::= value
                            | "(", expression, ")"
-                           | functionCall;
 if                       ::= "if" "(" condition ")" instruction [ "else" instruction ];
 condition                ::= subcondition, {" and ", subcondition};
 subcondition             ::= negatableBooleanExpression, {" or ", negatableBooleanExpression};
@@ -262,7 +259,7 @@ value                    ::= identifier
                            | expression
                            | functionCall
                            | as;
-as                       ::= value, " as ", legalCastType;  
+as                       ::= value, " as ", legalCastType;
 functionSignature        ::= "void ", identifier,
                            | variableTypeIdentifier
 parameterSignature       ::= variableTypeIdentifier;
