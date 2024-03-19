@@ -1,0 +1,9 @@
+int main() {
+    int a = 2;
+    int b = 2;
+    int sum = a + b;
+    string str = (2 + 2) as string;
+    print(str);
+
+    return 0;
+}

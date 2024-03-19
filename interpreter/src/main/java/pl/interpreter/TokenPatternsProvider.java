@@ -7,7 +7,12 @@ public class TokenPatternsProvider {
     private TokenPatternsProvider() {}
 
     public static Pattern getIdentifierPattern() {
-        return Pattern.compile("[1-9a-zA-Z_]+");
+        // TODO: fix dangerous regex
+        return Pattern.compile("[a-zA-Z_]\\w*");
+    }
+
+    public static Pattern getNumberPattern() {
+        return Pattern.compile("-?\\d+(\\.\\d+)?");
     }
 
 }
