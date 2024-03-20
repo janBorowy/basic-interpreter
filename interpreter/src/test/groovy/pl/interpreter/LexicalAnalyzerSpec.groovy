@@ -1,11 +1,8 @@
 package pl.interpreter
 
-import pl.interpreter.LexicalAnalyzer
-
+import pl.interpreter.lexicalAnalyzer.LexicalAnalyzer
+import pl.interpreter.lexicalAnalyzer.NumberTokenizationException
 import spock.lang.Specification
-import spock.lang.Subject
-
-import java.nio.file.Files
 import java.nio.file.Path
 
 class LexicalAnalyzerSpec extends Specification {
@@ -24,33 +21,104 @@ class LexicalAnalyzerSpec extends Specification {
         do {
             token = analyzer.getNextToken()
             tokens.add(token)
-        } while(token.type() != TokenType.EOF)
+        } while (token.type() != TokenType.EOF)
         return tokens;
     }
 
     def 'Should tokenize singly tokens correctly'() {
         given:
-        def code = "+ - * / % < > !"
+        def code = "+ - * / % < > ! . = ( ) { } ;"
         def reader = new StringReader(code)
         def lexicalAnalyzer = new LexicalAnalyzer(reader)
-        
+
         when:
         def tokens = getAllTokens(lexicalAnalyzer)
 
         then:
-        tokens.toString() == [
-                new Token(TokenType.ADDITIVE_OPERATOR, '+', 1, 1),
-                new Token(TokenType.ADDITIVE_OPERATOR, '-', 1, 3),
-                new Token(TokenType.MULTIPLICATIVE_OPERATOR, '*', 1, 5),
-                new Token(TokenType.MULTIPLICATIVE_OPERATOR, '/', 1, 7),
-                new Token(TokenType.MULTIPLICATIVE_OPERATOR, '%', 1, 9),
-                new Token(TokenType.RELATIONAL_OPERATOR, '<', 1, 11),
-                new Token(TokenType.RELATIONAL_OPERATOR, '>', 1, 13),
-                new Token(TokenType.RELATIONAL_OPERATOR, '!', 1, 15),
-                new Token(TokenType.EOF, null, 1, 16)
-        ].toString()
+        tokens == [
+                new Token(TokenType.ADDITIVE_OPERATOR, '+' as char, 1, 1),
+                new Token(TokenType.ADDITIVE_OPERATOR, '-' as char, 1, 3),
+                new Token(TokenType.MULTIPLICATIVE_OPERATOR, '*' as char, 1, 5),
+                new Token(TokenType.MULTIPLICATIVE_OPERATOR, '/' as char, 1, 7),
+                new Token(TokenType.MULTIPLICATIVE_OPERATOR, '%' as char, 1, 9),
+                new Token(TokenType.RELATIONAL_OPERATOR, '<' as char, 1, 11),
+                new Token(TokenType.RELATIONAL_OPERATOR, '>' as char, 1, 13),
+                new Token(TokenType.RELATIONAL_OPERATOR, '!' as char, 1, 15),
+                new Token(TokenType.COMMA, '.' as char, 1, 17),
+                new Token(TokenType.ASSIGNMENT, '=' as char, 1, 19),
+                new Token(TokenType.LEFT_PARENTHESES, '(' as char, 1, 21),
+                new Token(TokenType.RIGHT_PARENTHESES, ')' as char, 1, 23),
+                new Token(TokenType.LEFT_CURLY_BRACKET, '{' as char, 1 , 25),
+                new Token(TokenType.RIGHT_CURLY_BRACKET, '}' as char, 1, 27),
+                new Token(TokenType.SEMICOLON, ';' as char, 1, 29),
+                new Token(TokenType.EOF, null, 1, 30)
+        ]
     }
 
+    def 'Should tokenize doubly tokens correctly'() {
+        given:
+        def code = "== != <= >= ->"
+        def reader = new StringReader(code)
+        def lexicalAnalyzer = new LexicalAnalyzer(reader)
+        when:
+        def tokens = getAllTokens(lexicalAnalyzer)
+        then:
+        tokens == [
+                new Token(TokenType.RELATIONAL_OPERATOR, "==", 1, 1),
+                new Token(TokenType.RELATIONAL_OPERATOR, "!=", 1, 4),
+                new Token(TokenType.RELATIONAL_OPERATOR, "<=", 1, 7),
+                new Token(TokenType.RELATIONAL_OPERATOR, ">=", 1, 10),
+                new Token(TokenType.ARROW, "->", 1, 13),
+                new Token(TokenType.EOF, null, 1, 15)
+        ]
+    }
+
+    def 'Should show correct row, col values'() {
+        given:
+        def code = "== !=\n >= + \n   !\n--  "
+        def reader = new StringReader(code)
+        def lexicalAnalyzer = new LexicalAnalyzer(reader)
+        when:
+        def tokens = getAllTokens(lexicalAnalyzer)
+        then:
+        tokens == [
+                new Token(TokenType.RELATIONAL_OPERATOR, "==", 1, 1),
+                new Token(TokenType.RELATIONAL_OPERATOR, "!=", 1, 4),
+                new Token(TokenType.RELATIONAL_OPERATOR, ">=", 2, 2),
+                new Token(TokenType.ADDITIVE_OPERATOR, '+' as char, 2, 5),
+                new Token(TokenType.RELATIONAL_OPERATOR, '!' as char, 3, 4),
+                new Token(TokenType.ADDITIVE_OPERATOR, '-' as char, 4, 1),
+                new Token(TokenType.ADDITIVE_OPERATOR, '-' as char, 4, 2),
+                new Token(TokenType.EOF, null, 4, 5)
+        ]
+    }
+
+    def 'Should read number tokens correctly'() {
+        given:
+        def code = "1 1.5 21.37"
+        def reader = new StringReader(code)
+        def lexicalAnalyzer = new LexicalAnalyzer(reader)
+        when:
+        def tokens = getAllTokens(lexicalAnalyzer)
+        then:
+        tokens == [
+                new Token(TokenType.CONSTANT, Integer.valueOf(1), 1, 1),
+                new Token(TokenType.CONSTANT, Float.valueOf(1.5), 1, 3),
+                new Token(TokenType.CONSTANT, Float.valueOf(21.37), 1, 7),
+                new Token(TokenType.EOF, null, 1, 12)
+        ]
+    }
+
+    def 'Should throw number tokenization exception when number was not ended correctly'() {
+        given:
+        def code = "1. 1"
+        def reader = new StringReader(code)
+        def lexicalAnalyzer = new LexicalAnalyzer(reader)
+        when:
+        getAllTokens(lexicalAnalyzer)
+        then:
+        NumberTokenizationException e = thrown()
+    }
 //    def 'Should tokenize source_code_1 correctly'() {
 //        given:
 //        def reader = Files.newBufferedReader(sourceCode1)

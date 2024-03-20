@@ -1,5 +1,6 @@
 package pl.interpreter
 
+import pl.interpreter.lexicalAnalyzer.TokenPatternsProvider
 import spock.lang.Specification
 
 class TokenPatternsProviderSpec extends Specification {
