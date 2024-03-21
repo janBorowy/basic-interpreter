@@ -10,7 +10,6 @@ public enum TokenType {
     RIGHT_PARENTHESES,
     SEMICOLON,
     COMMA,
-    SPACE,
     ARROW,
     ADDITIVE_OPERATOR,
     MULTIPLICATIVE_OPERATOR,

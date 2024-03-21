@@ -25,17 +25,18 @@ class LexicalAnalyzerSpec extends Specification {
         return tokens;
     }
 
+    private static def tokenize(String code) {
+        def reader = new StringReader(code)
+        def lexicalAnalyzer = new LexicalAnalyzer(reader)
+        return getAllTokens(lexicalAnalyzer)
+    }
+
     def 'Should tokenize singly tokens correctly'() {
         given:
         def code = "+ - * / % < > ! . = ( ) { } ;"
-        def reader = new StringReader(code)
-        def lexicalAnalyzer = new LexicalAnalyzer(reader)
 
-        when:
-        def tokens = getAllTokens(lexicalAnalyzer)
-
-        then:
-        tokens == [
+        expect:
+        tokenize(code) == [
                 new Token(TokenType.ADDITIVE_OPERATOR, '+' as char, 1, 1),
                 new Token(TokenType.ADDITIVE_OPERATOR, '-' as char, 1, 3),
                 new Token(TokenType.MULTIPLICATIVE_OPERATOR, '*' as char, 1, 5),
@@ -58,12 +59,8 @@ class LexicalAnalyzerSpec extends Specification {
     def 'Should tokenize doubly tokens correctly'() {
         given:
         def code = "== != <= >= ->"
-        def reader = new StringReader(code)
-        def lexicalAnalyzer = new LexicalAnalyzer(reader)
-        when:
-        def tokens = getAllTokens(lexicalAnalyzer)
-        then:
-        tokens == [
+        expect:
+        tokenize(code) == [
                 new Token(TokenType.RELATIONAL_OPERATOR, "==", 1, 1),
                 new Token(TokenType.RELATIONAL_OPERATOR, "!=", 1, 4),
                 new Token(TokenType.RELATIONAL_OPERATOR, "<=", 1, 7),
@@ -75,13 +72,9 @@ class LexicalAnalyzerSpec extends Specification {
 
     def 'Should show correct row, col values'() {
         given:
-        def code = "== !=\n >= + \n   !\n--  "
-        def reader = new StringReader(code)
-        def lexicalAnalyzer = new LexicalAnalyzer(reader)
-        when:
-        def tokens = getAllTokens(lexicalAnalyzer)
-        then:
-        tokens == [
+        def code = "== !=\n >= + \n   !\n--  \n"
+        expect:
+        tokenize(code) == [
                 new Token(TokenType.RELATIONAL_OPERATOR, "==", 1, 1),
                 new Token(TokenType.RELATIONAL_OPERATOR, "!=", 1, 4),
                 new Token(TokenType.RELATIONAL_OPERATOR, ">=", 2, 2),
@@ -89,19 +82,15 @@ class LexicalAnalyzerSpec extends Specification {
                 new Token(TokenType.RELATIONAL_OPERATOR, '!' as char, 3, 4),
                 new Token(TokenType.ADDITIVE_OPERATOR, '-' as char, 4, 1),
                 new Token(TokenType.ADDITIVE_OPERATOR, '-' as char, 4, 2),
-                new Token(TokenType.EOF, null, 4, 5)
+                new Token(TokenType.EOF, null, 5, 1)
         ]
     }
 
     def 'Should read number tokens correctly'() {
         given:
         def code = "1 1.5 21.37"
-        def reader = new StringReader(code)
-        def lexicalAnalyzer = new LexicalAnalyzer(reader)
-        when:
-        def tokens = getAllTokens(lexicalAnalyzer)
-        then:
-        tokens == [
+        expect:
+        tokenize(code) == [
                 new Token(TokenType.CONSTANT, Integer.valueOf(1), 1, 1),
                 new Token(TokenType.CONSTANT, Float.valueOf(1.5), 1, 3),
                 new Token(TokenType.CONSTANT, Float.valueOf(21.37), 1, 7),
@@ -112,12 +101,32 @@ class LexicalAnalyzerSpec extends Specification {
     def 'Should throw number tokenization exception when number was not ended correctly'() {
         given:
         def code = "1. 1"
-        def reader = new StringReader(code)
-        def lexicalAnalyzer = new LexicalAnalyzer(reader)
         when:
-        getAllTokens(lexicalAnalyzer)
+        tokenize(code)
         then:
         NumberTokenizationException e = thrown()
+    }
+
+    def 'Should tokenize string literal correctly'() {
+        given:
+        def code = "\"hello world\""
+
+        expect:
+        tokenize(code) == [
+                new Token(TokenType.CONSTANT, "hello world", 1, 1),
+                new Token(TokenType.EOF, null, 1, 14)
+        ]
+    }
+
+    def 'Should tokenize multiple string literals correctly'() {
+        given:
+        def code = "\"   hello   \"\n\"world hello\""
+        expect:
+        tokenize(code) == [
+                new Token(TokenType.CONSTANT, "   hello   ", 1, 1),
+                new Token(TokenType.CONSTANT, "world hello", 2, 1),
+                new Token(TokenType.EOF, null, 2, 14)
+        ]
     }
 //    def 'Should tokenize source_code_1 correctly'() {
 //        given:

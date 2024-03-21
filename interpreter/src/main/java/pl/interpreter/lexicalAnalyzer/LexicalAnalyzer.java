@@ -15,6 +15,8 @@ import pl.interpreter.TokenType;
 
 public class LexicalAnalyzer {
 
+    private final Character STRING_BORDER_CHARACTER = '"';
+
     final Reader reader;
     private final Deque<Character> buffer;
     private int cursorRow;
@@ -59,6 +61,9 @@ public class LexicalAnalyzer {
         }
         if(isNumberToken()) {
             return getNumberToken();
+        }
+        if(isStringLiteralToken()) {
+            return getStringLiteralToken();
         }
         return new Token(TokenType.EOF, null, cursorRow, cursorCol);
     }
@@ -151,6 +156,7 @@ public class LexicalAnalyzer {
 
     private Token getNumberToken() throws IOException{
         var pattern = TokenPatternsProvider.getNumberPattern();
+        // TODO: add number literal length limit
         while(pattern.matcher(getBufferContentString()).matches() || buffer.getLast() == '.') {
             readNext();
         }
@@ -170,5 +176,22 @@ public class LexicalAnalyzer {
         } else {
             return Integer.valueOf(numberStr);
         }
+    }
+
+    private boolean isStringLiteralToken() {
+        return STRING_BORDER_CHARACTER.equals(buffer.getFirst());
+    }
+
+    private Token getStringLiteralToken() throws IOException{
+        // TODO: add backslash escape mechanism
+        readNext();
+        while(!STRING_BORDER_CHARACTER.equals(buffer.getLast())) {
+            readNext();
+        }
+        var tokenValueWithQuotes = getBufferContentString();
+        var tokenValue = tokenValueWithQuotes.substring(1, tokenValueWithQuotes.length() - 1);
+        var token = new Token(TokenType.CONSTANT, tokenValue, cursorRow, cursorCol);
+        clearBufferAndAdvance();
+        return token;
     }
 }
