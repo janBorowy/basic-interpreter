@@ -2,18 +2,15 @@ package pl.interpreter.lexicalAnalyzer;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.function.Supplier;
 import lombok.NonNull;
 import pl.interpreter.Token;
 import pl.interpreter.TokenType;
 
-// TODO: sprawdzić funkcjie javki
+// TODO: sprawdzić funkcje javki
 // TODO: escape character
 // TODO: comments
 
@@ -23,9 +20,7 @@ public class LexicalAnalyzer {
     private static final Character STRING_BORDER_CHARACTER = '"';
 
     final Reader reader;
-    // TODO: maybe change to stack?
-    // Albo wgl to wywalić, patrzeć tylko na 1 znak i do budowania numerów i stringów używać StringBuildera
-    private final Deque<Character> buffer;
+    private char lastCharacterRead;
     private int cursorRow;
     private int cursorCol;
 
@@ -44,198 +39,188 @@ public class LexicalAnalyzer {
             "string",
             "bool");
 
-    private final Map<Character, TokenType> singlyTokens;
-    private final Map<String, TokenType> doublyTokens;
+    private final Map<Character, Supplier<Token>> operatorTokenSuppliers;
 
     public LexicalAnalyzer(@NonNull Reader reader) {
         this.reader = reader;
-        buffer = new ArrayDeque<>();
+        readNext();
         cursorCol = 1;
         cursorRow = 1;
-        singlyTokens = new HashMap<>();
-        doublyTokens = new HashMap<>();
-        prepareSinglyTokens();
-        prepareDoublyTokens();
+        operatorTokenSuppliers = new HashMap<>();
+        prepareOperatorTokenSuppliers();
     }
 
     public Token getNextToken() {
-        if(buffer.isEmpty()) {
-            readNext();
-        }
         clearWhitespacesUntilFirstCharacterRead();
-        if(buffer.getFirst() == 0xFFFF) {
+        if (lastCharacterRead == 0xFFFF) {
             return new Token(TokenType.EOF, null, cursorRow, cursorCol);
         }
-        // TODO: tryBuild lepsze
-        // TODO: Zamienic drabinke
-        if(isOperatorToken()) {
+        if (isOperatorToken()) {
             return getOperatorToken();
         }
-        if(isNumberToken()) {
+        if (isNumberToken()) {
             return getNumberToken();
         }
-        if(isStringLiteralToken()) {
+        if (isStringLiteralToken()) {
             return getStringLiteralToken();
         }
-        if(isWordToken()) {
+        if (isWordToken()) {
             return getWordToken();
         }
         throw new IllegalCharacterException();
     }
 
-    private void prepareSinglyTokens() {
-        singlyTokens.put('+', TokenType.ADDITIVE_OPERATOR);
-        singlyTokens.put('-', TokenType.ADDITIVE_OPERATOR);
-        singlyTokens.put('*', TokenType.MULTIPLICATIVE_OPERATOR);
-        singlyTokens.put('/', TokenType.MULTIPLICATIVE_OPERATOR);
-        singlyTokens.put('%', TokenType.MULTIPLICATIVE_OPERATOR);
-        singlyTokens.put('.', TokenType.COMMA);
-        singlyTokens.put('<', TokenType.RELATIONAL_OPERATOR);
-        singlyTokens.put('>', TokenType.RELATIONAL_OPERATOR);
-        singlyTokens.put('!', TokenType.RELATIONAL_OPERATOR);
-        singlyTokens.put('=', TokenType.ASSIGNMENT);
-        singlyTokens.put('(', TokenType.LEFT_PARENTHESES);
-        singlyTokens.put(')', TokenType.RIGHT_PARENTHESES);
-        singlyTokens.put('{', TokenType.LEFT_CURLY_BRACKET);
-        singlyTokens.put('}', TokenType.RIGHT_CURLY_BRACKET);
-        singlyTokens.put(';', TokenType.SEMICOLON);
+    private void prepareOperatorTokenSuppliers() {
+        operatorTokenSuppliers.put('+', () -> new Token(TokenType.ADDITIVE_OPERATOR, '+', cursorRow, cursorCol));
+        operatorTokenSuppliers.put('-', () -> chooseOperatorToken('>',
+                new Token(TokenType.ADDITIVE_OPERATOR, '-', cursorRow, cursorCol),
+                new Token(TokenType.ARROW, "->", cursorRow, cursorCol)));
+        operatorTokenSuppliers.put('*', () -> new Token(TokenType.MULTIPLICATIVE_OPERATOR, '*', cursorRow, cursorCol));
+        operatorTokenSuppliers.put('/', () -> new Token(TokenType.MULTIPLICATIVE_OPERATOR, '/', cursorRow, cursorCol));
+        operatorTokenSuppliers.put('%', () -> new Token(TokenType.MULTIPLICATIVE_OPERATOR, '%', cursorRow, cursorCol));
+        operatorTokenSuppliers.put(',', () -> new Token(TokenType.COMMA, ',', cursorRow, cursorCol));
+        operatorTokenSuppliers.put('.', () -> new Token(TokenType.DOT, '.', cursorRow, cursorCol));
+        operatorTokenSuppliers.put('<', () -> chooseOperatorToken('=',
+                new Token(TokenType.RELATIONAL_OPERATOR, '<', cursorRow, cursorCol),
+                new Token(TokenType.RELATIONAL_OPERATOR, "<=", cursorRow, cursorCol)));
+        operatorTokenSuppliers.put('>', () -> chooseOperatorToken('=',
+                new Token(TokenType.RELATIONAL_OPERATOR, '>', cursorRow, cursorCol),
+                new Token(TokenType.RELATIONAL_OPERATOR, ">=", cursorRow, cursorCol)));
+        operatorTokenSuppliers.put('!', () -> chooseOperatorToken('=',
+                new Token(TokenType.RELATIONAL_OPERATOR, '!', cursorRow, cursorCol),
+                new Token(TokenType.RELATIONAL_OPERATOR, "!=", cursorRow, cursorCol)));
+        operatorTokenSuppliers.put('=', () -> chooseOperatorToken('=',
+                new Token(TokenType.ASSIGNMENT, '=', cursorRow, cursorCol),
+                new Token(TokenType.RELATIONAL_OPERATOR, "==", cursorRow, cursorCol)));
+        operatorTokenSuppliers.put('(', () -> new Token(TokenType.LEFT_PARENTHESES, '(', cursorRow, cursorCol));
+        operatorTokenSuppliers.put(')', () -> new Token(TokenType.RIGHT_PARENTHESES, ')', cursorRow, cursorCol));
+        operatorTokenSuppliers.put('{', () -> new Token(TokenType.LEFT_CURLY_BRACKET, '{', cursorRow, cursorCol));
+        operatorTokenSuppliers.put('}', () -> new Token(TokenType.RIGHT_CURLY_BRACKET, '}', cursorRow, cursorCol));
+        operatorTokenSuppliers.put(';', () -> new Token(TokenType.SEMICOLON, ';', cursorRow, cursorCol));
     }
 
-    private void prepareDoublyTokens() {
-        doublyTokens.put("<=", TokenType.RELATIONAL_OPERATOR);
-        doublyTokens.put(">=", TokenType.RELATIONAL_OPERATOR);
-        doublyTokens.put("!=", TokenType.RELATIONAL_OPERATOR);
-        doublyTokens.put("==", TokenType.RELATIONAL_OPERATOR);
-        doublyTokens.put("->", TokenType.ARROW);
+    private Token chooseOperatorToken(char secondOperatorChar, Token ifIsSingly, Token ifIsDoubly) {
+        return lastCharacterRead == secondOperatorChar ? ifIsDoubly : ifIsSingly;
     }
 
     private void readNext() {
         try {
-            buffer.add((char) reader.read());
-        } catch(IOException e) {
+            lastCharacterRead = (char) reader.read();
+        } catch (IOException e) {
             throw new InterpreterIOException(e.getMessage());
         }
     }
 
     private void clearWhitespacesUntilFirstCharacterRead() {
-        while(Character.isWhitespace(buffer.getFirst())) {
-            readNext();
-            // TODO: support other newline types
-            if (buffer.getFirst() == '\n') {
+        while (Character.isWhitespace(lastCharacterRead)) {
+            if (lastCharacterRead == '\n') {
                 cursorCol = 1;
                 ++cursorRow;
             } else {
                 ++cursorCol;
             }
-            buffer.pollFirst();
+            readNext();
         }
-    }
-
-    private void pollBufferAndAdvance() {
-        pollBufferAndAdvance(1);
-    }
-
-    private void pollBufferAndAdvance(int pollCount) {
-        cursorCol += pollCount;
-        IntStream.range(0, pollCount).forEach(i -> buffer.pollFirst());
-    }
-
-    private void clearBufferAndAdvance() {
-        cursorCol += buffer.size();
-        buffer.clear();
     }
 
     private boolean isOperatorToken() {
-        return singlyTokens.containsKey(buffer.getFirst());
+        return operatorTokenSuppliers.containsKey(lastCharacterRead);
     }
 
     private Token getOperatorToken() {
+        var firstCharacter = lastCharacterRead;
         readNext();
-        Token output;
-        var doublyOperatorVal = getBufferContentString();
-        if(doublyTokens.containsKey(doublyOperatorVal)) {
-            output = new Token(doublyTokens.get(doublyOperatorVal), doublyOperatorVal, cursorRow, cursorCol);
-            clearBufferAndAdvance();
-        } else {
-            output = new Token(singlyTokens.get(buffer.getFirst()), buffer.getFirst(), cursorRow, cursorCol);
-            pollBufferAndAdvance();
-        }
-        return output;
-    }
-
-    private String getBufferContentString() {
-        return buffer.stream().map(String::valueOf).collect(Collectors.joining());
-    }
-
-    private boolean isNumberToken() {
-        return Character.isDigit(buffer.getFirst());
-    }
-
-    private Token getNumberToken() {
-        // TODO: update so that 21.37. teokenizes to FLOAT - DOT
-        var pattern = TokenPatternsProvider.getNumberPattern();
-        while(pattern.matcher(getBufferContentString()).matches() || buffer.getLast() == '.') {
+        var token = operatorTokenSuppliers.get(firstCharacter).get();
+        var tokenValue = token.value();
+        if (tokenValue instanceof String s) {
+            cursorCol += s.length();
             readNext();
+        } else if (tokenValue instanceof Character) {
+            cursorCol += 1;
         }
-        var numberStr = getBufferContentExceptLastCharacter();
-        var token = new Token(TokenType.CONSTANT, getNumberTokenValue(numberStr), cursorRow, cursorCol);
-        pollBufferAndAdvance(numberStr.length());
         return token;
     }
 
-    private Object getNumberTokenValue(String numberStr) {
-        // TODO: nie przepuszczać 0 na początku
-        if(numberStr.endsWith(".")) {
-            throw new NumberTokenizationException();
+    private boolean isNumberToken() {
+        return Character.isDigit(lastCharacterRead);
+    }
+
+    private Token getNumberToken() {
+        // TODO: add max literal length limit
+        var builder = new StringBuilder();
+        while (Character.isDigit(lastCharacterRead) /*and doesnt break the limit */) {
+            builder.append(lastCharacterRead);
+            readNext();
         }
-        if (numberStr.contains(".")) {
-            return Float.valueOf(numberStr);
-        } else {
-            return Integer.valueOf(numberStr);
+        var integralValue = Integer.parseInt(builder.toString());
+        if (lastCharacterRead == '.') {
+            var decimalBuilder = new StringBuilder();
+            readNext();
+            while (Character.isDigit(lastCharacterRead) /*and doesnt break the limit */) {
+                decimalBuilder.append(lastCharacterRead);
+                readNext();
+            }
+            var decimalValue = tryToParseInt(decimalBuilder.toString());
+            var token = new Token(TokenType.CONSTANT, computeFloat(integralValue, decimalValue, decimalBuilder.length()), cursorRow, cursorCol);
+            cursorCol += builder.length() + decimalBuilder.length() + 1;
+            return token;
+        }
+        var token = new Token(TokenType.CONSTANT, integralValue, cursorRow, cursorCol);
+        cursorCol += builder.length();
+        return token;
+    }
+
+    private int tryToParseInt(String strValue) {
+        try {
+            return Integer.parseInt(strValue);
+        } catch (NumberFormatException e) {
+            throw new NumberTokenizationException();
         }
     }
 
+    private float computeFloat(int integral, int decimal, int decimalLength) {
+        return (float) (integral + (decimal / Math.pow(10, decimalLength)));
+    }
+
     private boolean isStringLiteralToken() {
-        return STRING_BORDER_CHARACTER.equals(buffer.getFirst());
+        return STRING_BORDER_CHARACTER.equals(lastCharacterRead);
     }
 
     private Token getStringLiteralToken() {
         // TODO: add backslash escape mechanism
+        var builder = new StringBuilder();
         readNext();
-        while(!STRING_BORDER_CHARACTER.equals(buffer.getLast())) {
+        while (!STRING_BORDER_CHARACTER.equals(lastCharacterRead)) {
+            builder.append(lastCharacterRead);
             readNext();
         }
-        var tokenValueWithQuotes = getBufferContentString();
-        var tokenValue = tokenValueWithQuotes.substring(1, tokenValueWithQuotes.length() - 1);
-        var token = new Token(TokenType.CONSTANT, tokenValue, cursorRow, cursorCol);
-        clearBufferAndAdvance();
+        readNext();
+        var token = new Token(TokenType.CONSTANT, builder.toString(), cursorRow, cursorCol);
+        cursorCol += builder.length() + 2;
         return token;
     }
 
     private boolean isWordToken() {
-        return isLegalWordCharacter(buffer.getFirst());
+        return isLegalWordCharacter(lastCharacterRead);
     }
 
     private boolean isLegalWordCharacter(Character c) {
-        return c == '_' | Character.isLetter(c);
+        return c == '_' || Character.isLetter(c);
     }
 
     private Token getWordToken() {
+        // TODO: add limit
+        var builder = new StringBuilder();
+        builder.append(lastCharacterRead);
         readNext();
-        int readCounter = 1;
-        while(isLegalWordCharacter(buffer.getLast()) && readCounter <= MAX_WORD_LENGTH_LIMIT) {
+        while (isLegalWordCharacter(lastCharacterRead)) {
+            builder.append(lastCharacterRead);
             readNext();
-            ++readCounter;
         }
-        var tokenValue = getBufferContentExceptLastCharacter();
+        var tokenValue = builder.toString();
         var token = new Token(getWordTokenType(tokenValue), tokenValue, cursorRow, cursorCol);
-        pollBufferAndAdvance(tokenValue.length());
+        cursorCol += builder.length();
         return token;
-    }
-
-    private String getBufferContentExceptLastCharacter() {
-        var bufferContentString = getBufferContentString();
-        return bufferContentString.substring(0, bufferContentString.length() - 1);
     }
 
     private TokenType getWordTokenType(String tokenValue) {

@@ -52,7 +52,7 @@ class LexicalAnalyzerSpec extends Specification {
                 new Token(TokenType.RELATIONAL_OPERATOR, '<' as char, 1, 11),
                 new Token(TokenType.RELATIONAL_OPERATOR, '>' as char, 1, 13),
                 new Token(TokenType.RELATIONAL_OPERATOR, '!' as char, 1, 15),
-                new Token(TokenType.COMMA, '.' as char, 1, 17),
+                new Token(TokenType.DOT, '.' as char, 1, 17),
                 new Token(TokenType.ASSIGNMENT, '=' as char, 1, 19),
                 new Token(TokenType.LEFT_PARENTHESES, '(' as char, 1, 21),
                 new Token(TokenType.RIGHT_PARENTHESES, ')' as char, 1, 23),
@@ -95,13 +95,14 @@ class LexicalAnalyzerSpec extends Specification {
 
     def 'Should read number tokens correctly'() {
         given:
-        def code = "1 1.5 21.37"
+        def code = "1 1.5 21.37."
         expect:
         tokenize(code) == [
                 new Token(TokenType.CONSTANT, Integer.valueOf(1), 1, 1),
                 new Token(TokenType.CONSTANT, Float.valueOf(1.5), 1, 3),
                 new Token(TokenType.CONSTANT, Float.valueOf(21.37), 1, 7),
-                new Token(TokenType.EOF, null, 1, 12)
+                new Token(TokenType.DOT, '.' as char, 1, 12),
+                new Token(TokenType.EOF, null, 1, 13)
         ]
     }
 
