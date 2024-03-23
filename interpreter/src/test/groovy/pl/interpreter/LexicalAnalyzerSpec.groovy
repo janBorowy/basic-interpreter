@@ -31,6 +31,13 @@ class LexicalAnalyzerSpec extends Specification {
         return getAllTokens(lexicalAnalyzer)
     }
 
+    def 'Should tokenize EOF'() {
+        given:
+        def code = ""
+        expect:
+        tokenize(code) == [new Token(TokenType.EOF, null, 1, 1)]
+    }
+
     def 'Should tokenize singly tokens correctly'() {
         given:
         def code = "+ - * / % < > ! . = ( ) { } ;"
@@ -126,6 +133,19 @@ class LexicalAnalyzerSpec extends Specification {
                 new Token(TokenType.CONSTANT, "   hello   ", 1, 1),
                 new Token(TokenType.CONSTANT, "world hello", 2, 1),
                 new Token(TokenType.EOF, null, 2, 14)
+        ]
+    }
+
+    def 'Should tokenize identifiers and keywords correctly'() {
+        given:
+        def code = "hello world int"
+
+        expect:
+        tokenize(code) == [
+                new Token(TokenType.IDENTIFIER, "hello", 1, 1),
+                new Token(TokenType.IDENTIFIER, "world", 1, 7),
+                new Token(TokenType.KEYWORD, "int", 1, 13),
+                new Token(TokenType.EOF, null, 1, 16)
         ]
     }
 //    def 'Should tokenize source_code_1 correctly'() {

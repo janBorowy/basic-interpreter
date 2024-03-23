@@ -13,11 +13,18 @@ import lombok.NonNull;
 import pl.interpreter.Token;
 import pl.interpreter.TokenType;
 
+// TODO: sprawdzić funkcjie javki
+// TODO: escape character
+// TODO: comments
+
 public class LexicalAnalyzer {
 
-    private final Character STRING_BORDER_CHARACTER = '"';
+    private static final int MAX_WORD_LENGTH_LIMIT = 256;
+    private static final Character STRING_BORDER_CHARACTER = '"';
 
     final Reader reader;
+    // TODO: maybe change to stack?
+    // Albo wgl to wywalić, patrzeć tylko na 1 znak i do budowania numerów i stringów używać StringBuildera
     private final Deque<Character> buffer;
     private int cursorRow;
     private int cursorCol;
@@ -51,11 +58,16 @@ public class LexicalAnalyzer {
         prepareDoublyTokens();
     }
 
-    public Token getNextToken() throws IOException {
+    public Token getNextToken() {
         if(buffer.isEmpty()) {
             readNext();
         }
-        clearWhitespaces();
+        clearWhitespacesUntilFirstCharacterRead();
+        if(buffer.getFirst() == 0xFFFF) {
+            return new Token(TokenType.EOF, null, cursorRow, cursorCol);
+        }
+        // TODO: tryBuild lepsze
+        // TODO: Zamienic drabinke
         if(isOperatorToken()) {
             return getOperatorToken();
         }
@@ -65,7 +77,10 @@ public class LexicalAnalyzer {
         if(isStringLiteralToken()) {
             return getStringLiteralToken();
         }
-        return new Token(TokenType.EOF, null, cursorRow, cursorCol);
+        if(isWordToken()) {
+            return getWordToken();
+        }
+        throw new IllegalCharacterException();
     }
 
     private void prepareSinglyTokens() {
@@ -94,22 +109,25 @@ public class LexicalAnalyzer {
         doublyTokens.put("->", TokenType.ARROW);
     }
 
-    private void readNext() throws IOException {
-        buffer.add((char) reader.read());
+    private void readNext() {
+        try {
+            buffer.add((char) reader.read());
+        } catch(IOException e) {
+            throw new InterpreterIOException(e.getMessage());
+        }
     }
 
-    private void clearWhitespaces() throws IOException{
-        char firstCharacter = buffer.getFirst();
-        while(Character.isWhitespace(firstCharacter)) {
-            if(buffer.getFirst() == '\n') {
+    private void clearWhitespacesUntilFirstCharacterRead() {
+        while(Character.isWhitespace(buffer.getFirst())) {
+            readNext();
+            // TODO: support other newline types
+            if (buffer.getFirst() == '\n') {
                 cursorCol = 1;
                 ++cursorRow;
             } else {
                 ++cursorCol;
             }
             buffer.pollFirst();
-            readNext();
-            firstCharacter = buffer.getFirst();
         }
     }
 
@@ -131,12 +149,11 @@ public class LexicalAnalyzer {
         return singlyTokens.containsKey(buffer.getFirst());
     }
 
-    private Token getOperatorToken() throws IOException {
+    private Token getOperatorToken() {
         readNext();
         Token output;
         var doublyOperatorVal = getBufferContentString();
-        var isDoublyOperator = doublyTokens.containsKey(doublyOperatorVal);
-        if(isDoublyOperator) {
+        if(doublyTokens.containsKey(doublyOperatorVal)) {
             output = new Token(doublyTokens.get(doublyOperatorVal), doublyOperatorVal, cursorRow, cursorCol);
             clearBufferAndAdvance();
         } else {
@@ -154,20 +171,20 @@ public class LexicalAnalyzer {
         return Character.isDigit(buffer.getFirst());
     }
 
-    private Token getNumberToken() throws IOException{
+    private Token getNumberToken() {
+        // TODO: update so that 21.37. teokenizes to FLOAT - DOT
         var pattern = TokenPatternsProvider.getNumberPattern();
-        // TODO: add number literal length limit
         while(pattern.matcher(getBufferContentString()).matches() || buffer.getLast() == '.') {
             readNext();
         }
-        var bufferContent = getBufferContentString();
-        var numberStr = bufferContent.substring(0, bufferContent.length() - 1);
+        var numberStr = getBufferContentExceptLastCharacter();
         var token = new Token(TokenType.CONSTANT, getNumberTokenValue(numberStr), cursorRow, cursorCol);
-        pollBufferAndAdvance(bufferContent.length() - 1);
+        pollBufferAndAdvance(numberStr.length());
         return token;
     }
 
     private Object getNumberTokenValue(String numberStr) {
+        // TODO: nie przepuszczać 0 na początku
         if(numberStr.endsWith(".")) {
             throw new NumberTokenizationException();
         }
@@ -182,7 +199,7 @@ public class LexicalAnalyzer {
         return STRING_BORDER_CHARACTER.equals(buffer.getFirst());
     }
 
-    private Token getStringLiteralToken() throws IOException{
+    private Token getStringLiteralToken() {
         // TODO: add backslash escape mechanism
         readNext();
         while(!STRING_BORDER_CHARACTER.equals(buffer.getLast())) {
@@ -193,5 +210,35 @@ public class LexicalAnalyzer {
         var token = new Token(TokenType.CONSTANT, tokenValue, cursorRow, cursorCol);
         clearBufferAndAdvance();
         return token;
+    }
+
+    private boolean isWordToken() {
+        return isLegalWordCharacter(buffer.getFirst());
+    }
+
+    private boolean isLegalWordCharacter(Character c) {
+        return c == '_' | Character.isLetter(c);
+    }
+
+    private Token getWordToken() {
+        readNext();
+        int readCounter = 1;
+        while(isLegalWordCharacter(buffer.getLast()) && readCounter <= MAX_WORD_LENGTH_LIMIT) {
+            readNext();
+            ++readCounter;
+        }
+        var tokenValue = getBufferContentExceptLastCharacter();
+        var token = new Token(getWordTokenType(tokenValue), tokenValue, cursorRow, cursorCol);
+        pollBufferAndAdvance(tokenValue.length());
+        return token;
+    }
+
+    private String getBufferContentExceptLastCharacter() {
+        var bufferContentString = getBufferContentString();
+        return bufferContentString.substring(0, bufferContentString.length() - 1);
+    }
+
+    private TokenType getWordTokenType(String tokenValue) {
+        return keywords.contains(tokenValue) ? TokenType.KEYWORD : TokenType.IDENTIFIER;
     }
 }
