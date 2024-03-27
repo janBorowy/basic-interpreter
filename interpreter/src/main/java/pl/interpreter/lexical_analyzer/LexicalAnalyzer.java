@@ -75,6 +75,8 @@ public class LexicalAnalyzer {
         keywords.put("bool", TokenType.KW_BOOL);
         keywords.put("true", TokenType.KW_TRUE);
         keywords.put("false", TokenType.KW_FALSE);
+        keywords.put("and", TokenType.KW_AND);
+        keywords.put("or", TokenType.KW_OR);
     }
     private void prepareOperatorTokenSuppliers() {
         operatorTokenSuppliers.put('+', () -> new Token(TokenType.ADD_OPERATOR, '+', cursorRow, cursorCol));
