@@ -1,4 +1,4 @@
-package pl.interpreter.lexicalAnalyzer;
+package pl.interpreter.lexical_analyzer;
 
 public class InterpreterIOException extends RuntimeException {
 

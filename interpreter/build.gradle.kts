@@ -18,3 +18,5 @@ dependencies {
 tasks.named<Test>("test"){
     useJUnitPlatform();
 }
+
+tasks.register("prepareKotlinBuildScriptModel"){}
