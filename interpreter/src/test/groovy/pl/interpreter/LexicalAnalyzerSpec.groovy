@@ -6,6 +6,7 @@ import spock.lang.Specification
 
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.stream.IntStream
 
 class LexicalAnalyzerSpec extends Specification {
     def static sourceCode1 = Path.of(
@@ -262,5 +263,16 @@ class LexicalAnalyzerSpec extends Specification {
                         new Token(TokenType.EOF, null, 1, 54)
                 ]
         ]
+    }
+
+    def 'Should throw if identifier is too big'() {
+        given:
+        def code = "a".repeat(257)
+
+        when:
+        tokenize(code)
+
+        then:
+        LexicalAnalyzerException e = thrown()
     }
 }

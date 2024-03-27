@@ -228,7 +228,7 @@ public class LexicalAnalyzer {
         try {
             return Integer.parseInt(strValue);
         } catch (NumberFormatException e) {
-            throw new LexicalAnalyzerException("Failed to parse a number", cursorCol, cursorRow);
+            throw new LexicalAnalyzerException("Failed to parse a number", cursorRow, cursorCol);
         }
     }
 
@@ -279,7 +279,7 @@ public class LexicalAnalyzer {
             readNext();
         }
         if(counter >= MAX_WORD_LENGTH_LIMIT) {
-            throw new LexicalAnalyzerException("Identifier length limit exceeded", cursorCol, cursorRow);
+            throw new LexicalAnalyzerException("Identifier length limit exceeded", cursorRow, cursorCol);
         }
         var tokenValue = builder.toString();
         var token = new Token(getWordTokenType(tokenValue), tokenValue, cursorRow, cursorCol);
