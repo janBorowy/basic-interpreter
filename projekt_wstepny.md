@@ -204,10 +204,10 @@ int getNthFibonacciNumber(int n) {
 program                  ::= { functionDefinition 
                              | structureDefinition
                              | variantDefinition };
-functionDefinition       ::= functionSignature functionParameters block;
+functionDefinition       ::= functionSignature "(" functionParameters ")" block;
 structureDefinition      ::= "struct " userTypeIdentifier "{" { parameterSignature ";" } "}";
 variantDefinition        ::= "variant " userTypeIdentifier "{" userTypeIdentifierList "}";
-functionParameters       ::= "(" [ parameterSignature { "," parameterSignature } ] ")";
+functionParameters       ::=  [parameterSignature { "," parameterSignature } ];
 instruction              ::= block
                            | singleStatement
                            | compoundStatement;
@@ -270,14 +270,13 @@ variableType             ::= "int"
                            | "float"
                            | "string"
                            | "bool"
-                           | userTypeIdentifier;
+                           | identifier;
 legalCastType           ::= "int"
                            | "float"
                            | "string";
 identifier               ::= identifierName
                            | identifierName, ".", identifierName;
 identifierName           ::= identifierFirstCharacter, { digit | letter | "_" };
-userTypeIdentifier       ::= capitalLetter, { digit | letter | "_" };
 identifierFirstCharacter ::= "_" | letter;
 constant                 ::= number
                            | stringLiteral;
