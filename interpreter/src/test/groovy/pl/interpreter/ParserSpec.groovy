@@ -70,8 +70,8 @@ class ParserSpec extends Specification {
         expect:
         parseProgram(code) == p
         where:
-        code                                                                                                     | p
-        "int main() { var int a = 0; float hello = 1.5 + 3.5; string HELLO = \"Hello World\"; bool isActive = true; }" | new Program(List.of(
+        code                                                                                                           | p
+        "int main() { var int a = 0; float hello = 1.5 + 3.5; string HELLO = \"Hello World\";}" | new Program(List.of(
                 new FunctionDefinition(
                         new FunctionSignature(new VariableType(VariableTypeEnum.INT), "main"),
                         new FunctionParameters(List.of()),
@@ -84,7 +84,12 @@ class ParserSpec extends Specification {
                                                         "a"
                                                 ),
                                                 new Value(
-                                                        new IntConst(0)
+                                                        new Expression(List.of(new Term(List.of(
+                                                                new Factor(
+                                                                        new IntConst(0)
+                                                                )
+                                                        ), List.of()))
+                                                                , List.of())
                                                 )
                                         )
                                 ),
@@ -100,20 +105,16 @@ class ParserSpec extends Specification {
                                                                 List.of(
                                                                         new Term(List.of(
                                                                                 new Factor(
-                                                                                        new Value(
-                                                                                                new FloatConst(
-                                                                                                        1.5
-                                                                                                )
-                                                                                        )
+                                                                                            new FloatConst(
+                                                                                                    1.5
+                                                                                            )
                                                                                 )
-                                                                        ),List.of()),
+                                                                        ), List.of()),
                                                                         new Term(List.of(
                                                                                 new Factor(
-                                                                                        new Value(
-                                                                                                new FloatConst(
-                                                                                                        3.5
-                                                                                                )
-                                                                                        )
+                                                                                            new FloatConst(
+                                                                                                    3.5
+                                                                                            )
                                                                                 )
                                                                         ), List.of())
                                                                 ),
@@ -132,19 +133,12 @@ class ParserSpec extends Specification {
                                                         "HELLO"
                                                 ),
                                                 new Value(
-                                                        new StringConst("Hello World")
-                                                )
-                                        )
-                                ),
-                                new SingleStatement(
-                                        new Initialization(
-                                                new InitializationSignature(
-                                                        false,
-                                                        new VariableType(VariableTypeEnum.BOOL),
-                                                        "isActive"
-                                                ),
-                                                new Value(
-                                                        new BoolConst(true)
+                                                        new Expression(List.of(new Term(List.of(
+                                                                new Factor(
+                                                                        new StringConst("Hello World")
+                                                                )
+                                                        ), List.of()))
+                                                        , List.of())
                                                 )
                                         )
                                 )

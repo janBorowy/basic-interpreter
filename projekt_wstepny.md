@@ -232,7 +232,8 @@ additiveOperator         ::= "+"
 multiplicativeOperator   ::= "*"
                            | "/"
                            | "%";
-factor                   ::= value
+factor                   ::= identifier
+                           | constant
                            | "(", expression, ")"
 if                       ::= "if" "(" condition ")" instruction [ "else" instruction ];
 condition                ::= subcondition, {" and ", subcondition};
@@ -253,9 +254,7 @@ greaterThan              ::= value, ">", value;
 lessThanOrEqual          ::= value, "<=", value;
 greaterThanOrEqual       ::= value, ">=", value;
 functionArguments        ::= "(", [ value {"," value } ], ")";
-value                    ::= identifier
-                           | constant
-                           | expression
+value                    ::= expression
                            | functionCall
                            | as;
 as                       ::= value, " as ", legalCastType;

@@ -1,3 +1,4 @@
 package pl.interpreter.parser.ast;
 
-public record Factor(Node valueOrExpression) implements Node {}
+// if string - identifier
+public record Factor(Object value) implements Node {}

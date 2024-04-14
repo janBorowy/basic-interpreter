@@ -137,16 +137,9 @@ public class Parser {
         return Optional.of(new Initialization(initializationSignature.get(), value.get()));
     }
 
-    // TODO: finish parseValue
-    // value ::= expression | functionCall | as
+    // TODO: finish parseValue (as is missing)
+    // value ::= expression | functionCall
     private Optional<Value> parseValue() {
-        if (token.type() == TokenType.IDENTIFIER) {
-            return Optional.of(new Value(token.value()));
-        }
-        var constant = parseConstant();
-        if (constant.isPresent()) {
-            return Optional.of(new Value(constant.get()));
-        }
         var expression = parseExpression();
         if (expression.isPresent()) {
             return Optional.of(new Value(expression.get()));
@@ -170,6 +163,7 @@ public class Parser {
         if (term.isEmpty()) {
             return Optional.empty();
         }
+        terms.add(term.get());
         var operator = parseAdditiveOperator();
         while (operator.isPresent()) {
             var node = parseTerm();
@@ -178,6 +172,7 @@ public class Parser {
             }
             terms.add(node.get());
             additiveOperators.add(operator.get());
+            operator = parseAdditiveOperator();
         }
         return Optional.of(new Expression(terms, additiveOperators));
     }
@@ -190,6 +185,7 @@ public class Parser {
         if (factor.isEmpty()) {
             return Optional.empty();
         }
+        factors.add(factor.get());
         var operator = parseMultiplicativeOperator();
         while (operator.isPresent()) {
             var node = parseFactor();
@@ -215,9 +211,13 @@ public class Parser {
     }
 
     private Optional<Factor> parseFactor() {
-        var value = parseValue();
-        if (value.isPresent()) {
-            return Optional.of(new Factor(value.get()));
+        if (token.type() == TokenType.IDENTIFIER) {
+            consumeToken();
+            return Optional.of(new Factor(token.value()));
+        }
+        var constant = parseConstant();
+        if (constant.isPresent()) {
+            return Optional.of(new Factor(constant.get()));
         }
         if (token.type() == TokenType.LEFT_PARENTHESES) {
             consumeToken();
