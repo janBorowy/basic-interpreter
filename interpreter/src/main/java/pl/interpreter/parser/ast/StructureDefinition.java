@@ -1,4 +1,3 @@
 package pl.interpreter.parser.ast;
 
-public class StructureDefinition implements Node {
-}
+public record StructureDefinition() implements Node {}

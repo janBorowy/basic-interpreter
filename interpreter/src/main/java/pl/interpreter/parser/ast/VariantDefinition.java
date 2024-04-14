@@ -1,4 +1,3 @@
 package pl.interpreter.parser.ast;
 
-public class VariantDefinition implements Node{
-}
+public record VariantDefinition() implements Node{}

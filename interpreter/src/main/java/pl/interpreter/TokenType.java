@@ -19,6 +19,7 @@ public enum TokenType {
     KW_FALSE,
     KW_AND,
     KW_OR,
+    KW_VAR,
     IDENTIFIER,
     STRING_CONST,
     INT_CONST,

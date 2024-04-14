@@ -213,17 +213,16 @@ instruction              ::= block
                            | compoundStatement;
 block                    ::= "{" { singleStatement, ";" | compoundStatement } "}";
 singleStatement          ::= initialization
-                           | assignment
                            | return
-                           | functionCall;
+                           | identifierStatement;
 compoundStatement        ::= if
                            | while
                            | match;
 initialization           ::= initializationSignature "=" value;
-assignment               ::= identifier, "=", value;
+identifierStatement      ::= identifier, assignment | functionArguments;
+assignment               ::= "=", value;
 return                   ::= "return ", [value];
 while                    ::= "while", "(" condition ")", instruction;
-functionCall             ::= identifier, arguments;
 match                    ::= "match", "(", value, ")", "{", matchBranch, {matchBranch}, "}";
 matchBranch              ::= userTypeIdentifier, " ", identifier, "->" instruction;
 expression               ::= term, {additionOperator, term};
@@ -253,7 +252,7 @@ lessThan                 ::= value, "<", value;
 greaterThan              ::= value, ">", value;
 lessThanOrEqual          ::= value, "<=", value;
 greaterThanOrEqual       ::= value, ">=", value;
-arguments                ::= "(", [ value {"," value } ], ")";
+functionArguments        ::= "(", [ value {"," value } ], ")";
 value                    ::= identifier
                            | constant
                            | expression
