@@ -7,9 +7,12 @@ import java.util.Optional;
 import pl.interpreter.Token;
 import pl.interpreter.TokenType;
 import pl.interpreter.lexical_analyzer.LexicalAnalyzer;
+import pl.interpreter.parser.ast.AdditiveOperator;
 import pl.interpreter.parser.ast.Block;
 import pl.interpreter.parser.ast.BoolConst;
 import pl.interpreter.parser.ast.CompoundStatement;
+import pl.interpreter.parser.ast.Expression;
+import pl.interpreter.parser.ast.Factor;
 import pl.interpreter.parser.ast.FloatConst;
 import pl.interpreter.parser.ast.FunctionDefinition;
 import pl.interpreter.parser.ast.FunctionParameters;
@@ -17,12 +20,15 @@ import pl.interpreter.parser.ast.FunctionSignature;
 import pl.interpreter.parser.ast.Initialization;
 import pl.interpreter.parser.ast.InitializationSignature;
 import pl.interpreter.parser.ast.IntConst;
+import pl.interpreter.parser.ast.MultiplicativeOperator;
 import pl.interpreter.parser.ast.Node;
+import pl.interpreter.parser.ast.Operator;
 import pl.interpreter.parser.ast.ParameterSignature;
 import pl.interpreter.parser.ast.Program;
 import pl.interpreter.parser.ast.SingleStatement;
 import pl.interpreter.parser.ast.StringConst;
 import pl.interpreter.parser.ast.StructureDefinition;
+import pl.interpreter.parser.ast.Term;
 import pl.interpreter.parser.ast.UserType;
 import pl.interpreter.parser.ast.Value;
 import pl.interpreter.parser.ast.VariableType;
@@ -63,7 +69,7 @@ public class Parser {
     // functionDefinitions ::= functionSignature "(" functionParameters ")" block;
     private Optional<FunctionDefinition> parseFunctionDefinition() {
         var functionSignature = parseFunctionSignature();
-        if(functionSignature.isEmpty()) {
+        if (functionSignature.isEmpty()) {
             return Optional.empty();
         }
         mustBe(TokenType.LEFT_PARENTHESES);
@@ -125,20 +131,121 @@ public class Parser {
         mustBe(TokenType.ASSIGNMENT);
         consumeToken();
         var value = parseValue();
-        if(value.isEmpty()) {
+        if (value.isEmpty()) {
             throwParserException("Expected value");
         }
         return Optional.of(new Initialization(initializationSignature.get(), value.get()));
     }
 
     // TODO: finish parseValue
-    // value ::= identifier | constant
+    // value ::= expression | functionCall | as
     private Optional<Value> parseValue() {
-        if(token.type() == TokenType.IDENTIFIER) {
+        if (token.type() == TokenType.IDENTIFIER) {
             return Optional.of(new Value(token.value()));
         }
         var constant = parseConstant();
-        return constant.map(Value::new);
+        if (constant.isPresent()) {
+            return Optional.of(new Value(constant.get()));
+        }
+        var expression = parseExpression();
+        if (expression.isPresent()) {
+            return Optional.of(new Value(expression.get()));
+        }
+//        var functionCall = parseFunctionCall();
+//        if (functionCall.isPresent()) {
+//            return Optional.of(new Value(functionCall.get()));
+//        }
+//        var as = parseAs();
+//        if (as.isPresent()) {
+//            return Optional.of(new Value(as.get()));
+//        }
+        return Optional.empty();
+    }
+
+    // expression ::= term, { additiveOperator, term };
+    private Optional<Expression> parseExpression() {
+        var terms = new ArrayList<Term>();
+        var additiveOperators = new ArrayList<AdditiveOperator>();
+        var term = parseTerm();
+        if (term.isEmpty()) {
+            return Optional.empty();
+        }
+        var operator = parseAdditiveOperator();
+        while (operator.isPresent()) {
+            var node = parseTerm();
+            if (node.isEmpty()) {
+                throwParserException("Expected term");
+            }
+            terms.add(node.get());
+            additiveOperators.add(operator.get());
+        }
+        return Optional.of(new Expression(terms, additiveOperators));
+    }
+
+    // term ::= factor, { multiplicativeOperator, factor };
+    private Optional<Term> parseTerm() {
+        var factors = new ArrayList<Factor>();
+        var multiplicativeOperators = new ArrayList<MultiplicativeOperator>();
+        var factor = parseFactor();
+        if (factor.isEmpty()) {
+            return Optional.empty();
+        }
+        var operator = parseMultiplicativeOperator();
+        while (operator.isPresent()) {
+            var node = parseFactor();
+            if (node.isEmpty()) {
+                throwParserException("Expected factor");
+            }
+            factors.add(node.get());
+            multiplicativeOperators.add(operator.get());
+        }
+        return Optional.of(new Term(factors, multiplicativeOperators));
+    }
+
+    private Optional<AdditiveOperator> parseAdditiveOperator() {
+        if (token.type() == TokenType.ADD_OPERATOR) {
+            consumeToken();
+            return Optional.of(new AdditiveOperator(Operator.ADD));
+        }
+        if (token.type() == TokenType.SUBTRACT_OPERATOR) {
+            consumeToken();
+            return Optional.of(new AdditiveOperator(Operator.SUBTRACT));
+        }
+        return Optional.empty();
+    }
+
+    private Optional<Factor> parseFactor() {
+        var value = parseValue();
+        if (value.isPresent()) {
+            return Optional.of(new Factor(value.get()));
+        }
+        if (token.type() == TokenType.LEFT_PARENTHESES) {
+            consumeToken();
+            var expression = parseExpression();
+            if (expression.isEmpty()) {
+                throwParserException("Expression expected");
+            }
+            mustBe(TokenType.RIGHT_PARENTHESES);
+            consumeToken();
+            return Optional.of(new Factor(expression.get()));
+        }
+        return Optional.empty();
+    }
+
+    private Optional<MultiplicativeOperator> parseMultiplicativeOperator() {
+        if (token.type() == TokenType.MULTIPLY_OPERATOR) {
+            consumeToken();
+            return Optional.of(new MultiplicativeOperator(Operator.MULTIPLY));
+        }
+        if (token.type() == TokenType.DIVIDE_OPERATOR) {
+            consumeToken();
+            return Optional.of(new MultiplicativeOperator(Operator.DIVIDE));
+        }
+        if (token.type() == TokenType.MODULO_OPERATOR) {
+            consumeToken();
+            return Optional.of(new MultiplicativeOperator(Operator.MODULO));
+        }
+        return Optional.empty();
     }
 
     // constant ::= string_const | int_const | float_const | bool_const
@@ -171,7 +278,7 @@ public class Parser {
         if (token.type() == TokenType.KW_VAR) {
             consumeToken();
             var type = parseUserOrVariableType();
-            if(type.isEmpty()) {
+            if (type.isEmpty()) {
                 throwParserException("Expected variable type");
             }
             mustBe(TokenType.IDENTIFIER);
@@ -180,7 +287,7 @@ public class Parser {
             return Optional.of(new InitializationSignature(true, type.get(), (String) identifier));
         }
         var type = parseUserOrVariableType();
-        if(type.isPresent()) {
+        if (type.isPresent()) {
             mustBe(TokenType.IDENTIFIER);
             var identifier = token.value();
             consumeToken();
@@ -193,12 +300,12 @@ public class Parser {
     private FunctionParameters parseFunctionParameters() {
         var parameterSignatures = new ArrayList<ParameterSignature>();
         ParameterSignature node;
-        if(Objects.isNull(node = parseParameterSignature())) {
+        if (Objects.isNull(node = parseParameterSignature())) {
             return new FunctionParameters(List.of());
         } else {
             parameterSignatures.add(node);
         }
-        while(token.type() == TokenType.COMMA) {
+        while (token.type() == TokenType.COMMA) {
             consumeToken();
             parameterSignatures.add(parseParameterSignature());
         }
@@ -208,7 +315,7 @@ public class Parser {
     // parameterSignature ::= variableTypeIdentifier
     private ParameterSignature parseParameterSignature() {
         var type = parseUserOrVariableType();
-        if(type.isEmpty()) {
+        if (type.isEmpty()) {
             return null;
         }
         mustBe(TokenType.IDENTIFIER);
@@ -218,7 +325,7 @@ public class Parser {
     }
 
     private void mustBe(TokenType tokenType) {
-        if(token.type() != tokenType) {
+        if (token.type() != tokenType) {
             throwParserException("Invalid token");
         }
     }
@@ -231,7 +338,7 @@ public class Parser {
 
     // functionSignature ::= "void ", identifier | variableTypeIdentifier
     private Optional<FunctionSignature> parseFunctionSignature() {
-        if(token.type() == TokenType.KW_VOID) {
+        if (token.type() == TokenType.KW_VOID) {
             consumeToken();
             mustBe(TokenType.IDENTIFIER);
             var functionSignature = new FunctionSignature(new VoidType(), (String) token.value());
@@ -239,7 +346,7 @@ public class Parser {
             return Optional.of(functionSignature);
         }
         var returnType = parseUserOrVariableType();
-        if(returnType.isEmpty()) {
+        if (returnType.isEmpty()) {
             return Optional.empty();
         }
         mustBe(TokenType.IDENTIFIER);
@@ -250,7 +357,7 @@ public class Parser {
 
     // variableTypeIdentifier ::= variableType, " ", identifier
     private Optional<Node> parseUserOrVariableType() {
-        if(TokenTypeGroupsProvider.VAR_TYPES.contains(token.type())) {
+        if (TokenTypeGroupsProvider.VAR_TYPES.contains(token.type())) {
             var variableType = new VariableType(VariableTypeEnum.tokenTypeToVariableType(token.type()));
             consumeToken();
             return Optional.of(variableType);

@@ -2,8 +2,11 @@ package pl.interpreter
 
 import pl.interpreter.lexical_analyzer.LexicalAnalyzer
 import pl.interpreter.parser.Parser
+import pl.interpreter.parser.ast.AdditiveOperator
 import pl.interpreter.parser.ast.Block
 import pl.interpreter.parser.ast.BoolConst
+import pl.interpreter.parser.ast.Expression
+import pl.interpreter.parser.ast.Factor
 import pl.interpreter.parser.ast.FloatConst
 import pl.interpreter.parser.ast.FunctionDefinition
 import pl.interpreter.parser.ast.FunctionParameters
@@ -11,10 +14,12 @@ import pl.interpreter.parser.ast.FunctionSignature
 import pl.interpreter.parser.ast.Initialization
 import pl.interpreter.parser.ast.InitializationSignature
 import pl.interpreter.parser.ast.IntConst
+import pl.interpreter.parser.ast.Operator
 import pl.interpreter.parser.ast.ParameterSignature
 import pl.interpreter.parser.ast.Program
 import pl.interpreter.parser.ast.SingleStatement
 import pl.interpreter.parser.ast.StringConst
+import pl.interpreter.parser.ast.Term
 import pl.interpreter.parser.ast.UserType
 import pl.interpreter.parser.ast.Value
 import pl.interpreter.parser.ast.VariableType
@@ -66,7 +71,7 @@ class ParserSpec extends Specification {
         parseProgram(code) == p
         where:
         code                                                                                                     | p
-        "int main() { var int a = 0; float hello = 1.5; string HELLO = \"Hello World\"; bool isActive = true; }" | new Program(List.of(
+        "int main() { var int a = 0; float hello = 1.5 + 3.5; string HELLO = \"Hello World\"; bool isActive = true; }" | new Program(List.of(
                 new FunctionDefinition(
                         new FunctionSignature(new VariableType(VariableTypeEnum.INT), "main"),
                         new FunctionParameters(List.of()),
@@ -91,7 +96,31 @@ class ParserSpec extends Specification {
                                                         "hello"
                                                 ),
                                                 new Value(
-                                                        new FloatConst(1.5)
+                                                        new Expression(
+                                                                List.of(
+                                                                        new Term(List.of(
+                                                                                new Factor(
+                                                                                        new Value(
+                                                                                                new FloatConst(
+                                                                                                        1.5
+                                                                                                )
+                                                                                        )
+                                                                                )
+                                                                        ),List.of()),
+                                                                        new Term(List.of(
+                                                                                new Factor(
+                                                                                        new Value(
+                                                                                                new FloatConst(
+                                                                                                        3.5
+                                                                                                )
+                                                                                        )
+                                                                                )
+                                                                        ), List.of())
+                                                                ),
+                                                                List.of(
+                                                                        new AdditiveOperator(Operator.ADD)
+                                                                )
+                                                        )
                                                 )
                                         )
                                 ),

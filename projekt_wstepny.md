@@ -225,9 +225,9 @@ return                   ::= "return ", [value];
 while                    ::= "while", "(" condition ")", instruction;
 match                    ::= "match", "(", value, ")", "{", matchBranch, {matchBranch}, "}";
 matchBranch              ::= userTypeIdentifier, " ", identifier, "->" instruction;
-expression               ::= term, {additionOperator, term};
+expression               ::= term, {additiveOperator, term};
 term                     ::= factor, {multiplicativeOperator, factor};
-additionOperator         ::= "+"
+additiveOperator         ::= "+"
                            | "-";
 multiplicativeOperator   ::= "*"
                            | "/"
