@@ -2,21 +2,23 @@ package pl.interpreter.parser;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import pl.interpreter.Token;
 import pl.interpreter.TokenType;
 import pl.interpreter.lexical_analyzer.LexicalAnalyzer;
 import pl.interpreter.parser.ast.AdditiveOperator;
+import pl.interpreter.parser.ast.Assignment;
 import pl.interpreter.parser.ast.Block;
 import pl.interpreter.parser.ast.BoolConst;
 import pl.interpreter.parser.ast.CompoundStatement;
 import pl.interpreter.parser.ast.Expression;
 import pl.interpreter.parser.ast.Factor;
 import pl.interpreter.parser.ast.FloatConst;
+import pl.interpreter.parser.ast.FunctionArguments;
 import pl.interpreter.parser.ast.FunctionDefinition;
 import pl.interpreter.parser.ast.FunctionParameters;
 import pl.interpreter.parser.ast.FunctionSignature;
+import pl.interpreter.parser.ast.IdentifierStatement;
 import pl.interpreter.parser.ast.Initialization;
 import pl.interpreter.parser.ast.InitializationSignature;
 import pl.interpreter.parser.ast.IntConst;
@@ -25,7 +27,7 @@ import pl.interpreter.parser.ast.Node;
 import pl.interpreter.parser.ast.Operator;
 import pl.interpreter.parser.ast.ParameterSignature;
 import pl.interpreter.parser.ast.Program;
-import pl.interpreter.parser.ast.SingleStatement;
+import pl.interpreter.parser.ast.Return;
 import pl.interpreter.parser.ast.StringConst;
 import pl.interpreter.parser.ast.StructureDefinition;
 import pl.interpreter.parser.ast.Term;
@@ -36,8 +38,7 @@ import pl.interpreter.parser.ast.VariableTypeEnum;
 import pl.interpreter.parser.ast.VariantDefinition;
 import pl.interpreter.parser.ast.VoidType;
 
-// TODO: remove assignments between parentheses
-// TODO: change nulls to optional
+// TODO: fix initialization
 
 public class Parser {
     private Token token;
@@ -109,11 +110,19 @@ public class Parser {
     }
 
     // TODO: finish single statement
-    // singleStatement ::= initialization | return | identifierStatement;
-    private Optional<SingleStatement> parseSingleStatement() {
-        var node = parseInitialization();
-        if (node.isPresent()) {
-            return Optional.of(new SingleStatement(node.get()));
+    // singleStatement ::= identifierStatement | varInitialization | return;
+    private Optional<Node> parseSingleStatement() {
+        var initialization = parseInitialization();
+        if (initialization.isPresent()) {
+            return initialization;
+        }
+        var returnStatement = parseReturn();
+        if (returnStatement.isPresent()) {
+            return Optional.of(returnStatement.get());
+        }
+        var identifierStatement = parseIdentifierStatement();
+        if (identifierStatement.isPresent()) {
+            return Optional.of(identifierStatement.get());
         }
         return Optional.empty();
     }
@@ -122,19 +131,103 @@ public class Parser {
         return Optional.empty();
     }
 
-    // initialization ::= initializationSignature "=" value
+    // initialization ::= initializationSignature assignment
     private Optional<Node> parseInitialization() {
         var initializationSignature = parseInitializationSignature();
         if (initializationSignature.isEmpty()) {
             return Optional.empty();
         }
-        mustBe(TokenType.ASSIGNMENT);
+        var assignment = parseAssignment();
+        if (assignment.isEmpty()) {
+            throwParserException("Expected assignment");
+        }
+        return Optional.of(new Initialization(initializationSignature.get(), assignment.get()));
+    }
+
+    // initializationSignature ::= ["var"], variableTypeIdentifier
+    private Optional<InitializationSignature> parseInitializationSignature() {
+        if (token.type() == TokenType.KW_VAR) {
+            consumeToken();
+            var type = parseUserOrVariableType();
+            if (type.isEmpty()) {
+                throwParserException("Expected variable type");
+            }
+            mustBe(TokenType.IDENTIFIER);
+            var identifier = token.value();
+            consumeToken();
+            return Optional.of(new InitializationSignature(true, type.get(), (String) identifier));
+        }
+        var type = parseUserOrVariableType();
+        if (type.isPresent()) {
+            mustBe(TokenType.IDENTIFIER);
+            var identifier = token.value();
+            consumeToken();
+            return Optional.of(new InitializationSignature(false, type.get(), (String) identifier));
+        }
+        return Optional.empty();
+    }
+
+    // return ::= "return", [value];
+    private Optional<Return> parseReturn() {
+        if (token.type() == TokenType.KW_RETURN) {
+            consumeToken();
+            var value = parseValue();
+            return Optional.of(new Return(value));
+        }
+        return Optional.empty();
+    }
+
+    // identifierStatement ::= identifier, assignment | functionArguments
+    private Optional<IdentifierStatement> parseIdentifierStatement() {
+        if (token.type() != TokenType.IDENTIFIER) {
+            return Optional.empty();
+        }
+        var identifier = (String) token.value();
+        consumeToken();
+        var assignment = parseAssignment();
+        if (assignment.isPresent()) {
+            return Optional.of(new IdentifierStatement(identifier, assignment.get()));
+        }
+        var functionArguments = parseFunctionArguments();
+        if (functionArguments.isEmpty()) {
+            throwParserException("Expected \"=\" or function call");
+        }
+        return Optional.of(new IdentifierStatement(identifier, functionArguments.get()));
+    }
+
+    // assignment ::= "=", value;
+    private Optional<Assignment> parseAssignment() {
+        if (token.type() != TokenType.ASSIGNMENT) {
+            return Optional.empty();
+        }
         consumeToken();
         var value = parseValue();
         if (value.isEmpty()) {
             throwParserException("Expected value");
         }
-        return Optional.of(new Initialization(initializationSignature.get(), value.get()));
+        return Optional.of(new Assignment(value.get()));
+    }
+
+    // functionArguments ::= "(", [ value { "," value } ], ")";
+    private Optional<FunctionArguments> parseFunctionArguments() {
+        if (token.type() != TokenType.LEFT_PARENTHESES) {
+            return Optional.empty();
+        }
+        consumeToken();
+        var values = new ArrayList<Value>();
+        var node = parseValue();
+        if (node.isPresent()) {
+            values.add(node.get());
+            while (token.type() == TokenType.COMMA) {
+                consumeToken();
+                node = parseValue();
+                if (node.isEmpty()) {
+                    throwParserException("Expected value");
+                }
+                values.add(node.get());
+            }
+        }
+        return Optional.of(new FunctionArguments(values));
     }
 
     // TODO: finish parseValue (as is missing)
@@ -273,55 +366,36 @@ public class Parser {
         return Optional.empty();
     }
 
-    // initializationSignature ::= ["var"], variableTypeIdentifier
-    private Optional<InitializationSignature> parseInitializationSignature() {
-        if (token.type() == TokenType.KW_VAR) {
-            consumeToken();
-            var type = parseUserOrVariableType();
-            if (type.isEmpty()) {
-                throwParserException("Expected variable type");
-            }
-            mustBe(TokenType.IDENTIFIER);
-            var identifier = token.value();
-            consumeToken();
-            return Optional.of(new InitializationSignature(true, type.get(), (String) identifier));
-        }
-        var type = parseUserOrVariableType();
-        if (type.isPresent()) {
-            mustBe(TokenType.IDENTIFIER);
-            var identifier = token.value();
-            consumeToken();
-            return Optional.of(new InitializationSignature(false, type.get(), (String) identifier));
-        }
-        return Optional.empty();
-    }
-
     // functionParameters ::= [parameterSignature { "," parameterSignature } ];
     private FunctionParameters parseFunctionParameters() {
         var parameterSignatures = new ArrayList<ParameterSignature>();
-        ParameterSignature node;
-        if (Objects.isNull(node = parseParameterSignature())) {
+        var parameterSignature = parseParameterSignature();
+        if (parameterSignature.isEmpty()) {
             return new FunctionParameters(List.of());
         } else {
-            parameterSignatures.add(node);
+            parameterSignatures.add(parameterSignature.get());
         }
         while (token.type() == TokenType.COMMA) {
             consumeToken();
-            parameterSignatures.add(parseParameterSignature());
+            var node = parseParameterSignature();
+            if (node.isEmpty()) {
+                throwParserException("Expected parameter");
+            }
+            parameterSignatures.add(node.get());
         }
         return new FunctionParameters(parameterSignatures);
     }
 
     // parameterSignature ::= variableTypeIdentifier
-    private ParameterSignature parseParameterSignature() {
+    private Optional<ParameterSignature> parseParameterSignature() {
         var type = parseUserOrVariableType();
         if (type.isEmpty()) {
-            return null;
+            return Optional.empty();
         }
         mustBe(TokenType.IDENTIFIER);
         var parameterSignature = new ParameterSignature(type.get(), (String) token.value());
         consumeToken();
-        return parameterSignature;
+        return Optional.of(parameterSignature);
     }
 
     private void mustBe(TokenType tokenType) {

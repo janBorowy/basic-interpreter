@@ -205,26 +205,28 @@ program                  ::= { functionDefinition
                              | structureDefinition
                              | variantDefinition };
 functionDefinition       ::= functionSignature "(" functionParameters ")" block;
-structureDefinition      ::= "struct " userTypeIdentifier "{" { parameterSignature ";" } "}";
-variantDefinition        ::= "variant " userTypeIdentifier "{" userTypeIdentifierList "}";
+structureDefinition      ::= "struct " identifier "{" { parameterSignature ";" } "}";
+variantDefinition        ::= "variant " identifier "{" userTypeIdentifierList "}";
 functionParameters       ::=  [parameterSignature { "," parameterSignature } ];
 instruction              ::= block
                            | singleStatement
                            | compoundStatement;
 block                    ::= "{" { singleStatement, ";" | compoundStatement } "}";
-singleStatement          ::= initialization
-                           | return
-                           | identifierStatement;
+singleStatement          ::= identifierStatement
+                           | varInitialization
+                           | return;
 compoundStatement        ::= if
                            | while
                            | match;
-initialization           ::= initializationSignature "=" value;
-identifierStatement      ::= identifier, assignment | functionArguments;
+identifierStatement      ::= identifier, assignment | functionArguments | userTypeInitialization;
+varInitialization        :: = "var", primitiveInitialization | userTypeInitialization;
+primitiveInitialization  ::= variableType identifier assignment;
+userTypeInitialization   ::= identifier identifier assignment;
 assignment               ::= "=", value;
 return                   ::= "return ", [value];
 while                    ::= "while", "(" condition ")", instruction;
 match                    ::= "match", "(", value, ")", "{", matchBranch, {matchBranch}, "}";
-matchBranch              ::= userTypeIdentifier, " ", identifier, "->" instruction;
+matchBranch              ::= identifier, " ", identifier, "->" instruction;
 expression               ::= term, {additiveOperator, term};
 term                     ::= factor, {multiplicativeOperator, factor};
 additiveOperator         ::= "+"
@@ -261,14 +263,12 @@ as                       ::= value, " as ", legalCastType;
 functionSignature        ::= "void ", identifier,
                            | variableTypeIdentifier
 parameterSignature       ::= variableTypeIdentifier;
-initializationSignature  ::= ["var "] variableTypeIdentifier;
 variableTypeIdentifier   ::= variableType, " ", identifier;
-userTypeIdentifierList   ::= userTypeIdentifier { "," userTypeIdentifier };
+userTypeIdentifierList   ::= identifier { "," identifier };
 variableType             ::= "int"
                            | "float"
                            | "string"
-                           | "bool"
-                           | identifier;
+                           | "bool";
 legalCastType           ::= "int"
                            | "float"
                            | "string";
