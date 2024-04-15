@@ -276,14 +276,14 @@ class LexicalAnalyzerSpec extends Specification {
 
     def 'Should throw when string literal break into a newline'() {
         when:
-        tokenize("\"abc\ndef\"")
+            tokenize("\"abc\ndef\"")
         then:
-        LexicalAnalyzerException e = thrown()
+            LexicalAnalyzerException e = thrown()
     }
 
     def 'Should not throw if string contains newline character'() {
         when:
-        tokenize("\"abc\\ndef\"");
+            tokenize("\"abc\\ndef\"");
         then:
             [
                     new Token(TokenType.STRING_CONST, "abc\\ndef", 1, 1),

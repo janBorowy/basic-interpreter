@@ -215,7 +215,7 @@ public class LexicalAnalyzer {
         int decimalPrecision = 0;
         while (Character.isDigit(lastCharacterRead)) {
             int lastDigitRead = Character.getNumericValue(lastCharacterRead);
-            checkDoesNotExceedLimit(number, decimalNumber);
+            checkDoesNotExceedLimit(decimalNumber, lastDigitRead);
             checkDoesNotExceedMaxPrecision(decimalPrecision);
             decimalNumber = decimalNumber * 10 + lastDigitRead;
             ++decimalPrecision;
