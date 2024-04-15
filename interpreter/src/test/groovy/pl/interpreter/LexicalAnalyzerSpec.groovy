@@ -98,14 +98,16 @@ class LexicalAnalyzerSpec extends Specification {
 
     def 'Should read number tokens correctly'() {
         given:
-        def code = "1 1.5 21.37."
+        def code = "1 1.5 21.37 0 0.75."
         expect:
         tokenize(code) == [
                 new Token(TokenType.INT_CONST, Integer.valueOf(1), 1, 1),
                 new Token(TokenType.FLOAT_CONST, Float.valueOf(1.5), 1, 3),
                 new Token(TokenType.FLOAT_CONST, Float.valueOf(21.37), 1, 7),
-                new Token(TokenType.DOT, '.' as char, 1, 12),
-                new Token(TokenType.EOF, null, 1, 13)
+                new Token(TokenType.INT_CONST, Integer.valueOf(0), 1, 13),
+                new Token(TokenType.FLOAT_CONST, Float.valueOf(0.75), 1, 15),
+                new Token(TokenType.DOT, '.' as char, 1, 19),
+                new Token(TokenType.EOF, null, 1, 20)
         ]
     }
 
@@ -261,18 +263,31 @@ class LexicalAnalyzerSpec extends Specification {
                         new Token(TokenType.STRING_CONST, "To type quotes use backslash \"\\\".", 1, 15),
                         new Token(TokenType.SEMICOLON, ';' as char, 1, 53),
                         new Token(TokenType.EOF, null, 1, 54)
-                ]
+                ],
         ]
     }
 
-    def 'Should throw if identifier is too big'() {
-        given:
-        def code = "a".repeat(257)
-
+    def 'Should throw when string literal has not been closed'() {
         when:
-        tokenize(code)
-
+        tokenize("\"abc\\")
         then:
         LexicalAnalyzerException e = thrown()
+    }
+
+    def 'Should throw when string literal break into a newline'() {
+        when:
+        tokenize("\"abc\ndef\"")
+        then:
+        LexicalAnalyzerException e = thrown()
+    }
+
+    def 'Should not throw if string contains newline character'() {
+        when:
+        tokenize("\"abc\\ndef\"");
+        then:
+            [
+                    new Token(TokenType.STRING_CONST, "abc\\ndef", 1, 1),
+                    new Token(TokenType.EOF, null, 1, 11)
+            ]
     }
 }

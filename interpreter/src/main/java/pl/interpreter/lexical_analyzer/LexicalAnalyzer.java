@@ -12,8 +12,11 @@ import pl.interpreter.TokenType;
 
 public class LexicalAnalyzer {
 
+    private static final int MAX_INTEGER_VALUE = Integer.MAX_VALUE;
     private static final int MAX_WORD_LENGTH_LIMIT = 256;
+    private static final int MAX_FLOAT_PRECISION = 7;
     private static final Character STRING_BORDER_CHARACTER = '"';
+    private static final Character RADIX_POINT = '.';
 
     final Reader reader;
     private char lastCharacterRead;
@@ -21,7 +24,6 @@ public class LexicalAnalyzer {
     private int cursorCol;
 
     private final Map<String, TokenType> keywords;
-
     private final Map<Character, Supplier<Token>> operatorTokenSuppliers;
 
     public LexicalAnalyzer(@NonNull Reader reader) {
@@ -29,8 +31,7 @@ public class LexicalAnalyzer {
         readNext();
         cursorCol = 1;
         cursorRow = 1;
-        keywords = new HashMap<>();
-        prepareKeywords();
+        keywords = LexicalAnalysisStaticProvider.getKeywords();
         operatorTokenSuppliers = new HashMap<>();
         prepareOperatorTokenSuppliers();
     }
@@ -58,26 +59,7 @@ public class LexicalAnalyzer {
         }
         throw new LexicalAnalyzerException("Illegal character found.", cursorRow, cursorCol);
     }
-
-    private void prepareKeywords() {
-        keywords.put("struct", TokenType.KW_STRUCT);
-        keywords.put("variant", TokenType.KW_VARIANT);
-        keywords.put("return", TokenType.KW_RETURN);
-        keywords.put("while", TokenType.KW_WHILE);
-        keywords.put("match", TokenType.KW_MATCH);
-        keywords.put("if", TokenType.KW_IF);
-        keywords.put("else", TokenType.KW_ELSE);
-        keywords.put("as", TokenType.KW_AS);
-        keywords.put("void", TokenType.KW_VOID);
-        keywords.put("int", TokenType.KW_INT);
-        keywords.put("float", TokenType.KW_FLOAT);
-        keywords.put("string", TokenType.KW_STRING);
-        keywords.put("bool", TokenType.KW_BOOL);
-        keywords.put("true", TokenType.KW_TRUE);
-        keywords.put("false", TokenType.KW_FALSE);
-        keywords.put("and", TokenType.KW_AND);
-        keywords.put("or", TokenType.KW_OR);
-    }
+    // TODO: try to take it out to LexicalAnalysisStaticProvider
     private void prepareOperatorTokenSuppliers() {
         operatorTokenSuppliers.put('+', () -> new Token(TokenType.ADD_OPERATOR, '+', cursorRow, cursorCol));
         operatorTokenSuppliers.put('-', () -> chooseOperatorToken('>',
@@ -115,6 +97,7 @@ public class LexicalAnalyzer {
         };
     }
 
+    // TODO: handle comments uniformly
     private Token getLineCommentToken() {
         var cursorColIncrement = 0;
         while (lastCharacterRead != 0xFFFF && lastCharacterRead != '\n') {
@@ -203,39 +186,57 @@ public class LexicalAnalyzer {
         if(!Character.isDigit(lastCharacterRead)) {
             return Optional.empty();
         }
-        var builder = new StringBuilder();
-        while (Character.isDigit(lastCharacterRead)) {
-            builder.append(lastCharacterRead);
-            readNext();
-        }
-        var integralValue = Integer.parseInt(builder.toString());
-        if (lastCharacterRead == '.') {
-            var decimalBuilder = new StringBuilder();
-            readNext();
+
+        int number = Character.getNumericValue(lastCharacterRead);
+        int numberDigits = 1;
+        readNext();
+        if(number != 0) {
             while (Character.isDigit(lastCharacterRead)) {
-                decimalBuilder.append(lastCharacterRead);
+                int lastDigitRead = Character.getNumericValue(lastCharacterRead);
+                checkDoesNotExceedLimit(number, lastDigitRead);
+                number = number * 10 + lastDigitRead;
+                ++numberDigits;
                 readNext();
             }
-            var decimalValue = tryToParseInt(decimalBuilder.toString());
-            var token = new Token(TokenType.FLOAT_CONST, computeFloat(integralValue, decimalValue, decimalBuilder.length()), cursorRow, cursorCol);
-            cursorCol += builder.length() + decimalBuilder.length() + 1;
-            return Optional.of(token);
         }
-        var token = new Token(TokenType.INT_CONST, integralValue, cursorRow, cursorCol);
-        cursorCol += builder.length();
-        return Optional.of(token);
+
+        if (lastCharacterRead != RADIX_POINT) {
+            var token = Optional.of(new Token(TokenType.INT_CONST, number, cursorRow, cursorCol));
+            cursorCol += numberDigits;
+            return token;
+        }
+        readNext();
+
+        if (!Character.isDigit(lastCharacterRead)) {
+            throw new LexicalAnalyzerException("Invalid float literal" , cursorRow, cursorCol);
+        }
+
+        int decimalNumber = 0;
+        int decimalPrecision = 0;
+        while (Character.isDigit(lastCharacterRead)) {
+            int lastDigitRead = Character.getNumericValue(lastCharacterRead);
+            checkDoesNotExceedLimit(number, decimalNumber);
+            checkDoesNotExceedMaxPrecision(decimalPrecision);
+            decimalNumber = decimalNumber * 10 + lastDigitRead;
+            ++decimalPrecision;
+            readNext();
+        }
+        float floatNumber = (float) (number + decimalNumber / Math.pow(10, decimalPrecision));
+        var token = Optional.of(new Token(TokenType.FLOAT_CONST, floatNumber, cursorRow, cursorCol));
+        cursorCol += numberDigits + 1 + decimalPrecision;
+        return token;
     }
 
-    private int tryToParseInt(String strValue) {
-        try {
-            return Integer.parseInt(strValue);
-        } catch (NumberFormatException e) {
-            throw new LexicalAnalyzerException("Failed to parse a number", cursorRow, cursorCol);
+    private void checkDoesNotExceedLimit(int number, int newDigit) {
+        if ((MAX_INTEGER_VALUE - newDigit) / 10 < number) {
+            throw new LexicalAnalyzerException("Integer is too large", cursorRow, cursorCol);
         }
     }
 
-    private float computeFloat(int integral, int decimal, int decimalLength) {
-        return (float) (integral + (decimal / Math.pow(10, decimalLength)));
+    private void checkDoesNotExceedMaxPrecision(int decimalPrecision) {
+        if (MAX_FLOAT_PRECISION < decimalPrecision) {
+            throw new LexicalAnalyzerException("Float precision is too big", cursorRow, cursorCol);
+        }
     }
 
     private Optional<Token> tryToBuildStringToken() {
@@ -252,6 +253,9 @@ public class LexicalAnalyzer {
                 ++backslashCounter;
                 readNext();
                 continue;
+            }
+            if(lastCharacterRead == 0xFFFF || lastCharacterRead == '\n') {
+                throw new LexicalAnalyzerException("Expected '\"'" , cursorCol, cursorRow);
             }
             escapeNext = false;
             builder.append(lastCharacterRead);
