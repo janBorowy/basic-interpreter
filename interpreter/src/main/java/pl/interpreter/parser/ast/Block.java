@@ -2,4 +2,4 @@ package pl.interpreter.parser.ast;
 
 import java.util.List;
 
-public record Block(List<Node> statements) implements Instruction {}
+public record Block(List<Instruction> statements) implements Instruction {}

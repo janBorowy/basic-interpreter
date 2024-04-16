@@ -201,12 +201,13 @@ int getNthFibonacciNumber(int n) {
 ## Gramatyka języka
 
 ```
-program                  ::= { functionDefinition 
-                             | structureDefinition
-                             | variantDefinition };
-functionDefinition       ::= functionSignature "(" functionParameters ")" block;
+program                  ::= { definition };
+definition               ::= functionDefinition
+                           | structureDefinition
+                           | variantDefinition;
+functionDefinition       ::= functionSignature "(" [ parameterSignature { "," parameterSignature } ] ")" block;
 structureDefinition      ::= "struct " identifier "{" { parameterSignature ";" } "}";
-variantDefinition        ::= "variant " identifier "{" identifier { "," identifier }; "}";
+variantDefinition        ::= "variant " identifier "{" identifier { "," identifier } "}";
 functionParameters       ::=  [parameterSignature { "," parameterSignature } ];
 block                    ::= "{" { singleOrCompoundStatement } "}";
 singleOrCompoundStatement::= singleStatement, ";"
@@ -272,10 +273,16 @@ value                    ::= expression
 inplaceValue             ::= number
                            | stringLiteral
                            | booleanLiteral;
-as                       ::= " as ", variableType;
-functionSignature        ::= "void ", identifier,
-                           | parameterSignature
-parameterSignature       ::= variableType, identifier;
+as                       ::= "as", variableType;
+functionSignature        ::= functionReturnType identifier;
+functionReturnType       ::= "int"
+                           | "string"
+                           | "float"
+                           | "bool"
+                           | "void"
+                           | identifier;
+parameterSignature       ::= variableType, identifier
+                           | identifier, identifier;
 variableType             ::= "int"
                            | "float"
                            | "string"

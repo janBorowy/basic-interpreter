@@ -1,3 +1,5 @@
 package pl.interpreter.parser.ast;
 
-public record FunctionDefinition(FunctionSignature functionSignature, FunctionParameters functionParameters, Block block) implements Node {}
+import java.util.List;
+
+public record FunctionDefinition(FunctionSignature functionSignature, List<ParameterSignature> functionParameters, Block block) implements Definition {}

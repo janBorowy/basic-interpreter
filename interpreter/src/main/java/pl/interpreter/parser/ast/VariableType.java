@@ -1,3 +1,20 @@
 package pl.interpreter.parser.ast;
 
-public record VariableType(VariableTypeEnum type) implements Node {}
+import pl.interpreter.TokenType;
+
+public enum VariableType {
+    STRING,
+    INT,
+    FLOAT,
+    BOOL,
+    USER_TYPE;
+
+    public static VariableType getFromTokenType(TokenType type) {
+        return switch (type) {
+            case KW_STRING -> STRING;
+            case KW_INT -> INT;
+            case KW_FLOAT -> FLOAT;
+            default -> BOOL;
+        };
+    }
+}

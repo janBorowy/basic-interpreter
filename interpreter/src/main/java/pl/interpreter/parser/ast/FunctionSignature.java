@@ -1,3 +1,3 @@
 package pl.interpreter.parser.ast;
 
-public record FunctionSignature(Node returnType, String identifier) implements Node {}
+public record FunctionSignature(FunctionReturnType returnType, String identifier) implements Node {}

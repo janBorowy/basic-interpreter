@@ -2,16 +2,18 @@ package pl.interpreter.parser.ast;
 
 import pl.interpreter.TokenType;
 
-public enum VariableTypeEnum {
+public enum FunctionReturnTypeEnum {
     STRING,
     INT,
     FLOAT,
-    BOOL;
+    BOOL,
+    VOID,
+    USER_TYPE;
 
-    public static VariableTypeEnum tokenTypeToVariableType(TokenType type) {
-        return switch (type) {
-            case KW_STRING -> STRING;
+    public static FunctionReturnTypeEnum getFromTokenType(TokenType type) {
+        return switch(type) {
             case KW_INT -> INT;
+            case KW_STRING -> STRING;
             case KW_FLOAT -> FLOAT;
             default -> BOOL;
         };

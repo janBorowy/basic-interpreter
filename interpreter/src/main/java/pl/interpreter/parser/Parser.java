@@ -11,11 +11,13 @@ import pl.interpreter.parser.ast.AfterIdentifierStatement;
 import pl.interpreter.parser.ast.As;
 import pl.interpreter.parser.ast.Block;
 import pl.interpreter.parser.ast.CompoundStatement;
+import pl.interpreter.parser.ast.Definition;
 import pl.interpreter.parser.ast.Expression;
 import pl.interpreter.parser.ast.Factor;
 import pl.interpreter.parser.ast.FunctionArguments;
 import pl.interpreter.parser.ast.FunctionDefinition;
-import pl.interpreter.parser.ast.FunctionParameters;
+import pl.interpreter.parser.ast.FunctionReturnType;
+import pl.interpreter.parser.ast.FunctionReturnTypeEnum;
 import pl.interpreter.parser.ast.FunctionSignature;
 import pl.interpreter.parser.ast.IdentifierStatement;
 import pl.interpreter.parser.ast.IdentifierValueApplier;
@@ -55,25 +57,40 @@ public class Parser {
         consumeToken();
     }
 
-    // program ::= {functionDefinition | structureDefinition | variantDefinition}
+    // program ::= { definition };
     public Program parseProgram() {
-        var functionDefinitions = new ArrayList<FunctionDefinition>();
-        var structureDefinitions = new ArrayList<StructureDefinition>();
-        var variantDefinitions = new ArrayList<VariantDefinition>();
-        var node = parseFunctionDefinition();
-        while (node.isPresent()) {
-            functionDefinitions.add(node.get());
-            node = parseFunctionDefinition();
+        var definitions = new ArrayList<Definition>();
+        var definition = parseDefinition();
+        while (definition.isPresent()) {
+            definitions.add(definition.get());
+            definition = parseDefinition();
         }
-//        } else if (Objects.isNull(node = parseStructureDefinition())) {
-//            structureDefinitions.add((StructureDefinition) node);
-//        } else if (Objects.isNull(node = parseVariantDefinition())) {
-//            variantDefinitions.add((VariantDefinition) node);
-//        }
-        return new Program(functionDefinitions, structureDefinitions, variantDefinitions);
+        if (token.type() != TokenType.EOF) {
+            throwParserException("Failed to parse source");
+        }
+        return new Program(definitions);
     }
 
-    // functionDefinitions ::= functionSignature "(" functionParameters ")" block;
+    // definition               ::= functionDefinition
+    //                           | structureDefinition
+    //                           | variantDefinition;
+    private Optional<Definition> parseDefinition() {
+        var functionDefinition = parseFunctionDefinition();
+        if (functionDefinition.isPresent()) {
+            return Optional.of(functionDefinition.get());
+        }
+        var structureDefinition = parseStructureDefinition();
+        if (structureDefinition.isPresent()) {
+            return Optional.of(structureDefinition.get());
+        }
+        var variantDefinition = parseVariantDefinition();
+        if (variantDefinition.isPresent()) {
+            return Optional.of(variantDefinition.get());
+        }
+        return Optional.empty();
+    }
+
+    // functionDefinitions ::= functionSignature "(" [ parameterSignature { "," parameterSignature } ] ")" block;
     private Optional<FunctionDefinition> parseFunctionDefinition() {
         var functionSignature = parseFunctionSignature();
         if (functionSignature.isEmpty()) {
@@ -81,7 +98,17 @@ public class Parser {
         }
         mustBe(TokenType.LEFT_PARENTHESES);
         consumeToken();
-        var functionParameters = parseFunctionParameters();
+        var functionParameters = new ArrayList<ParameterSignature>();
+        var parameterSignature = parseParameterSignature();
+        parameterSignature.ifPresent(functionParameters::add);
+        while (token.type() == TokenType.COMMA) {
+            consumeToken();
+            var node = parseParameterSignature();
+            if (node.isEmpty()) {
+                throwParserException("Expected parameter");
+            }
+            functionParameters.add(node.get());
+        }
         mustBe(TokenType.RIGHT_PARENTHESES);
         consumeToken();
         var block = parseBlock();
@@ -93,32 +120,57 @@ public class Parser {
     // TODO
     // structureDefinition ::= "struct " identifier "{" { parameterSignature ";" } "}";
     private Optional<StructureDefinition> parseStructureDefinition() {
-        return Optional.empty();
+        if (token.type() != TokenType.KW_STRUCT) {
+            return Optional.empty();
+        }
+        consumeToken();
+        mustBe(TokenType.IDENTIFIER);
+        var identifier = (String) token.value();
+        consumeToken();
+        mustBe(TokenType.LEFT_CURLY_BRACKET);
+        consumeToken();
+        var signatures = new ArrayList<ParameterSignature>();
+        var signature = parseParameterSignature();
+        while (signature.isPresent()) {
+            signatures.add(signature.get());
+            mustBe(TokenType.SEMICOLON);
+            consumeToken();
+            signature = parseParameterSignature();
+        }
+        mustBe(TokenType.RIGHT_CURLY_BRACKET);
+        consumeToken();
+        return Optional.of(new StructureDefinition(identifier, signatures));
     }
     // TODO
     // variantDefinition ::= "variant " identifier "{" identifier { "," identifier }; "}";
     private Optional<VariantDefinition> parseVariantDefinition() {
-        return Optional.empty();
-    }
-
-    // functionParameters ::= [parameterSignature { "," parameterSignature } ];
-    private FunctionParameters parseFunctionParameters() {
-        var parameterSignatures = new ArrayList<ParameterSignature>();
-        var parameterSignature = parseParameterSignature();
-        if (parameterSignature.isEmpty()) {
-            return new FunctionParameters(List.of());
-        } else {
-            parameterSignatures.add(parameterSignature.get());
+        if (token.type() != TokenType.KW_VARIANT) {
+            return Optional.empty();
         }
+        consumeToken();
+        if (token.type() != TokenType.IDENTIFIER) {
+            throwParserException("Expected identifier");
+        }
+        var variantName = (String) token.value();
+        consumeToken();
+        mustBe(TokenType.LEFT_CURLY_BRACKET);
+        consumeToken();
+        var identifiers = new ArrayList<String>();
+        mustBe(TokenType.IDENTIFIER);
+        var identifier = (String) token.value();
+        identifiers.add(identifier);
+        consumeToken();
         while (token.type() == TokenType.COMMA) {
             consumeToken();
-            var node = parseParameterSignature();
-            if (node.isEmpty()) {
-                throwParserException("Expected parameter");
+            if (token.type() != TokenType.IDENTIFIER) {
+                throwParserException("Expected identifier");
             }
-            parameterSignatures.add(node.get());
+            identifiers.add((String) token.value());
+            consumeToken();
         }
-        return new FunctionParameters(parameterSignatures);
+        mustBe(TokenType.RIGHT_CURLY_BRACKET);
+        consumeToken();
+        return Optional.of(new VariantDefinition(variantName, identifiers));
     }
 
     // block ::= "{" { singleOrCompoundStatement } "}";
@@ -127,7 +179,7 @@ public class Parser {
             return Optional.empty();
         }
         consumeToken();
-        var statements = new ArrayList<Node>();
+        var statements = new ArrayList<Instruction>();
         var statement = parseSingleOrCompoundStatement();
         while (statement.isPresent()) {
             statements.add(statement.get());
@@ -433,29 +485,77 @@ public class Parser {
     }
 
     // TODO
-    // functionSignature        ::= "void ", identifier,
-    //                            | parameterSignature
+    // functionSignature ::= functionReturnType identifier;
     private Optional<FunctionSignature> parseFunctionSignature() {
+        var functionReturnType = parseFunctionReturnType();
+        if (functionReturnType.isEmpty()) {
+            return Optional.empty();
+        }
+        mustBe(TokenType.IDENTIFIER);
+        var identifier = token.value();
+        consumeToken();
+        return Optional.of(new FunctionSignature(functionReturnType.get(), (String) identifier));
+    }
+
+    // functionReturnType       ::= variableType
+    //                           | "void"
+    //                           | identifier;
+    private Optional<FunctionReturnType> parseFunctionReturnType() {
+        if (TokenTypeGroupsProvider.VAR_TYPES.contains(token.type())) {
+            var type = token.type();
+            consumeToken();
+            return Optional.of(new FunctionReturnType(FunctionReturnTypeEnum.getFromTokenType(type)));
+        }
+        if (token.type() == TokenType.KW_VOID) {
+            consumeToken();
+            return Optional.of(new FunctionReturnType(FunctionReturnTypeEnum.VOID));
+        }
+        if (token.type() == TokenType.IDENTIFIER) {
+            var identifier = (String) token.value();
+            consumeToken();
+            return Optional.of(new FunctionReturnType(FunctionReturnTypeEnum.USER_TYPE, Optional.of(identifier)));
+        }
         return Optional.empty();
     }
 
     // parameterSignature ::= variableType, identifier
+    //                      | identifier, identifier;
     private Optional<ParameterSignature> parseParameterSignature() {
-        return Optional.empty();
+        var variableType = getVariableType();
+        if (variableType.isPresent()) {
+            mustBe(TokenType.IDENTIFIER);
+            var identifier = (String) token.value();
+            consumeToken();
+            return Optional.of(new ParameterSignature(variableType.get(), identifier));
+        }
+        if (token.type() != TokenType.IDENTIFIER) {
+            return Optional.empty();
+        }
+        var userType = (String) token.value();
+        consumeToken();
+        if (token.type() != TokenType.IDENTIFIER) {
+            throwParserException("Expected identifier");
+        }
+        var identifier = (String) token.value();
+        consumeToken();
+        return Optional.of(new ParameterSignature(VariableType.USER_TYPE, identifier, Optional.of(userType)));
     }
 
-    private Optional<VariableType> parseVariableType() {
+    // variableType             ::= "int"
+    //                           | "float"
+    //                           | "string"
+    //                           | "bool";
+    private Optional<VariableType> getVariableType() {
+        if (TokenTypeGroupsProvider.VAR_TYPES.contains(token.type())) {
+            var type = token.type();
+            consumeToken();
+            return Optional.of(VariableType.getFromTokenType(type));
+        }
         return Optional.empty();
     }
 
     private void mustBe(TokenType tokenType) {
         if (token.type() != tokenType) {
-            throwParserException("Invalid token");
-        }
-    }
-
-    private void mustBeIn(List<TokenType> tokenTypes) {
-        if (tokenTypes.stream().noneMatch(t -> token.type() == t)) {
             throwParserException("Invalid token");
         }
     }
