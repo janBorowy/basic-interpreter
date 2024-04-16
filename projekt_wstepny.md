@@ -206,7 +206,7 @@ program                  ::= { functionDefinition
                              | variantDefinition };
 functionDefinition       ::= functionSignature "(" functionParameters ")" block;
 structureDefinition      ::= "struct " identifier "{" { parameterSignature ";" } "}";
-variantDefinition        ::= "variant " identifier "{" identifierList "}";
+variantDefinition        ::= "variant " identifier "{" identifier { "," identifier }; "}";
 functionParameters       ::=  [parameterSignature { "," parameterSignature } ];
 block                    ::= "{" { singleOrCompoundStatement } "}";
 singleOrCompoundStatement::= singleStatement, ";"
@@ -272,25 +272,18 @@ value                    ::= expression
 inplaceValue             ::= number
                            | stringLiteral
                            | booleanLiteral;
-as                       ::= " as ", legalCastType;
+as                       ::= " as ", variableType;
 functionSignature        ::= "void ", identifier,
-                           | variableTypeIdentifier
-parameterSignature       ::= variableTypeIdentifier;
-variableTypeIdentifier   ::= variableType, " ", identifier;
-identifierList           ::= identifier { "," identifier };
+                           | parameterSignature
+parameterSignature       ::= variableType, identifier;
 variableType             ::= "int"
                            | "float"
                            | "string"
                            | "bool";
-legalCastType           ::= "int"
-                           | "float"
-                           | "string";
 identifier               ::= identifierName
                            | identifierName, ".", identifierName;
 identifierName           ::= identifierFirstCharacter, { digit | letter | "_" };
 identifierFirstCharacter ::= "_" | letter;
-constant                 ::= number
-                           | stringLiteral;
 number                   ::= ["-"], nonZeroDigit, {digit}
                            | "0"
                            | ["-"], digit, ".", digit, {digit};

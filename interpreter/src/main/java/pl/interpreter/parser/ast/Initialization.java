@@ -1,3 +1,3 @@
 package pl.interpreter.parser.ast;
 
-public interface Initialization extends Node {}
+public interface Initialization extends SingleStatement {}

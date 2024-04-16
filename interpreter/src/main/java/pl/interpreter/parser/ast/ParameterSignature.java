@@ -1,3 +1,3 @@
 package pl.interpreter.parser.ast;
 
-public record ParameterSignature(Node type, String identifier) implements Node {}
+public record ParameterSignature(VariableType type, String identifier) implements Node {}

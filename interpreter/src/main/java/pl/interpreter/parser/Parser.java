@@ -8,21 +8,23 @@ import pl.interpreter.TokenType;
 import pl.interpreter.lexical_analyzer.LexicalAnalyzer;
 import pl.interpreter.parser.ast.AdditiveOperator;
 import pl.interpreter.parser.ast.AfterIdentifierStatement;
-import pl.interpreter.parser.ast.Assignment;
+import pl.interpreter.parser.ast.As;
 import pl.interpreter.parser.ast.Block;
-import pl.interpreter.parser.ast.BoolConst;
 import pl.interpreter.parser.ast.CompoundStatement;
 import pl.interpreter.parser.ast.Expression;
 import pl.interpreter.parser.ast.Factor;
-import pl.interpreter.parser.ast.FloatConst;
 import pl.interpreter.parser.ast.FunctionArguments;
 import pl.interpreter.parser.ast.FunctionDefinition;
 import pl.interpreter.parser.ast.FunctionParameters;
 import pl.interpreter.parser.ast.FunctionSignature;
 import pl.interpreter.parser.ast.IdentifierStatement;
+import pl.interpreter.parser.ast.IdentifierValueApplier;
+import pl.interpreter.parser.ast.If;
 import pl.interpreter.parser.ast.Initialization;
-import pl.interpreter.parser.ast.InitializationSignature;
-import pl.interpreter.parser.ast.IntConst;
+import pl.interpreter.parser.ast.InplaceValue;
+import pl.interpreter.parser.ast.Instruction;
+import pl.interpreter.parser.ast.Match;
+import pl.interpreter.parser.ast.MatchBranch;
 import pl.interpreter.parser.ast.MultiplicativeOperator;
 import pl.interpreter.parser.ast.Node;
 import pl.interpreter.parser.ast.Operator;
@@ -30,19 +32,17 @@ import pl.interpreter.parser.ast.ParameterSignature;
 import pl.interpreter.parser.ast.PrimitiveInitialization;
 import pl.interpreter.parser.ast.Program;
 import pl.interpreter.parser.ast.Return;
-import pl.interpreter.parser.ast.StringConst;
+import pl.interpreter.parser.ast.SingleStatement;
 import pl.interpreter.parser.ast.StructureDefinition;
 import pl.interpreter.parser.ast.Term;
-import pl.interpreter.parser.ast.UserType;
 import pl.interpreter.parser.ast.UserTypeInitialization;
 import pl.interpreter.parser.ast.Value;
 import pl.interpreter.parser.ast.ValueAssignment;
 import pl.interpreter.parser.ast.VarInitialization;
 import pl.interpreter.parser.ast.VariableAssignment;
 import pl.interpreter.parser.ast.VariableType;
-import pl.interpreter.parser.ast.VariableTypeEnum;
 import pl.interpreter.parser.ast.VariantDefinition;
-import pl.interpreter.parser.ast.VoidType;
+import pl.interpreter.parser.ast.While;
 
 // TODO: fix initialization
 
@@ -96,7 +96,7 @@ public class Parser {
         return Optional.empty();
     }
     // TODO
-    // variantDefinition ::= "variant " identifier "{" identifierList "}";
+    // variantDefinition ::= "variant " identifier "{" identifier { "," identifier }; "}";
     private Optional<VariantDefinition> parseVariantDefinition() {
         return Optional.empty();
     }
@@ -139,23 +139,22 @@ public class Parser {
     }
 
     // singleOrCompoundStatement ::= singleStatement, ";" | compoundStatement
-    private Optional<Node> parseSingleOrCompoundStatement() {
+    private Optional<Instruction> parseSingleOrCompoundStatement() {
         var singleStatement = parseSingleStatement();
         if (singleStatement.isPresent()) {
             mustBe(TokenType.SEMICOLON);
             consumeToken();
             return Optional.of(singleStatement.get());
         }
-        var compoundStatement = parseCompoundStatement();
-        return compoundStatement.map(CompoundStatement::new);
+        return parseCompoundStatement().map(s -> s);
     }
 
     // TODO: refactor single statement
     // singleStatement ::= identifierStatement | varInitialization | primitiveInitalization | return;
-    private Optional<Node> parseSingleStatement() {
+    private Optional<SingleStatement> parseSingleStatement() {
         var initialization = parseInitialization();
         if (initialization.isPresent()) {
-            return initialization;
+            return Optional.of(initialization.get());
         }
         var returnStatement = parseReturn();
         if (returnStatement.isPresent()) {
@@ -189,7 +188,7 @@ public class Parser {
     }
 
     // TODO
-    // varInitialization ::= "var", primitiveInitialization | userTypeInitialization;
+    // varInitialization ::= "var", initialization;
     private Optional<VarInitialization> parseVarInitialization() {
         return Optional.empty();
     }
@@ -201,6 +200,8 @@ public class Parser {
         return Optional.empty();
     }
 
+    // TODO
+    // userTypeInitialization ::= identifier variableAssignment;
     private Optional<UserTypeInitialization> parseUserTypeInitialization() {
         return Optional.empty();
     }
@@ -232,44 +233,24 @@ public class Parser {
         }
         return Optional.empty();
     }
-
-    // functionArguments ::= "(", [ value { "," value } ], ")";
-    private Optional<FunctionArguments> parseFunctionArguments() {
-        if (token.type() != TokenType.LEFT_PARENTHESES) {
-            return Optional.empty();
-        }
-        consumeToken();
-        var values = new ArrayList<Value>();
-        var node = parseValue();
-        if (node.isPresent()) {
-            values.add(node.get());
-            while (token.type() == TokenType.COMMA) {
-                consumeToken();
-                node = parseValue();
-                if (node.isEmpty()) {
-                    throwParserException("Expected value");
-                }
-                values.add(node.get());
-            }
-        }
-        return Optional.of(new FunctionArguments(values));
+    // TODO
+    // while ::= "while", "(" condition ")", instruction;
+    private Optional<While> parseWhile() {
+        return Optional.empty();
+    }
+    // TODO
+    // instruction              ::= block
+    //                           | singleStatement
+    //                           | compoundStatement;
+    private Optional<Instruction> parseInstruction() {
+        return Optional.empty();
     }
 
-    // TODO: finish parseValue (as is missing)
-    // value ::= expression | functionCall
-    private Optional<Value> parseValue() {
-        var expression = parseExpression();
-        if (expression.isPresent()) {
-            return Optional.of(new Value(expression.get()));
-        }
-//        var functionCall = parseFunctionCall();
-//        if (functionCall.isPresent()) {
-//            return Optional.of(new Value(functionCall.get()));
-//        }
-//        var as = parseAs();
-//        if (as.isPresent()) {
-//            return Optional.of(new Value(as.get()));
-//        }
+    private Optional<Match> parseMatch() {
+        return Optional.empty();
+    }
+
+    private Optional<MatchBranch> parseMatchBranch() {
         return Optional.empty();
     }
 
@@ -316,6 +297,8 @@ public class Parser {
         return Optional.of(new Term(factors, multiplicativeOperators));
     }
 
+    // additiveOperator         ::= "+"
+    //                            | "-";
     private Optional<AdditiveOperator> parseAdditiveOperator() {
         if (token.type() == TokenType.ADD_OPERATOR) {
             consumeToken();
@@ -328,28 +311,9 @@ public class Parser {
         return Optional.empty();
     }
 
-    private Optional<Factor> parseFactor() {
-        if (token.type() == TokenType.IDENTIFIER) {
-            consumeToken();
-            return Optional.of(new Factor(token.value()));
-        }
-        var constant = parseConstant();
-        if (constant.isPresent()) {
-            return Optional.of(new Factor(constant.get()));
-        }
-        if (token.type() == TokenType.LEFT_PARENTHESES) {
-            consumeToken();
-            var expression = parseExpression();
-            if (expression.isEmpty()) {
-                throwParserException("Expression expected");
-            }
-            mustBe(TokenType.RIGHT_PARENTHESES);
-            consumeToken();
-            return Optional.of(new Factor(expression.get()));
-        }
-        return Optional.empty();
-    }
-
+    // multiplicativeOperator   ::= "*"
+    //                           | "/"
+    //                           | "%";
     private Optional<MultiplicativeOperator> parseMultiplicativeOperator() {
         if (token.type() == TokenType.MULTIPLY_OPERATOR) {
             consumeToken();
@@ -366,41 +330,122 @@ public class Parser {
         return Optional.empty();
     }
 
-    // constant ::= string_const | int_const | float_const | bool_const
-    private Optional<Node> parseConstant() {
-        if (token.type() == TokenType.STRING_CONST) {
-            var value = token.value();
-            consumeToken();
-            return Optional.of(new StringConst((String) value));
-        }
-        if (token.type() == TokenType.INT_CONST) {
-            var value = token.value();
-            consumeToken();
-            return Optional.of(new IntConst((int) value));
-        }
-        if (token.type() == TokenType.FLOAT_CONST) {
-            var value = token.value();
-            consumeToken();
-            return Optional.of(new FloatConst((float) value));
-        }
-        if (TokenTypeGroupsProvider.BOOL_TYPES.contains(token.type())) {
-            var value = token.value();
-            consumeToken();
-            return Optional.of(new BoolConst(value.equals("true")));
-        }
+    // TODO
+    // factor                   ::= number
+    //                           | identifier, [identifierValueApplier]
+    //                           | "(", expression, ")";
+    private Optional<Factor> parseFactor() {
         return Optional.empty();
     }
 
-    // parameterSignature ::= variableTypeIdentifier
-    private Optional<ParameterSignature> parseParameterSignature() {
-        var type = parseUserOrVariableType();
-        if (type.isEmpty()) {
+    // TODO
+    // identifierValueApplier   ::= functionArguments
+    //                            | as;
+    private Optional<IdentifierValueApplier> parseIdentifierValueApplier() {
+        return Optional.empty();
+    }
+
+    // TODO
+    // if ::= "if" "(" condition ")" instruction [ "else" instruction ];
+    private Optional<If> parseIf() {
+        return Optional.empty();
+    }
+
+    // condition                ::= subcondition, {" and ", subcondition};
+    // subcondition             ::= negatableBooleanExpression, {" or ", negatableBooleanExpression};
+    // negatableBooleanExpression ::= ["!"], booleanExpression;
+    // booleanExpression        ::= value [arithmeticCondition]
+    //                           | "(" condition ")";
+    // arithmeticCondition      ::= equal
+    //                           | notEqual
+    //                           | lessThan
+    //                           | greaterThan
+    //                           | lessThanOrEqual
+    //                           | greaterThanOrEqual;
+    // equal                    ::= "==", value;
+    // notEqual                 ::= "!=", value;
+    // lessThan                 ::= "<", value;
+    // greaterThan              ::= ">", value;
+    // lessThanOrEqual          ::= "<=", value;
+    // greaterThanOrEqual       ::= ">=", value;
+
+    // functionArguments ::= "(", [ value { "," value } ], ")";
+    private Optional<FunctionArguments> parseFunctionArguments() {
+        if (token.type() != TokenType.LEFT_PARENTHESES) {
             return Optional.empty();
         }
-        mustBe(TokenType.IDENTIFIER);
-        var parameterSignature = new ParameterSignature(type.get(), (String) token.value());
         consumeToken();
-        return Optional.of(parameterSignature);
+        var values = new ArrayList<Value>();
+        var node = parseValue();
+        if (node.isPresent()) {
+            values.add(node.get());
+            while (token.type() == TokenType.COMMA) {
+                consumeToken();
+                node = parseValue();
+                if (node.isEmpty()) {
+                    throwParserException("Expected value");
+                }
+                values.add(node.get());
+            }
+        }
+        return Optional.of(new FunctionArguments(values));
+    }
+
+    // TODO
+    // value ::= expression
+    //         | inplaceValue;
+    private Optional<Value> parseValue() {
+        return Optional.empty();
+    }
+
+    // TODO
+    // inplaceValue             ::= number
+    //                           | stringLiteral
+    //                           | booleanLiteral;
+    private Optional<InplaceValue> parseInplaceValue() {
+//        if (token.type() == TokenType.STRING_CONST) {
+//            var value = token.value();
+//            consumeToken();
+//            return Optional.of(new StringConst((String) value));
+//        }
+//        if (token.type() == TokenType.INT_CONST) {
+//            var value = token.value();
+//            consumeToken();
+//            return Optional.of(new IntConst((int) value));
+//        }
+//        if (token.type() == TokenType.FLOAT_CONST) {
+//            var value = token.value();
+//            consumeToken();
+//            return Optional.of(new FloatConst((float) value));
+//        }
+//        if (TokenTypeGroupsProvider.BOOL_TYPES.contains(token.type())) {
+//            var value = token.value();
+//            consumeToken();
+//            return Optional.of(new BoolConst(value.equals("true")));
+//        }
+        return Optional.empty();
+    }
+
+    // TODO
+    // as ::= " as ", variableType;
+    private Optional<As> parseAs() {
+        return Optional.empty();
+    }
+
+    // TODO
+    // functionSignature        ::= "void ", identifier,
+    //                            | parameterSignature
+    private Optional<FunctionSignature> parseFunctionSignature() {
+        return Optional.empty();
+    }
+
+    // parameterSignature ::= variableType, identifier
+    private Optional<ParameterSignature> parseParameterSignature() {
+        return Optional.empty();
+    }
+
+    private Optional<VariableType> parseVariableType() {
+        return Optional.empty();
     }
 
     private void mustBe(TokenType tokenType) {
@@ -413,39 +458,6 @@ public class Parser {
         if (tokenTypes.stream().noneMatch(t -> token.type() == t)) {
             throwParserException("Invalid token");
         }
-    }
-
-    // functionSignature ::= "void ", identifier | variableTypeIdentifier
-    private Optional<FunctionSignature> parseFunctionSignature() {
-        if (token.type() == TokenType.KW_VOID) {
-            consumeToken();
-            mustBe(TokenType.IDENTIFIER);
-            var functionSignature = new FunctionSignature(new VoidType(), (String) token.value());
-            consumeToken();
-            return Optional.of(functionSignature);
-        }
-        var returnType = parseUserOrVariableType();
-        if (returnType.isEmpty()) {
-            return Optional.empty();
-        }
-        mustBe(TokenType.IDENTIFIER);
-        var functionSignature = new FunctionSignature(returnType.get(), (String) token.value());
-        consumeToken();
-        return Optional.of(functionSignature);
-    }
-
-    // variableTypeIdentifier ::= variableType, " ", identifier
-    private Optional<Node> parseUserOrVariableType() {
-        if (TokenTypeGroupsProvider.VAR_TYPES.contains(token.type())) {
-            var variableType = new VariableType(VariableTypeEnum.tokenTypeToVariableType(token.type()));
-            consumeToken();
-            return Optional.of(variableType);
-        } else if (token.type() == TokenType.IDENTIFIER) {
-            var userType = new UserType((String) token.value());
-            consumeToken();
-            return Optional.of(userType);
-        }
-        return Optional.empty();
     }
 
     private void consumeToken() {
