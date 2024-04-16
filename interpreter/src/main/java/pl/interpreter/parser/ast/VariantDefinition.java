@@ -1,3 +1,5 @@
 package pl.interpreter.parser.ast;
 
-public record VariantDefinition() implements Node{}
+import java.util.List;
+
+public record VariantDefinition(String identifier, List<String> variantIdentifiers) implements Node{}

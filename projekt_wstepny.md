@@ -206,25 +206,34 @@ program                  ::= { functionDefinition
                              | variantDefinition };
 functionDefinition       ::= functionSignature "(" functionParameters ")" block;
 structureDefinition      ::= "struct " identifier "{" { parameterSignature ";" } "}";
-variantDefinition        ::= "variant " identifier "{" userTypeIdentifierList "}";
+variantDefinition        ::= "variant " identifier "{" identifierList "}";
 functionParameters       ::=  [parameterSignature { "," parameterSignature } ];
-instruction              ::= block
-                           | singleStatement
+block                    ::= "{" { singleOrCompoundStatement } "}";
+singleOrCompoundStatement::= singleStatement, ";"
                            | compoundStatement;
-block                    ::= "{" { singleStatement, ";" | compoundStatement } "}";
 singleStatement          ::= identifierStatement
                            | varInitialization
+                           | primitiveInitialization
                            | return;
 compoundStatement        ::= if
                            | while
                            | match;
-identifierStatement      ::= identifier, assignment | functionArguments | userTypeInitialization;
-varInitialization        :: = "var", primitiveInitialization | userTypeInitialization;
-primitiveInitialization  ::= variableType identifier assignment;
-userTypeInitialization   ::= identifier identifier assignment;
-assignment               ::= "=", value;
+identifierStatement      ::= identifier, afterIdentifierStatement;
+afterIdentifierStatement ::= valueAssignment
+                           | functionArguments
+                           | variableAssignment;
+varInitialization        :: = "var", initialization;
+initialization           ::= primitiveInitialization
+                           | userTypeInitialization;
+userTypeInitialization   ::= identifier variableAssignment;
+primitiveInitialization  ::= variableType variableAssignment;
+variableAssignment       ::= identifier valueAssignment;
+valueAssignment          ::= "=", value;
 return                   ::= "return ", [value];
 while                    ::= "while", "(" condition ")", instruction;
+instruction              ::= block
+                           | singleStatement
+                           | compoundStatement;
 match                    ::= "match", "(", value, ")", "{", matchBranch, {matchBranch}, "}";
 matchBranch              ::= identifier, " ", identifier, "->" instruction;
 expression               ::= term, {additiveOperator, term};
@@ -234,37 +243,41 @@ additiveOperator         ::= "+"
 multiplicativeOperator   ::= "*"
                            | "/"
                            | "%";
-factor                   ::= identifier
-                           | constant
-                           | "(", expression, ")"
+factor                   ::= number
+                           | identifier, [identifierValueApplier]
+                           | "(", expression, ")";
+identifierValueApplier   ::= functionArguments
+                           | as;
 if                       ::= "if" "(" condition ")" instruction [ "else" instruction ];
 condition                ::= subcondition, {" and ", subcondition};
 subcondition             ::= negatableBooleanExpression, {" or ", negatableBooleanExpression};
 negatableBooleanExpression ::= ["!"], booleanExpression;
-booleanExpression        ::= booleanLiteral
-                           | equal
+booleanExpression        ::= value [arithmeticCondition]
+                           | "(" condition ")";
+arithmeticCondition      ::= equal
                            | notEqual
                            | lessThan
                            | greaterThan
                            | lessThanOrEqual
-                           | greaterThanOrEqual
-                           | "(" condition ")";
-equal                    ::= value, "==", value;
-notEqual                 ::= value, "!=", value;
-lessThan                 ::= value, "<", value;
-greaterThan              ::= value, ">", value;
-lessThanOrEqual          ::= value, "<=", value;
-greaterThanOrEqual       ::= value, ">=", value;
+                           | greaterThanOrEqual;
+equal                    ::= "==", value;
+notEqual                 ::= "!=", value;
+lessThan                 ::= "<", value;
+greaterThan              ::= ">", value;
+lessThanOrEqual          ::= "<=", value;
+greaterThanOrEqual       ::= ">=", value;
 functionArguments        ::= "(", [ value {"," value } ], ")";
 value                    ::= expression
-                           | functionCall
-                           | as;
-as                       ::= value, " as ", legalCastType;
+                           | inplaceValue;
+inplaceValue             ::= number
+                           | stringLiteral
+                           | booleanLiteral;
+as                       ::= " as ", legalCastType;
 functionSignature        ::= "void ", identifier,
                            | variableTypeIdentifier
 parameterSignature       ::= variableTypeIdentifier;
 variableTypeIdentifier   ::= variableType, " ", identifier;
-userTypeIdentifierList   ::= identifier { "," identifier };
+identifierList           ::= identifier { "," identifier };
 variableType             ::= "int"
                            | "float"
                            | "string"

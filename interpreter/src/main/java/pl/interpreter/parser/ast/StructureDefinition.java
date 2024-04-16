@@ -1,3 +1,5 @@
 package pl.interpreter.parser.ast;
 
-public record StructureDefinition() implements Node {}
+import java.util.List;
+
+public record StructureDefinition(String identifier, List<ParameterSignature> parameterSignatures) implements Node {}

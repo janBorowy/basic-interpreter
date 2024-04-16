@@ -13,7 +13,7 @@ import pl.interpreter.parser.ast.FunctionDefinition
 import pl.interpreter.parser.ast.FunctionParameters
 import pl.interpreter.parser.ast.FunctionSignature
 import pl.interpreter.parser.ast.IdentifierStatement
-import pl.interpreter.parser.ast.Initialization
+
 import pl.interpreter.parser.ast.InitializationSignature
 import pl.interpreter.parser.ast.IntConst
 import pl.interpreter.parser.ast.Operator

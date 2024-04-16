@@ -1,3 +1,3 @@
 package pl.interpreter.parser.ast;
 
-public record Initialization(InitializationSignature initializationSignature, Assignment assignment) implements Node {}
+public interface Initialization extends Node {}
