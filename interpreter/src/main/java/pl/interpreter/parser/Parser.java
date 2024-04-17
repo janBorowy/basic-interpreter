@@ -1,7 +1,6 @@
 package pl.interpreter.parser;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import pl.interpreter.Token;
 import pl.interpreter.TokenType;
@@ -11,9 +10,11 @@ import pl.interpreter.parser.ast.AfterIdentifierStatement;
 import pl.interpreter.parser.ast.As;
 import pl.interpreter.parser.ast.Block;
 import pl.interpreter.parser.ast.CompoundStatement;
+import pl.interpreter.parser.ast.Condition;
 import pl.interpreter.parser.ast.Definition;
 import pl.interpreter.parser.ast.Expression;
 import pl.interpreter.parser.ast.Factor;
+import pl.interpreter.parser.ast.FloatConst;
 import pl.interpreter.parser.ast.FunctionArguments;
 import pl.interpreter.parser.ast.FunctionDefinition;
 import pl.interpreter.parser.ast.FunctionReturnType;
@@ -21,16 +22,20 @@ import pl.interpreter.parser.ast.FunctionReturnTypeEnum;
 import pl.interpreter.parser.ast.FunctionSignature;
 import pl.interpreter.parser.ast.IdentifierStatement;
 import pl.interpreter.parser.ast.IdentifierValueApplier;
+import pl.interpreter.parser.ast.IdentifierWithValue;
 import pl.interpreter.parser.ast.If;
 import pl.interpreter.parser.ast.Initialization;
 import pl.interpreter.parser.ast.InplaceValue;
 import pl.interpreter.parser.ast.Instruction;
+import pl.interpreter.parser.ast.IntConst;
 import pl.interpreter.parser.ast.Match;
 import pl.interpreter.parser.ast.MatchBranch;
 import pl.interpreter.parser.ast.MultiplicativeOperator;
 import pl.interpreter.parser.ast.Node;
+import pl.interpreter.parser.ast.Number;
 import pl.interpreter.parser.ast.Operator;
 import pl.interpreter.parser.ast.ParameterSignature;
+import pl.interpreter.parser.ast.ParenthesesValue;
 import pl.interpreter.parser.ast.PrimitiveInitialization;
 import pl.interpreter.parser.ast.Program;
 import pl.interpreter.parser.ast.Return;
@@ -45,8 +50,6 @@ import pl.interpreter.parser.ast.VariableAssignment;
 import pl.interpreter.parser.ast.VariableType;
 import pl.interpreter.parser.ast.VariantDefinition;
 import pl.interpreter.parser.ast.While;
-
-// TODO: fix initialization
 
 public class Parser {
     private Token token;
@@ -71,7 +74,7 @@ public class Parser {
         return new Program(definitions);
     }
 
-    // definition               ::= functionDefinition
+    // definition              ::= functionDefinition
     //                           | structureDefinition
     //                           | variantDefinition;
     private Optional<Definition> parseDefinition() {
@@ -198,25 +201,15 @@ public class Parser {
             consumeToken();
             return Optional.of(singleStatement.get());
         }
-        return parseCompoundStatement().map(s -> s);
+        return parseCompoundStatement().map(Instruction.class::cast);
     }
 
-    // TODO: refactor single statement
     // singleStatement ::= identifierStatement | varInitialization | primitiveInitalization | return;
     private Optional<SingleStatement> parseSingleStatement() {
-        var initialization = parseInitialization();
-        if (initialization.isPresent()) {
-            return Optional.of(initialization.get());
-        }
-        var returnStatement = parseReturn();
-        if (returnStatement.isPresent()) {
-            return Optional.of(returnStatement.get());
-        }
-        var identifierStatement = parseIdentifierStatement();
-        if (identifierStatement.isPresent()) {
-            return Optional.of(identifierStatement.get());
-        }
-        return Optional.empty();
+        return parseIdentifierStatement().map(SingleStatement.class::cast)
+                .or(() -> parseVarInitialization().map(SingleStatement.class::cast))
+                .or(() -> parsePrimitiveInitialization().map(SingleStatement.class::cast))
+                .or(() -> parseReturn().map(SingleStatement.class::cast));
     }
 
     // TODO
@@ -225,10 +218,20 @@ public class Parser {
         return Optional.empty();
     }
 
-    // TODO
-    // identifierStatement ::= identifier, valueAssignment | functionAssignment | variableAssignment;
+    // identifierStatement ::= identifier, valueAssignment | functionArguments | variableAssignment;
     private Optional<IdentifierStatement> parseIdentifierStatement() {
-        return Optional.empty();
+        if (token.type() != TokenType.IDENTIFIER) {
+            return Optional.empty();
+        }
+        var identifier = (String) token.value();
+        consumeToken();
+        var statement = parseValueAssignment().map(Node.class::cast)
+            .or(() -> parseFunctionArguments().map(Node.class::cast))
+            .or(() -> parseVariableAssignment().map(Node.class::cast));
+        if (statement.isEmpty()) {
+            throwParserException("Expected statement");
+        }
+        return Optional.of(new IdentifierStatement(identifier, statement.get()));
     }
 
     // TODO
@@ -239,52 +242,91 @@ public class Parser {
         return Optional.empty();
     }
 
-    // TODO
     // varInitialization ::= "var", initialization;
     private Optional<VarInitialization> parseVarInitialization() {
-        return Optional.empty();
+        if (token.type() != TokenType.KW_VAR) {
+           return Optional.empty();
+        }
+        consumeToken();
+        var initialization = parseInitialization();
+        if (initialization.isEmpty()) {
+            throwParserException("Expected initialization");
+        }
+        return Optional.of(new VarInitialization(initialization.get()));
     }
 
-    // TODO
     // initialization ::= primitiveInitialization
     //                  | userTypeInitialization;
     private Optional<Initialization> parseInitialization () {
-        return Optional.empty();
+        return parsePrimitiveInitialization().map(Initialization.class::cast)
+                .or(() -> parseUserTypeInitialization().map(Initialization.class::cast));
     }
 
-    // TODO
     // userTypeInitialization ::= identifier variableAssignment;
     private Optional<UserTypeInitialization> parseUserTypeInitialization() {
-        return Optional.empty();
+        if (token.type() != TokenType.IDENTIFIER) {
+            return Optional.empty();
+        }
+        var typeIdentifier = (String) token.value();
+        consumeToken();
+        var variableAssignment = parseVariableAssignment();
+        if (variableAssignment.isEmpty()) {
+            throwParserException("Expected variable assignment");
+        }
+        var assignment = variableAssignment.get();
+        return Optional.of(new UserTypeInitialization(typeIdentifier, assignment.identifier(), assignment.valueAssigned()));
     }
 
-    // TODO
     // primitiveInitialization ::= variableType variableAssignment;
     private Optional<PrimitiveInitialization> parsePrimitiveInitialization() {
-        return Optional.empty();
+        var variableType = parseVariableType();
+        if (variableType.isEmpty()) {
+            return Optional.empty();
+        }
+        var variableAssignment = parseVariableAssignment();
+        if (variableAssignment.isEmpty()) {
+            throwParserException("Expected variable assignment");
+        }
+        var assignment = variableAssignment.get();
+        return Optional.of(new PrimitiveInitialization(variableType.get(), assignment.identifier(), assignment.valueAssigned()));
     }
 
-    // TODO
     // variableAssignment ::= identifier valueAssignment;
     private Optional<VariableAssignment> parseVariableAssignment() {
-        return Optional.empty();
+        if (token.type() != TokenType.IDENTIFIER) {
+            return Optional.empty();
+        }
+        var identifier = (String) token.value();
+        consumeToken();
+        var valueAssignment = parseValueAssignment();
+        if (valueAssignment.isEmpty()) {
+            throwParserException("Expected value assignment");
+        }
+        return Optional.of(new VariableAssignment(identifier, valueAssignment.get().value()));
     }
 
-    // TODO
     // valueAssignment ::= "=", value;
     private Optional<ValueAssignment> parseValueAssignment() {
-        return Optional.empty();
+        if (token.type() != TokenType.ASSIGNMENT) {
+            return Optional.empty();
+        }
+        consumeToken();
+        var value = parseValue();
+        if (value.isEmpty()) {
+            throwParserException("Expected value");
+        }
+        return Optional.of(new ValueAssignment(value.get()));
     }
 
     // return ::= "return", [value];
     private Optional<Return> parseReturn() {
-        if (token.type() == TokenType.KW_RETURN) {
-            consumeToken();
-            var value = parseValue();
-            return Optional.of(new Return(value));
+        if (token.type() != TokenType.KW_RETURN) {
+            return Optional.empty();
         }
-        return Optional.empty();
+        consumeToken();
+        return Optional.of(new Return(parseValue()));
     }
+
     // TODO
     // while ::= "while", "(" condition ")", instruction;
     private Optional<While> parseWhile() {
@@ -345,6 +387,7 @@ public class Parser {
             }
             factors.add(node.get());
             multiplicativeOperators.add(operator.get());
+            operator = parseMultiplicativeOperator();
         }
         return Optional.of(new Term(factors, multiplicativeOperators));
     }
@@ -384,17 +427,29 @@ public class Parser {
 
     // TODO
     // factor                   ::= number
-    //                           | identifier, [identifierValueApplier]
-    //                           | "(", expression, ")";
+    //                           | identifierWithValue
+    //                           | "(", parenthasesValue, ")";
     private Optional<Factor> parseFactor() {
-        return Optional.empty();
+        return parseNumber().map(Factor.class::cast)
+                .or(() ->parseIdentifierWithValue().map(Factor.class::cast))
+                .or(() -> parseParenthesesValue().map(Factor.class::cast));
     }
 
-    // TODO
+    // identifierWithValue ::= identifier, [identifierValueApplier]
+    private Optional<IdentifierWithValue> parseIdentifierWithValue() {
+        if (token.type() != TokenType.IDENTIFIER) {
+            return Optional.empty();
+        }
+        var identifier = (String) token.value();
+        consumeToken();
+        return Optional.of(new IdentifierWithValue(identifier, parseIdentifierValueApplier()));
+    }
+
     // identifierValueApplier   ::= functionArguments
     //                            | as;
     private Optional<IdentifierValueApplier> parseIdentifierValueApplier() {
-        return Optional.empty();
+        return parseFunctionArguments().map(IdentifierValueApplier.class::cast)
+                .or(() -> parseAs().map((IdentifierValueApplier.class::cast)));
     }
 
     // TODO
@@ -404,10 +459,23 @@ public class Parser {
     }
 
     // condition                ::= subcondition, {" and ", subcondition};
+    private Optional<Condition> parseCondition() {
+        return Optional.empty();
+    }
+
     // subcondition             ::= negatableBooleanExpression, {" or ", negatableBooleanExpression};
     // negatableBooleanExpression ::= ["!"], booleanExpression;
     // booleanExpression        ::= value [arithmeticCondition]
     //                           | "(" condition ")";
+
+    // parenthasesValue         ::= expression
+    //                           | condition;
+    private Optional<ParenthesesValue> parseParenthesesValue() {
+        return parseExpression().map(ParenthesesValue.class::cast)
+                .or(() -> parseCondition().map(ParenthesesValue.class::cast));
+    }
+
+
     // arithmeticCondition      ::= equal
     //                           | notEqual
     //                           | lessThan
@@ -440,14 +508,16 @@ public class Parser {
                 values.add(node.get());
             }
         }
+        mustBe(TokenType.RIGHT_PARENTHESES);
+        consumeToken();
         return Optional.of(new FunctionArguments(values));
     }
 
-    // TODO
     // value ::= expression
     //         | inplaceValue;
     private Optional<Value> parseValue() {
-        return Optional.empty();
+        return parseExpression().map(Value.class::cast)
+                .or(() -> parseInplaceValue().map(Value.class::cast));
     }
 
     // TODO
@@ -478,10 +548,17 @@ public class Parser {
         return Optional.empty();
     }
 
-    // TODO
-    // as ::= " as ", variableType;
+    // as ::= "as", variableType;
     private Optional<As> parseAs() {
-        return Optional.empty();
+        if (token.type() != TokenType.KW_AS) {
+            return Optional.empty();
+        }
+        consumeToken();
+        var variableType = parseVariableType();
+        if (variableType.isEmpty()) {
+            throwParserException("Expected variable type");
+        }
+        return Optional.of(new As(variableType.get()));
     }
 
     // TODO
@@ -521,7 +598,7 @@ public class Parser {
     // parameterSignature ::= variableType, identifier
     //                      | identifier, identifier;
     private Optional<ParameterSignature> parseParameterSignature() {
-        var variableType = getVariableType();
+        var variableType = parseVariableType();
         if (variableType.isPresent()) {
             mustBe(TokenType.IDENTIFIER);
             var identifier = (String) token.value();
@@ -545,11 +622,26 @@ public class Parser {
     //                           | "float"
     //                           | "string"
     //                           | "bool";
-    private Optional<VariableType> getVariableType() {
+    private Optional<VariableType> parseVariableType() {
         if (TokenTypeGroupsProvider.VAR_TYPES.contains(token.type())) {
             var type = token.type();
             consumeToken();
             return Optional.of(VariableType.getFromTokenType(type));
+        }
+        return Optional.empty();
+    }
+
+    // number ::= intConst | floatConst;
+    private Optional<Number> parseNumber() {
+        if (token.type() == TokenType.INT_CONST) {
+            var value = (int) token.value();
+            consumeToken();
+            return Optional.of(new IntConst(value)).map(Number.class::cast);
+        }
+        if (token.type() == TokenType.FLOAT_CONST) {
+            var value = (float) token.value();
+            consumeToken();
+            return Optional.of(new FloatConst(value)).map(Number.class::cast);
         }
         return Optional.empty();
     }

@@ -219,10 +219,7 @@ singleStatement          ::= identifierStatement
 compoundStatement        ::= if
                            | while
                            | match;
-identifierStatement      ::= identifier, afterIdentifierStatement;
-afterIdentifierStatement ::= valueAssignment
-                           | functionArguments
-                           | variableAssignment;
+identifierStatement      ::= identifier, valueAssignment | functionArguments | variableAssignment;
 varInitialization        :: = "var", initialization;
 initialization           ::= primitiveInitialization
                            | userTypeInitialization;
@@ -245,16 +242,18 @@ multiplicativeOperator   ::= "*"
                            | "/"
                            | "%";
 factor                   ::= number
-                           | identifier, [identifierValueApplier]
-                           | "(", expression, ")";
+                           | identifierWithValue
+                           | "(", parenthesesValue, ")";
+identifierWithValue      ::= identifier, [identifierValueApplier]
 identifierValueApplier   ::= functionArguments
                            | as;
 if                       ::= "if" "(" condition ")" instruction [ "else" instruction ];
 condition                ::= subcondition, {" and ", subcondition};
 subcondition             ::= negatableBooleanExpression, {" or ", negatableBooleanExpression};
 negatableBooleanExpression ::= ["!"], booleanExpression;
-booleanExpression        ::= value [arithmeticCondition]
-                           | "(" condition ")";
+booleanExpression        ::= value [arithmeticCondition];
+parenthesesValue         ::= expression
+                           | condition;
 arithmeticCondition      ::= equal
                            | notEqual
                            | lessThan
@@ -270,8 +269,7 @@ greaterThanOrEqual       ::= ">=", value;
 functionArguments        ::= "(", [ value {"," value } ], ")";
 value                    ::= expression
                            | inplaceValue;
-inplaceValue             ::= number
-                           | stringLiteral
+inplaceValue             ::= stringLiteral
                            | booleanLiteral;
 as                       ::= "as", variableType;
 functionSignature        ::= functionReturnType identifier;

@@ -1,3 +1,3 @@
 package pl.interpreter.parser.ast;
 
-public record FloatConst(float value) implements Node {}
+public record FloatConst(float value) implements Number {}

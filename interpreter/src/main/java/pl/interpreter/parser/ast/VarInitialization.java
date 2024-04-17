@@ -1,3 +1,3 @@
 package pl.interpreter.parser.ast;
 
-public record VarInitialization() implements SingleStatement {}
+public record VarInitialization(Initialization initialization) implements SingleStatement {}

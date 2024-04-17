@@ -1,3 +1,3 @@
 package pl.interpreter.parser.ast;
 
-public record PrimitiveInitialization() implements SingleStatement{}
+public record PrimitiveInitialization(VariableType type, String identifier, Value valueAssigned) implements Initialization {}

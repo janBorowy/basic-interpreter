@@ -1,3 +1,3 @@
 package pl.interpreter.parser.ast;
 
-public record VariableAssignment() implements Node {}
+public record VariableAssignment(String identifier, Value valueAssigned) implements Node {}

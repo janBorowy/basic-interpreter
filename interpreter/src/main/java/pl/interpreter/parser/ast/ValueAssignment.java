@@ -1,3 +1,3 @@
 package pl.interpreter.parser.ast;
 
-public record ValueAssignment() implements Node {}
+public record ValueAssignment(Value value) implements Node {}

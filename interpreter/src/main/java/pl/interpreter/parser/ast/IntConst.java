@@ -1,3 +1,3 @@
 package pl.interpreter.parser.ast;
 
-public record IntConst(int value) implements Node {}
+public record IntConst(int value) implements Number {}
