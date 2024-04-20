@@ -1,3 +1,3 @@
 package pl.interpreter.parser.ast;
 
-public record MatchBranch() implements Node {}
+public record MatchBranch(String type, String identifier, Instruction instruction) implements Node {}

@@ -1,3 +1,5 @@
 package pl.interpreter.parser.ast;
 
-public record If() implements Node {}
+import java.util.Optional;
+
+public record If(Parentheses parentheses, Instruction instruction, Optional<Instruction> elseInstruction) implements CompoundStatement {}

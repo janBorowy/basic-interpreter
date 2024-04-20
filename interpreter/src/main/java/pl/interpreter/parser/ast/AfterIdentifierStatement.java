@@ -1,3 +1,9 @@
 package pl.interpreter.parser.ast;
 
-public record AfterIdentifierStatement() implements SingleStatement {}
+import pl.interpreter.parser.NodeVisitor;
+
+public record AfterIdentifierStatement() implements SingleStatement {
+    public void accept(NodeVisitor visitor) {
+        visitor.visit(this);
+    }
+}

@@ -210,16 +210,16 @@ structureDefinition      ::= "struct " identifier "{" { parameterSignature ";" }
 variantDefinition        ::= "variant " identifier "{" identifier { "," identifier } "}";
 functionParameters       ::=  [parameterSignature { "," parameterSignature } ];
 block                    ::= "{" { singleOrCompoundStatement } "}";
-singleOrCompoundStatement::= singleStatement, ";"
+singleOrCompoundStatement::= singleStatement
                            | compoundStatement;
 singleStatement          ::= identifierStatement
                            | varInitialization
                            | primitiveInitialization
-                           | return;
+                           | return, ";"
 compoundStatement        ::= if
                            | while
                            | match;
-identifierStatement      ::= identifier, valueAssignment | functionArguments | variableAssignment;
+identifierStatement      ::= identifier, valueAssignment | functionCall | variableAssignment;
 varInitialization        :: = "var", initialization;
 initialization           ::= primitiveInitialization
                            | userTypeInitialization;
@@ -228,12 +228,13 @@ primitiveInitialization  ::= variableType variableAssignment;
 variableAssignment       ::= identifier valueAssignment;
 valueAssignment          ::= "=", value;
 return                   ::= "return ", [value];
-while                    ::= "while", "(" condition ")", instruction;
+while                    ::= "while", "(" parentheses ")", instruction;
 instruction              ::= block
                            | singleStatement
                            | compoundStatement;
-match                    ::= "match", "(", value, ")", "{", matchBranch, {matchBranch}, "}";
-matchBranch              ::= identifier, " ", identifier, "->" instruction;
+match                    ::= "match", "(", identifierWithValue ")", "{" {matchBranch} "}";
+matchBranch              ::= identifier, identifier, "->" instruction;
+matchableValue           ::= 
 expression               ::= term, {additiveOperator, term};
 term                     ::= factor, {multiplicativeOperator, factor};
 additiveOperator         ::= "+"
@@ -243,30 +244,30 @@ multiplicativeOperator   ::= "*"
                            | "%";
 factor                   ::= number
                            | identifierWithValue
-                           | "(", parenthesesValue, ")";
+                           | "(" parentheses ")";
 identifierWithValue      ::= identifier, [identifierValueApplier]
-identifierValueApplier   ::= functionArguments
+identifierValueApplier   ::= functionCall
                            | as;
-if                       ::= "if" "(" condition ")" instruction [ "else" instruction ];
-condition                ::= subcondition, {" and ", subcondition};
-subcondition             ::= negatableBooleanExpression, {" or ", negatableBooleanExpression};
-negatableBooleanExpression ::= ["!"], booleanExpression;
-booleanExpression        ::= value [arithmeticCondition];
-parenthesesValue         ::= expression
-                           | condition;
+if                       ::= "if" "(" parentheses ")" instruction [ "else" instruction ];
+parentheses              ::= subcondition, {"and", subcondition};
+subcondition             ::= booleanExpression, {"or", booleanExpression};
+booleanExpression        ::= ["!"], logicTerm;
+logicTerm                ::= booleanLiteral
+                           | relation;
+relation                 ::= expression, [arithemticCondition, expression];
 arithmeticCondition      ::= equal
                            | notEqual
                            | lessThan
                            | greaterThan
                            | lessThanOrEqual
                            | greaterThanOrEqual;
-equal                    ::= "==", value;
-notEqual                 ::= "!=", value;
-lessThan                 ::= "<", value;
-greaterThan              ::= ">", value;
-lessThanOrEqual          ::= "<=", value;
-greaterThanOrEqual       ::= ">=", value;
-functionArguments        ::= "(", [ value {"," value } ], ")";
+equal                    ::= "==";
+notEqual                 ::= "!=";
+lessThan                 ::= "<";
+greaterThan              ::= ">";
+lessThanOrEqual          ::= "<=";
+greaterThanOrEqual       ::= ">=";
+functionCall        ::= "(", [ value {"," value } ], ")";
 value                    ::= expression
                            | inplaceValue;
 inplaceValue             ::= stringLiteral

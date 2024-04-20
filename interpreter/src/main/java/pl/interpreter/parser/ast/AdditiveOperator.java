@@ -1,3 +1,9 @@
 package pl.interpreter.parser.ast;
 
-public record AdditiveOperator(Operator operator) implements Node {}
+import pl.interpreter.parser.NodeVisitor;
+
+public record AdditiveOperator(Operator operator) implements Node {
+    public void accept(NodeVisitor visitor) {
+        visitor.visit(this);
+    }
+}

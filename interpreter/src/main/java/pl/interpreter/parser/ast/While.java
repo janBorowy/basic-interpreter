@@ -1,3 +1,3 @@
 package pl.interpreter.parser.ast;
 
-public record While() implements CompoundStatement {}
+public record While(Parentheses parentheses, Instruction instruction) implements CompoundStatement {}

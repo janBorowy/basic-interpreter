@@ -1,3 +1,5 @@
 package pl.interpreter.parser.ast;
 
-public record Match() implements SingleStatement {}
+import java.util.List;
+
+public record Match(List<MatchBranch> branches) implements CompoundStatement {}

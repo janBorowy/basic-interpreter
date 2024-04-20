@@ -9,7 +9,7 @@ public enum VariableType {
     BOOL,
     USER_TYPE;
 
-    public static VariableType getFromTokenType(TokenType type) {
+    public static VariableType fromTokenType(TokenType type) {
         return switch (type) {
             case KW_STRING -> STRING;
             case KW_INT -> INT;

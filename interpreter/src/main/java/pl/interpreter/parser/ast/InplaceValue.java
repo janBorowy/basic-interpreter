@@ -1,3 +1,3 @@
 package pl.interpreter.parser.ast;
 
-public interface InplaceValue extends Factor {}
+public interface InplaceValue extends Value {}
