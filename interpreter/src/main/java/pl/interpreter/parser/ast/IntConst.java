@@ -1,3 +1,9 @@
 package pl.interpreter.parser.ast;
 
-public record IntConst(int value) implements Number {}
+import pl.interpreter.parser.NodeVisitor;
+
+public record IntConst(int value, int row, int col) implements Number {
+    public void accept(NodeVisitor visitor) {
+        visitor.visit(this);
+    }
+}

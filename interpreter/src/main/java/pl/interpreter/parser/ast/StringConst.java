@@ -1,3 +1,9 @@
 package pl.interpreter.parser.ast;
 
-public record StringConst(String value) implements Node {}
+import pl.interpreter.parser.NodeVisitor;
+
+public record StringConst(String value) implements Node {
+    public void accept(NodeVisitor visitor) {
+        visitor.visit(this);
+    }
+}

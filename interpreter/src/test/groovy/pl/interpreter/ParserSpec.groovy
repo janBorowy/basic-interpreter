@@ -3,15 +3,13 @@ package pl.interpreter
 import pl.interpreter.lexical_analyzer.LexicalAnalyzer
 import pl.interpreter.parser.Parser
 
-import pl.interpreter.parser.ast.AdditiveOperator
-
 import pl.interpreter.parser.ast.ArithmeticCondition
 import pl.interpreter.parser.ast.Block
 import pl.interpreter.parser.ast.BooleanExpression
-import pl.interpreter.parser.ast.BooleanLiteral
+import pl.interpreter.parser.ast.Match
+import pl.interpreter.parser.ast.MatchBranch
 import pl.interpreter.parser.ast.Parentheses
 import pl.interpreter.parser.ast.Expression
-import pl.interpreter.parser.ast.Factor
 import pl.interpreter.parser.ast.FloatConst
 import pl.interpreter.parser.ast.FunctionCall
 import pl.interpreter.parser.ast.FunctionDefinition
@@ -21,9 +19,7 @@ import pl.interpreter.parser.ast.FunctionSignature
 import pl.interpreter.parser.ast.IdentifierStatement
 import pl.interpreter.parser.ast.IdentifierWithValue
 import pl.interpreter.parser.ast.If
-import pl.interpreter.parser.ast.Instruction
 import pl.interpreter.parser.ast.IntConst
-import pl.interpreter.parser.ast.Operator
 import pl.interpreter.parser.ast.ParameterSignature
 import pl.interpreter.parser.ast.PrimitiveInitialization
 import pl.interpreter.parser.ast.Program
@@ -33,7 +29,6 @@ import pl.interpreter.parser.ast.StringLiteral
 import pl.interpreter.parser.ast.StructureDefinition
 import pl.interpreter.parser.ast.Subcondition
 import pl.interpreter.parser.ast.Term
-import pl.interpreter.parser.ast.Value
 import pl.interpreter.parser.ast.ValueAssignment
 import pl.interpreter.parser.ast.VarInitialization
 import pl.interpreter.parser.ast.VariableAssignment
@@ -51,33 +46,6 @@ class ParserSpec extends Specification {
         return parser.parseProgram();
     }
 
-    def createProgramWithMain(List<Instruction> instructions) {
-        return new Program(
-                List.of(
-                        new FunctionDefinition(
-                                new FunctionSignature(new FunctionReturnType(FunctionReturnTypeEnum.INT), "main"),
-                                List.of(),
-                                new Block(instructions)
-                        )
-                )
-        )
-    }
-
-    def createSingleValueWithinExpression(Factor value) {
-        return new Expression(List.of(
-                new Term(List.of(
-                        value
-                ), List.of())
-        ), List.of())
-    }
-
-    def createPrintFunctionCallWithArgument(String arg) {
-        return new IdentifierStatement(
-                "print",
-                new FunctionCall(List.of(new StringLiteral(arg) as Value))
-        )
-    }
-
     def "Should parse function definitions"() {
         given:
         var program = parseProgram("int main() { }")
@@ -85,9 +53,11 @@ class ParserSpec extends Specification {
         program == new Program(
                 List.of(
                         new FunctionDefinition(
-                                new FunctionSignature(new FunctionReturnType(FunctionReturnTypeEnum.INT), "main"),
+                                new FunctionSignature(new FunctionReturnType(FunctionReturnTypeEnum.INT, 1, 1), "main", 1, 1),
                                 List.of(),
-                                new Block(List.of())
+                                new Block(List.of(), 1, 12),
+                                1,
+                                1
                         )
                 )
         )
@@ -102,9 +72,11 @@ class ParserSpec extends Specification {
                         new StructureDefinition(
                                 "User",
                                 List.of(
-                                        new ParameterSignature(VariableType.STRING, "username"),
-                                        new ParameterSignature(VariableType.USER_TYPE, "hero", Optional.of("Hero"))
-                                )
+                                        new ParameterSignature(VariableType.STRING, "username", 1, 15),
+                                        new ParameterSignature(VariableType.USER_TYPE, "hero", Optional.of("Hero"), 1, 32)
+                                ),
+                                1,
+                                1
                         )
                 )
         )
@@ -121,215 +93,431 @@ class ParserSpec extends Specification {
                                 List.of(
                                         "Circle",
                                         "Square"
-                                )
-                        )
-                )
-        )
-    }
-
-    def "Should parse single statements"() {
-        given:
-            var program = parseProgram(
-                    """
-                                int main() {
-                                    int a = 3;
-                                    a = 1;
-                                    b(3);
-                                    Circle c = Circle(1.5);
-                                    var int i = 5;
-                                    return 0;
-                                }
-                              """)
-        expect:
-            program == createProgramWithMain(
-                    List.of(
-                            new PrimitiveInitialization(VariableType.INT, "a", createSingleValueWithinExpression(new IntConst(3))),
-                            new IdentifierStatement("a", new ValueAssignment(createSingleValueWithinExpression(new IntConst(1)))),
-                            new IdentifierStatement("b", new FunctionCall(List.of(createSingleValueWithinExpression(new IntConst(3))))),
-                            new IdentifierStatement("Circle", new VariableAssignment("c",
-                                    createSingleValueWithinExpression(new IdentifierWithValue("Circle",
-                                    Optional.of(new FunctionCall(List.of(createSingleValueWithinExpression(new FloatConst(1.5)))))))
-                            )),
-                            new VarInitialization(new PrimitiveInitialization(VariableType.INT, "i", createSingleValueWithinExpression(new IntConst(5)))),
-                            new Return(Optional.of(createSingleValueWithinExpression(new IntConst(0))))
-                    )
-            )
-    }
-
-    def "Should parse compound statements"() {
-        given:
-        var program = parseProgram(
-                """
-                          int main() {
-                              if (!(a > b and c <= d()) or true) {
-                                print("hello");
-                                print(" world");
-                              } else
-                                print("else");
-                              while (!(a + b) > c) {
-                                print("!(a + b) is greater than c");
-                                c = c + 1;
-                              }
-                          }
-
-                          """
-        )
-        // a > b
-        var aGreaterThanB = new Relation(
-                createSingleValueWithinExpression(new IdentifierWithValue("a", Optional.empty())),
-                Optional.of(ArithmeticCondition.GREATER_THAN),
-                Optional.of(createSingleValueWithinExpression(new IdentifierWithValue(
-                        "b", Optional.empty()))
-                )
-        )
-        // c <= d()
-        var cLessThanOrEqualsDFunctionCall = new Relation(
-                createSingleValueWithinExpression(new IdentifierWithValue("c", Optional.empty())),
-                Optional.of(ArithmeticCondition.LESS_THAN_OR_EQUAL),
-                Optional.of(createSingleValueWithinExpression(new IdentifierWithValue(
-                        "d", Optional.of(new FunctionCall(List.of()))))
-            )
-        )
-
-        // (a > b and c <= d())
-        var firstParentheses = new Parentheses(List.of(
-                new Subcondition(
-                        List.of(
-                                new BooleanExpression(
-                                        aGreaterThanB,
-                                        false
-                                )
-                        )
-                ),
-                new Subcondition(
-                        List.of(
-                                new BooleanExpression(
-                                        cLessThanOrEqualsDFunctionCall,
-                                        false
-                                )
-                        )
-                )
-        ))
-
-        // (a + b) > c
-        var aPlusBGreaterThanC = new Relation(
-                new Expression(
-                        List.of(new Term(
-                                List.of(
-                                        new Parentheses(
-                                                List.of(new Subcondition(
-                                                        List.of(new BooleanExpression(
-                                                                new Relation(
-                                                                        new Expression(
-                                                                                List.of(new Term(
-                                                                                        List.of(
-                                                                                                new IdentifierWithValue("a", Optional.empty()),
-                                                                                                new IdentifierWithValue("b", Optional.empty())
-                                                                                        ),
-                                                                                        List.of()
-                                                                                )),
-                                                                                List.of(new AdditiveOperator(Operator.ADD))
-                                                                        ),
-                                                                        Optional.empty(),
-                                                                        Optional.empty()
-                                                                ),
-                                                                false
-                                                        ))
-                                                ))
-                                        )
                                 ),
-                                List.of()
-                        )),
-                        List.of()
-                ),
-                Optional.of(ArithmeticCondition.GREATER_THAN),
-                Optional.of(createSingleValueWithinExpression(new IdentifierWithValue("c", Optional.empty())))
+                                1,
+                                1
+                        )
+                )
         )
+    }
+
+    def "Should parse primitive initialization"() {
+        var program = parseProgram("int main() { int a = 3; }")
 
         expect:
-        program == createProgramWithMain(
+        program == new Program(
                 List.of(
-                        new If(new Parentheses(
-                                List.of(
-                                        new Subcondition(
-                                                List.of(
-                                                        new BooleanExpression(
-                                                                new Relation(
-                                                                    new Expression(
-                                                                            List.of(
-                                                                                    new Term(
-                                                                                            List.of(firstParentheses),
-                                                                                            List.of()
-                                                                                    )
-                                                                            ),
-                                                                            List.of()
-                                                                    ),
-                                                                        Optional.empty(),
-                                                                        Optional.empty()
-                                                                ),
-                                                                true
-                                                        ),
-                                                        new BooleanExpression(
-                                                                new BooleanLiteral(true),
-                                                                false
-                                                        )
-                                                )
-                                        )
-                                )
-                        ),
-                                new Block(
-                                        List.of(
-                                                createPrintFunctionCallWithArgument("hello"),
-                                                createPrintFunctionCallWithArgument(" world")
-                                        )
-                                ),
-                                Optional.of(createPrintFunctionCallWithArgument("else"))
-                        ) as Instruction,
-                        new While(new Parentheses(
-                                List.of(
-                                        new Subcondition(
-                                                List.of(
-                                                        new BooleanExpression(
-                                                            aPlusBGreaterThanC,
-                                                            true
-                                                        )
-                                                )
-                                        )
-                                )
-                        ),
-                                new Block(
-                                        List.of(
-                                                createPrintFunctionCallWithArgument("a + b is greater than c"),
-                                                new IdentifierStatement(
-                                                        "c",
-                                                        new ValueAssignment(
-                                                                new Expression(
+                        new FunctionDefinition(
+                                new FunctionSignature(new FunctionReturnType(FunctionReturnTypeEnum.INT, 1, 1), "main", 1, 1),
+                                List.of(),
+                                new Block(List.of(
+                                        new PrimitiveInitialization(VariableType.INT, "a",
+                                                new Expression(
+                                                        List.of(
+                                                                new Term(
                                                                         List.of(
-                                                                                new Term(
-                                                                                        List.of(
-                                                                                                new IdentifierWithValue(
-                                                                                                        "c",
-                                                                                                        Optional.empty()
-                                                                                                ),
-                                                                                        ),
-                                                                                        List.of()
+                                                                                new IntConst(3, 1, 22)
+                                                                        ),
+                                                                        List.of(),
+                                                                        1, 22
+                                                                )
+                                                        ),
+                                                        List.of(),
+                                                        1, 22
+                                                ),
+                                                1, 14)
+                                ), 1, 12),
+                                1,
+                                1
+                        )
+                )
+        )
+    }
+
+    def "Should parse value assignment"() {
+        var program = parseProgram("int main() { a = 1; }")
+
+        expect:
+        program == new Program(
+                List.of(
+                        new FunctionDefinition(
+                                new FunctionSignature(new FunctionReturnType(FunctionReturnTypeEnum.INT, 1, 1), "main", 1, 1),
+                                List.of(),
+                                new Block(List.of(
+                                        new IdentifierStatement("a", new ValueAssignment(
+                                                new Expression(
+                                                        List.of(
+                                                                new Term(
+                                                                        List.of(
+                                                                                new IntConst(1, 1, 18)
+                                                                        ),
+                                                                        List.of(),
+                                                                        1, 18
+                                                                )
+                                                        ),
+                                                        List.of(),
+                                                        1, 18
+                                                ),
+                                                1, 16
+                                        ), 1, 14)
+                                ), 1, 12),
+                                1,
+                                1
+                        )
+                )
+        )
+    }
+
+    def "Should parse function call"() {
+        var program = parseProgram("int main() { b(3); }")
+
+        expect:
+        program == new Program(
+                List.of(
+                        new FunctionDefinition(
+                                new FunctionSignature(new FunctionReturnType(FunctionReturnTypeEnum.INT, 1, 1), "main", 1, 1),
+                                List.of(),
+                                new Block(List.of(
+                                        new IdentifierStatement("b", new FunctionCall(List.of(
+                                                new Expression(
+                                                        List.of(
+                                                                new Term(
+                                                                        List.of(
+                                                                                new IntConst(3, 1, 16)
+                                                                        ),
+                                                                        List.of(),
+                                                                        1, 16
+                                                                )
+                                                        ),
+                                                        List.of(),
+                                                        1, 16
+                                                )
+                                        ), 1, 15), 1, 14)
+                                ), 1, 12),
+                                1,
+                                1
+                        )
+                )
+        )
+    }
+
+    def "Should parse user type initialization"() {
+        var program = parseProgram("int main() { Circle c = Circle(1.5); }")
+
+        expect:
+        program == new Program(
+                List.of(
+                        new FunctionDefinition(
+                                new FunctionSignature(new FunctionReturnType(FunctionReturnTypeEnum.INT, 1, 1), "main", 1, 1),
+                                List.of(),
+                                new Block(List.of(
+                                        new IdentifierStatement("Circle",
+                                                new VariableAssignment("c",
+                                                        new Expression(
+                                                                List.of(new Term(
+                                                                        List.of(
+                                                                                new IdentifierWithValue("Circle",
+                                                                                        Optional.of(new FunctionCall(
+                                                                                                List.of(new Expression(
+                                                                                                        List.of(
+                                                                                                                new Term(
+                                                                                                                        List.of(
+                                                                                                                                new FloatConst(1.5, 1, 32)
+                                                                                                                        ),
+                                                                                                                        List.of(),
+                                                                                                                        1, 32
+                                                                                                                )
+                                                                                                        ),
+                                                                                                        List.of(),
+                                                                                                        1, 32
+                                                                                                )),
+                                                                                                1, 31
+                                                                                        )),
+                                                                                        1, 25)
+                                                                        ),
+                                                                        List.of(),
+                                                                        1,
+                                                                        25
+                                                                )
+                                                                ),
+                                                                List.of(),
+                                                                1, 25
+                                                        ),
+                                                        1, 21
+                                                ),
+                                                1, 14)
+                                ), 1, 12),
+                                1,
+                                1
+                        )
+                )
+        )
+    }
+
+    def "Should parse var initialization"() {
+        var program = parseProgram("int main() { var int i = 5; }")
+
+        expect:
+        program == new Program(
+                List.of(
+                        new FunctionDefinition(
+                                new FunctionSignature(new FunctionReturnType(FunctionReturnTypeEnum.INT, 1, 1), "main", 1, 1),
+                                List.of(),
+                                new Block(List.of(
+                                        new VarInitialization(
+                                                new PrimitiveInitialization(
+                                                        VariableType.INT,
+                                                        "i",
+                                                        new Expression(
+                                                                List.of(
+                                                                        new Term(
+                                                                                List.of(
+                                                                                        new IntConst(5, 1, 26)
                                                                                 ),
-                                                                                new Term(
-                                                                                        List.of(
-                                                                                                new IntConst(1)
+                                                                                List.of(),
+                                                                                1, 26
+                                                                        )
+                                                                ),
+                                                                List.of(),
+                                                                1, 26
+                                                        ),
+                                                        1, 18
+                                                ),
+                                                1, 14)
+                                ), 1, 12),
+                                1,
+                                1
+                        )
+                )
+        )
+    }
+
+    def "Should parse return statement"() {
+        var program = parseProgram("int main() { return 0; }")
+
+        expect:
+        program == new Program(
+                List.of(
+                        new FunctionDefinition(
+                                new FunctionSignature(new FunctionReturnType(FunctionReturnTypeEnum.INT, 1, 1), "main", 1, 1),
+                                List.of(),
+                                new Block(List.of(
+                                        new Return(
+                                                Optional.of(new Expression(
+                                                        List.of(
+                                                                new Term(
+                                                                        List.of(
+                                                                                new IntConst(0, 1, 21)
+                                                                        ),
+                                                                        List.of(),
+                                                                        1, 21
+                                                                )
+                                                        ),
+                                                        List.of(),
+                                                        1, 21
+                                                )),
+                                                1, 14
+                                        )
+                                ), 1, 12),
+                                1,
+                                1
+                        )
+                )
+        )
+    }
+
+    def "Should parse if else statement"() {
+        var program = parseProgram(
+                "int main() { if(a > b) { print(\"hello world\"); } else print(\"don't\"); }")
+        expect:
+
+
+        program == new Program(
+                List.of(
+                        new FunctionDefinition(
+                                new FunctionSignature(new FunctionReturnType(FunctionReturnTypeEnum.INT, 1, 1), "main", 1, 1),
+                                List.of(),
+                                new Block(List.of(
+                                        new If(
+                                                new Parentheses(
+                                                        List.of(
+                                                                new Subcondition(
+                                                                        List.of(
+                                                                                new BooleanExpression(
+                                                                                        new Relation(
+                                                                                                new Expression(
+                                                                                                        List.of(
+                                                                                                                new Term(
+                                                                                                                        List.of(
+                                                                                                                                new IdentifierWithValue('a', Optional.empty(), 1, 17)
+                                                                                                                        ),
+                                                                                                                        List.of(),
+                                                                                                                        1, 17
+                                                                                                                )
+                                                                                                        ),
+                                                                                                        List.of(),
+                                                                                                        1, 17
+                                                                                                ),
+                                                                                                Optional.of(ArithmeticCondition.GREATER_THAN),
+                                                                                                Optional.of(new Expression(
+                                                                                                        List.of(
+                                                                                                                new Term(
+                                                                                                                        List.of(
+                                                                                                                                new IdentifierWithValue('b', Optional.empty(), 1, 21)
+                                                                                                                        ),
+                                                                                                                        List.of(),
+                                                                                                                        1, 21
+                                                                                                                )
+                                                                                                        ),
+                                                                                                        List.of(),
+                                                                                                        1, 21
+                                                                                                )),
+                                                                                                1, 17
                                                                                         ),
-                                                                                        List.of()
+                                                                                        false,
+                                                                                        1, 17
                                                                                 )
                                                                         ),
-                                                                        List.of(new AdditiveOperator(Operator.ADD))
+                                                                        1, 17
                                                                 )
-                                                        )
-                                                )
+                                                        ),
+                                                        1, 17
+                                                ),
+                                                new Block(
+                                                        List.of(
+                                                                new IdentifierStatement("print", new FunctionCall(
+                                                                        List.of(new StringLiteral("hello world", 1, 32)),
+                                                                        1, 31
+                                                                ), 1, 26)
+                                                        ),
+                                                        1, 24
+                                                ),
+                                                Optional.of(new IdentifierStatement("print", new FunctionCall(
+                                                        List.of(new StringLiteral("don't", 1, 61)),
+                                                        1, 60
+                                                ), 1, 55)),
+                                                1, 14
                                         )
-                                )
+                                ), 1, 12),
+                                1,
+                                1
                         )
                 )
         )
     }
+
+    def "Should parse while statement"() {
+        var program = parseProgram("int main() { while(a == b) { print(\"hello\"); } }")
+
+        expect:
+        program == new Program(
+                List.of(
+                        new FunctionDefinition(
+                                new FunctionSignature(new FunctionReturnType(FunctionReturnTypeEnum.INT, 1, 1), "main", 1, 1),
+                                List.of(),
+                                new Block(List.of(
+                                        new While(
+                                                new Parentheses(
+                                                        List.of(
+                                                                new Subcondition(List.of(
+                                                                        new BooleanExpression(
+                                                                                new Relation(
+                                                                                        new Expression(
+                                                                                                List.of(
+                                                                                                        new Term(
+                                                                                                                List.of(
+                                                                                                                        new IdentifierWithValue('a', Optional.empty(), 1, 20)
+                                                                                                                ),
+                                                                                                                List.of(),
+                                                                                                                1, 20
+                                                                                                        )
+                                                                                                ),
+                                                                                                List.of(),
+                                                                                                1, 20
+                                                                                        ),
+                                                                                        Optional.of(ArithmeticCondition.EQUAL),
+                                                                                        Optional.of(
+                                                                                                new Expression(
+                                                                                                        List.of(
+                                                                                                                new Term(
+                                                                                                                        List.of(
+                                                                                                                                new IdentifierWithValue('b', Optional.empty(), 1, 25)
+                                                                                                                        ),
+                                                                                                                        List.of(),
+                                                                                                                        1, 25
+                                                                                                                )
+                                                                                                        ),
+                                                                                                        List.of(),
+                                                                                                        1, 25
+                                                                                                )
+                                                                                        ), 1, 20
+                                                                                ),
+                                                                                false, 1, 20
+                                                                        )), 1, 20
+                                                                )
+                                                        ), 1, 20
+                                                ),
+                                                new Block(List.of(
+                                                        new IdentifierStatement("print",
+                                                                new FunctionCall(List.of(
+                                                                        new StringLiteral("hello", 1, 36)
+                                                                ),
+                                                                        1, 35),
+                                                                1, 30)
+                                                ), 1, 28),
+                                                1, 14
+                                        )
+                                ), 1, 12),
+                                1,
+                                1
+                        )
+                )
+        )
+    }
+
+    def "Should parse match statement"() {
+        var program = parseProgram(
+"""int main() {
+    match (point) {
+        FloatPoint floatPoint -> print("float");
+        IntPoint intPoint -> print("int");
+    }
+}
+""")
+        expect:
+            program == new Program(
+                    List.of(
+                            new FunctionDefinition(
+                                    new FunctionSignature(new FunctionReturnType(FunctionReturnTypeEnum.INT, 1, 1), "main", 1, 1),
+                                    List.of(),
+                                    new Block(List.of(
+                                        new Match(new IdentifierWithValue(("point"), Optional.empty(), 2, 12),
+                                                List.of(
+                                                        new MatchBranch(
+                                                                "FloatPoint", "floatPoint",
+                                                                new IdentifierStatement("print",
+                                                                new FunctionCall(List.of(
+                                                                        new StringLiteral("float", 3, 40)),
+                                                                        3, 39), 3, 34),
+                                                                3, 9
+                                                        ),
+                                                        new MatchBranch(
+                                                                "IntPoint", "intPoint",
+                                                                new IdentifierStatement("print",
+                                                                        new FunctionCall(List.of(
+                                                                                new StringLiteral("int", 4, 36)),
+                                                                                4, 35), 4, 30),
+                                                                4, 9
+                                                        )
+                                                ),
+                                                2, 5
+                                        )
+                                    ), 1, 12),
+                                    1,
+                                    1
+                            )
+                    )
+            )
+        }
 
 }

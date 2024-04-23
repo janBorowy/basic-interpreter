@@ -3,11 +3,17 @@ package pl.interpreter.parser.ast;
 import pl.interpreter.TokenType;
 
 public enum VariableType {
-    STRING,
-    INT,
-    FLOAT,
-    BOOL,
-    USER_TYPE;
+    STRING("string"),
+    INT("int"),
+    FLOAT("float"),
+    BOOL("boolean"),
+    USER_TYPE("userType");
+
+    private final String string;
+
+    VariableType(String name) {
+        this.string = name;
+    }
 
     public static VariableType fromTokenType(TokenType type) {
         return switch (type) {
@@ -16,5 +22,10 @@ public enum VariableType {
             case KW_FLOAT -> FLOAT;
             default -> BOOL;
         };
+    }
+
+    @Override
+    public String toString() {
+        return string;
     }
 }

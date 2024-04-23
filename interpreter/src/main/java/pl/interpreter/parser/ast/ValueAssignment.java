@@ -1,3 +1,9 @@
 package pl.interpreter.parser.ast;
 
-public record ValueAssignment(Value value) implements Node {}
+import pl.interpreter.parser.NodeVisitor;
+
+public record ValueAssignment(Value value, int row, int col) implements Node {
+    public void accept(NodeVisitor visitor) {
+        visitor.visit(this);
+    }
+}

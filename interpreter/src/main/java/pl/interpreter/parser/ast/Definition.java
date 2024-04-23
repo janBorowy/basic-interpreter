@@ -1,3 +1,3 @@
 package pl.interpreter.parser.ast;
 
-public interface Definition extends Node{}
+public interface Definition extends Node {}
