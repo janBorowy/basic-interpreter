@@ -219,7 +219,10 @@ singleStatement          ::= identifierStatement
 compoundStatement        ::= if
                            | while
                            | match;
-identifierStatement      ::= identifier, valueAssignment | functionCall | variableAssignment;
+identifierStatement      ::= identifier, identifierStatementApplier;
+identifierStatementApplier::= valueAssignment
+                            | functionCall
+                            | variableAssignment;
 varInitialization        :: = "var", initialization;
 initialization           ::= primitiveInitialization
                            | userTypeInitialization;

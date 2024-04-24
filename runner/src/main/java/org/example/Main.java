@@ -1,13 +1,11 @@
 package org.example;
 
-import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.io.StringReader;
-import pl.interpreter.Token;
-import pl.interpreter.TokenType;
+import java.io.StringWriter;
 import pl.interpreter.lexical_analyzer.LexicalAnalyzer;
-import pl.interpreter.lexical_analyzer.LexicalAnalyzerException;
 import pl.interpreter.parser.Parser;
-import pl.interpreter.parser.ast.PrintTreeVisitor;
+import pl.interpreter.parser.PrintTreeVisitor;
 
 public class Main {
     /**
@@ -15,10 +13,12 @@ public class Main {
      * @param args
      */
     public static void main(String[] args) {
-        var reader = new StringReader("int main() { }");
+        var reader = new StringReader("int main(int a, int b) { int a = 0; int b = 0; print(a + b); return;}");
         var analyzer = new LexicalAnalyzer(reader);
         var parser = new Parser(analyzer);
         var tree = parser.parseProgram();
-        new PrintTreeVisitor().visit(tree);
+        var stringWriter = new StringWriter();
+        new PrintTreeVisitor(stringWriter).visit(tree);
+        System.out.print(stringWriter);
     }
 }

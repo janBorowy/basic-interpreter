@@ -4,9 +4,9 @@ import pl.interpreter.parser.ast.AdditiveOperator;
 import pl.interpreter.parser.ast.AfterIdentifierStatement;
 import pl.interpreter.parser.ast.As;
 import pl.interpreter.parser.ast.Block;
-import pl.interpreter.parser.ast.BoolConst;
 import pl.interpreter.parser.ast.BooleanExpression;
 import pl.interpreter.parser.ast.BooleanLiteral;
+import pl.interpreter.parser.ast.CompoundStatement;
 import pl.interpreter.parser.ast.Expression;
 import pl.interpreter.parser.ast.FloatConst;
 import pl.interpreter.parser.ast.FunctionCall;
@@ -14,32 +14,32 @@ import pl.interpreter.parser.ast.FunctionDefinition;
 import pl.interpreter.parser.ast.FunctionReturnType;
 import pl.interpreter.parser.ast.FunctionSignature;
 import pl.interpreter.parser.ast.IdentifierStatement;
+import pl.interpreter.parser.ast.IdentifierStatementApplier;
 import pl.interpreter.parser.ast.IdentifierWithValue;
 import pl.interpreter.parser.ast.If;
-import pl.interpreter.parser.ast.InitializationSignature;
+import pl.interpreter.parser.ast.Initialization;
+import pl.interpreter.parser.ast.InplaceValue;
 import pl.interpreter.parser.ast.IntConst;
 import pl.interpreter.parser.ast.Match;
 import pl.interpreter.parser.ast.MatchBranch;
 import pl.interpreter.parser.ast.MultiplicativeOperator;
-import pl.interpreter.parser.ast.Node;
 import pl.interpreter.parser.ast.ParameterSignature;
 import pl.interpreter.parser.ast.Parentheses;
 import pl.interpreter.parser.ast.PrimitiveInitialization;
 import pl.interpreter.parser.ast.Program;
 import pl.interpreter.parser.ast.Relation;
 import pl.interpreter.parser.ast.Return;
-import pl.interpreter.parser.ast.StringConst;
+import pl.interpreter.parser.ast.SingleStatement;
 import pl.interpreter.parser.ast.StringLiteral;
 import pl.interpreter.parser.ast.StructureDefinition;
 import pl.interpreter.parser.ast.Subcondition;
 import pl.interpreter.parser.ast.Term;
-import pl.interpreter.parser.ast.UserType;
 import pl.interpreter.parser.ast.UserTypeInitialization;
+import pl.interpreter.parser.ast.Value;
 import pl.interpreter.parser.ast.ValueAssignment;
 import pl.interpreter.parser.ast.VarInitialization;
 import pl.interpreter.parser.ast.VariableAssignment;
 import pl.interpreter.parser.ast.VariantDefinition;
-import pl.interpreter.parser.ast.VoidType;
 import pl.interpreter.parser.ast.While;
 
 public interface NodeVisitor {
@@ -53,8 +53,6 @@ public interface NodeVisitor {
     void visit(As as);
 
     void visit(Block block);
-
-    void visit(BoolConst boolConst);
 
     void visit(BooleanExpression booleanExpression);
 
@@ -76,8 +74,6 @@ public interface NodeVisitor {
 
     void visit(If anIf);
 
-    void visit(InitializationSignature initializationSignature);
-
     void visit(IntConst intConst);
 
     void visit(Match match);
@@ -98,8 +94,6 @@ public interface NodeVisitor {
 
     void visit(Return aReturn);
 
-    void visit(StringConst stringConst);
-
     void visit(StringLiteral stringLiteral);
 
     void visit(StructureDefinition structureDefinition);
@@ -107,8 +101,6 @@ public interface NodeVisitor {
     void visit(Subcondition subcondition);
 
     void visit(Term term);
-
-    void visit(UserType userType);
 
     void visit(UserTypeInitialization userTypeInitialization);
 
@@ -120,7 +112,17 @@ public interface NodeVisitor {
 
     void visit(VarInitialization varInitialization);
 
-    void visit(VoidType voidType);
-
     void visit(Expression expression);
+
+    void visit(SingleStatement singleStatement);
+
+    void visit(CompoundStatement compoundStatement);
+
+    void visit(IdentifierStatementApplier identifierStatementApplier);
+
+    void visit(Value value);
+
+    void visit(InplaceValue inplaceValue);
+
+    void visit(Initialization initialization);
 }

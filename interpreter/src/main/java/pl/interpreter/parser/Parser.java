@@ -12,6 +12,7 @@ import pl.interpreter.parser.ast.Block;
 import pl.interpreter.parser.ast.BooleanExpression;
 import pl.interpreter.parser.ast.BooleanLiteral;
 import pl.interpreter.parser.ast.CompoundStatement;
+import pl.interpreter.parser.ast.IdentifierStatementApplier;
 import pl.interpreter.parser.ast.LogicTerm;
 import pl.interpreter.parser.ast.Parentheses;
 import pl.interpreter.parser.ast.Definition;
@@ -238,13 +239,21 @@ public class Parser {
         }
         var identifier = (String) token.value();
         consumeToken();
-        var statement = parseValueAssignment().map(Node.class::cast)
-                .or(() -> parseFunctionCall().map(Node.class::cast))
-                .or(() -> parseVariableAssignment().map(Node.class::cast));
+        var statement = parseIdentifierStatementApplier();
         if (statement.isEmpty()) {
             throwParserException("Expected statement");
         }
         return Optional.of(new IdentifierStatement(identifier, statement.get(), position.row(), position.col()));
+    }
+
+    // identifierStatementApplier::= valueAssignment
+    //                            | functionCall
+    //                            | variableAssignment;
+
+    private Optional<IdentifierStatementApplier> parseIdentifierStatementApplier() {
+        return parseValueAssignment().map(IdentifierStatementApplier.class::cast)
+                .or(() -> parseFunctionCall().map(IdentifierStatementApplier.class::cast))
+                .or(() -> parseVariableAssignment().map(IdentifierStatementApplier.class::cast));
     }
 
     // varInitialization ::= "var", initialization;
@@ -711,6 +720,7 @@ public class Parser {
 
     // as ::= "as", variableType;
     private Optional<As> parseAs() {
+        var position = getTokenPosition();
         if (token.type() != TokenType.KW_AS) {
             return Optional.empty();
         }
@@ -719,7 +729,7 @@ public class Parser {
         if (variableType.isEmpty()) {
             throwParserException("Expected variable type");
         }
-        return Optional.of(new As(variableType.get()));
+        return Optional.of(new As(variableType.get(), token.row(), token.col()));
     }
 
     // functionSignature ::= functionReturnType identifier;
