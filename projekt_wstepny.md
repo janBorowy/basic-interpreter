@@ -208,94 +208,67 @@ definition               ::= functionDefinition
 functionDefinition       ::= functionSignature "(" [ parameterSignature { "," parameterSignature } ] ")" block;
 structureDefinition      ::= "struct " identifier "{" { parameterSignature ";" } "}";
 variantDefinition        ::= "variant " identifier "{" identifier { "," identifier } "}";
-functionParameters       ::=  [parameterSignature { "," parameterSignature } ];
-block                    ::= "{" { singleOrCompoundStatement } "}";
-singleOrCompoundStatement::= singleStatement
-                           | compoundStatement;
-singleStatement          ::= identifierStatement
-                           | varInitialization
-                           | primitiveInitialization
-                           | return, ";"
-compoundStatement        ::= if
-                           | while
-                           | match;
-identifierStatement      ::= identifier, identifierStatementApplier;
-identifierStatementApplier::= valueAssignment
-                            | functionCall
-                            | variableAssignment;
-varInitialization        :: = "var", initialization;
-initialization           ::= primitiveInitialization
-                           | userTypeInitialization;
-userTypeInitialization   ::= identifier variableAssignment;
-primitiveInitialization  ::= variableType variableAssignment;
-variableAssignment       ::= identifier valueAssignment;
-valueAssignment          ::= "=", value;
-return                   ::= "return ", [value];
-while                    ::= "while", "(" parentheses ")", instruction;
 instruction              ::= block
                            | singleStatement
                            | compoundStatement;
-match                    ::= "match", "(", identifierWithValue ")", "{" {matchBranch} "}";
+block                    ::= "{" { singleOrCompoundStatement } "}";
+singleOrCompoundStatement::= singleStatement
+                           | compoundStatement;
+singleStatement          ::= (identifierStatement
+                           | "var" initialization // var initialization
+                           | return) ";";
+identifierStatement      ::= identifier ("(" [ cast {"," cast } ] ")" // function call
+                           | "=" cast // assignment
+                           | identifier "=" cast) // user type initialization
+compoundStatement        ::= if
+                           | while
+                           | match;
+initialization           ::= primitiveType identifier "=" cast; // primitive initialization
+                           | identifier identifier "=" cast; // user type initialization
+return                   ::= "return ", [cast];
+while                    ::= "while", "(" condition ")", instruction;
+functionCall             ::= identifier, arguments;
+match                    ::= "match", "(", identifierOrFunctionCall, {"." identifier}, ")", "{", matchBranch, {matchBranch}, "}";
 matchBranch              ::= identifier, identifier, "->" instruction;
-matchableValue           ::= 
-expression               ::= term, {additiveOperator, term};
-term                     ::= factor, {multiplicativeOperator, factor};
-additiveOperator         ::= "+"
+cast                     ::= expression, ["as", primitiveType]
+                           | stringLiteral, ["as", primitiveType];
+expression               ::= term, {additionOperator, term};
+term                     ::= negation, {multiplicativeOperator, negation};
+additionOperator         ::= "+"
                            | "-";
 multiplicativeOperator   ::= "*"
                            | "/"
                            | "%";
-factor                   ::= number
-                           | identifierWithValue
-                           | "(" parentheses ")";
-identifierWithValue      ::= identifier, [identifierValueApplier]
-identifierValueApplier   ::= functionCall
-                           | as;
-if                       ::= "if" "(" parentheses ")" instruction [ "else" instruction ];
-parentheses              ::= subcondition, {"and", subcondition};
-subcondition             ::= booleanExpression, {"or", booleanExpression};
-booleanExpression        ::= ["!"], logicTerm;
-logicTerm                ::= booleanLiteral
-                           | relation;
-relation                 ::= expression, [arithemticCondition, expression];
-arithmeticCondition      ::= equal
-                           | notEqual
-                           | lessThan
-                           | greaterThan
-                           | lessThanOrEqual
-                           | greaterThanOrEqual;
-equal                    ::= "==";
-notEqual                 ::= "!=";
-lessThan                 ::= "<";
-greaterThan              ::= ">";
-lessThanOrEqual          ::= "<=";
-greaterThanOrEqual       ::= ">=";
-functionCall        ::= "(", [ value {"," value } ], ")";
-value                    ::= expression
-                           | inplaceValue;
-inplaceValue             ::= stringLiteral
-                           | booleanLiteral;
-as                       ::= "as", variableType;
-functionSignature        ::= functionReturnType identifier;
-functionReturnType       ::= "int"
-                           | "string"
-                           | "float"
-                           | "bool"
-                           | "void"
-                           | identifier;
-parameterSignature       ::= variableType, identifier
-                           | identifier, identifier;
-variableType             ::= "int"
+negation                 ::= ["!"] factor;
+factor                   ::= identifierOrFunctionCall {"." identifier} // dot is access to structure field
+                           | number // integer or float literal
+                           | booleanLiteral
+                           | "(", condition, ")";
+identifierOrFunctionCall ::= identifier ["("[ cast {"," cast } ]")"] 
+if                       ::= "if" "(" condition ")" instruction [ "else" instruction ];
+condition                ::= conjunction, {" and ", conjunction};
+conjunction              ::= alternative, {" or ", alternative};
+alternative              ::= cast, [relationalOperator, cast];
+relationalOperator       ::= "=="
+                           | "!="
+                           | "<"
+                           | ">"
+                           | "<="
+                           | ">=";
+arguments                ::= "(", [ cast {"," cast } ], ")";
+functionSignature        ::= "void", identifier,
+                           | primitiveType, identifier
+                           | identifier, identifier; // user return type
+parameterSignature       ::= primitiveType, identifier
+                           | identifier, identifier; // user type parameter
+initializationSignature  ::= ["var "] primitiveType, identifier;
+identifierList   ::= identifier { "," identifier };
+primitiveType            ::= "int"
                            | "float"
                            | "string"
                            | "bool";
-identifier               ::= identifierName
-                           | identifierName, ".", identifierName;
-identifierName           ::= identifierFirstCharacter, { digit | letter | "_" };
+identifier               ::= identifierFirstCharacter, { digit | letter | "_" };
 identifierFirstCharacter ::= "_" | letter;
-number                   ::= ["-"], nonZeroDigit, {digit}
-                           | "0"
-                           | ["-"], digit, ".", digit, {digit};
 booleanLiteral           ::= "true"
                            | "false";
 stringLiteral            ::= '"'string'"';
@@ -303,6 +276,9 @@ string                   ::= { letter
                            | digit
                            | stringLegalWhitespace
                            | otherStringLegalCharacters };
+number                   ::= ["-"], nonZeroDigit, {digit}
+                          | "0"
+                          | ["-"], digit, ".", digit, {digit};
 digit                    ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
 nonZeroDigit             ::= "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
 stringLegalWhitespace    ::= " ";
