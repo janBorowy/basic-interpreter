@@ -1,0 +1,85 @@
+program                  ::= { definition };
+definition               ::= functionDefinition
+                           | structureDefinition
+                           | variantDefinition;
+functionDefinition       ::= functionSignature "(" [ parameterSignature { "," parameterSignature } ] ")" block;
+structureDefinition      ::= "struct " identifier "{" { parameterSignature ";" } "}";
+variantDefinition        ::= "variant " identifier "{" identifier { "," identifier } "}";
+instruction              ::= block
+                           | singleStatement
+                           | compoundStatement;
+block                    ::= "{" { singleOrCompoundStatement } "}";
+singleOrCompoundStatement::= singleStatement
+                           | compoundStatement;
+singleStatement          ::= (identifierStatement
+                           | "var" initialization // var initialization
+                           | return) ";";
+identifierStatement      ::= identifier ("(" [ expression {"," expression } ] ")" // function call
+                           | "=" expression // assignment
+                           | identifier "=" expression) // user type initialization
+compoundStatement        ::= if
+                           | while
+                           | match;
+initialization           ::= primitiveType identifier "=" expression; // primitive initialization
+                           | identifier identifier "=" expression; // user type initialization
+return                   ::= "return ", [expression];
+while                    ::= "while", "(" expression ")", instruction;
+functionCall             ::= identifier, arguments;
+match                    ::= "match", "(", dotAccess, ")", "{", matchBranch, {matchBranch}, "}";
+matchBranch              ::= identifier, identifier, "->" instruction;
+cast                     ::= sum, ["as", primitiveType]
+                           | stringLiteral, ["as", primitiveType];
+sum                      ::= multiplication, {additionOperator, multiplication};
+multiplication           ::= negation, {multiplicationOperator, negation};
+additionOperator         ::= "+"
+                           | "-";
+multiplicationOperator   ::= "*"
+                           | "/"
+                           | "%";
+negation                 ::= ["!"] factor;
+factor                   ::= dotAccess
+                           | number // integer or float literal
+                           | booleanLiteral
+                           | "(", expression, ")";
+dotAccess                ::= identifierOrFunctionCall {"." identifier}
+identifierOrFunctionCall ::= identifier ["("[ expression {"," expression } ]")"]
+if                       ::= "if" "(" expression ")" instruction [ "else" instruction ];
+expression               ::= alternative, {"and", alternative};
+alternative              ::= relation, {"or", relation};
+relation                 ::= cast, [relationalOperator, cast];
+relationalOperator       ::= "=="
+                           | "!="
+                           | "<"
+                           | ">"
+                           | "<="
+                           | ">=";
+arguments                ::= "(", [ expression {"," expression } ], ")";
+functionSignature        ::= "void", identifier,
+                           | primitiveType, identifier
+                           | identifier, identifier; // user return type
+parameterSignature       ::= primitiveType, identifier
+                           | identifier, identifier; // user type parameter
+initializationSignature  ::= ["var "] primitiveType, identifier;
+identifierList   ::= identifier { "," identifier };
+primitiveType            ::= "int"
+                           | "float"
+                           | "string"
+                           | "bool";
+identifier               ::= identifierFirstCharacter, { digit | letter | "_" };
+identifierFirstCharacter ::= "_" | letter;
+booleanLiteral           ::= "true"
+                           | "false";
+stringLiteral            ::= '"'string'"';
+string                   ::= { letter
+                           | digit
+                           | stringLegalWhitespace
+                           | otherStringLegalCharacters };
+number                   ::= ["-"], nonZeroDigit, {digit}
+                          | "0"
+                          | ["-"], digit, ".", digit, {digit};
+digit                    ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
+nonZeroDigit             ::= "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
+stringLegalWhitespace    ::= " ";
+letter                   ::= "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | capitalLetter
+capitalLetter            ::= "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z";
+otherStringLegalCharacters ::= "~" | "!" | "@" | "#" | "$" | "%" | "^" | "&" | "*" | "(" | ")" | "-" | "_" | "=" | "+" | "[" | "{" | "]" | "}" | "|" | ";" | ":" | "'" | "," | "<" | "." | ">" | "/"

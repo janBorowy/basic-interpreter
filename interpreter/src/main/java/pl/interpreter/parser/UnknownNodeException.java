@@ -1,4 +1,4 @@
-package pl.interpreter;
+package pl.interpreter.parser;
 
 public class UnknownNodeException extends RuntimeException {
 
