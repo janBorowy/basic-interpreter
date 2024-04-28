@@ -1,2 +1,7 @@
 .*
 !.gitignore
+/lib
+/gradle
+/build
+/interpreter/build
+/runner/build

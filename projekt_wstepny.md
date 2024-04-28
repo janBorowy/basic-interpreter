@@ -33,7 +33,7 @@ Przykładowe programy napisane w języku:
 int main() { // main is an entry point of every program
     int a = 2; // Initialize immutable integer
     int b = 2;
-    int sum = a + b; // Binray(two argument) addition function
+    int sum = a + b; // Binary(two argument) addition function
     string str = (2 + 2) as string; // immutable string initialization
     print(str); // Built-in standard output function
     
