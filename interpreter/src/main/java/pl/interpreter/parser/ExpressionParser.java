@@ -221,10 +221,10 @@ public class ExpressionParser extends Parser {
             return Optional.of(new Identifier(id, position));
         }
         consumeToken();
-        var params = new ArrayList<Expression>();
+        var arguments = new ArrayList<Expression>();
         var expression = parseExpression();
         if (expression.isPresent()) {
-            params.add(expression.get());
+            arguments.add(expression.get());
         }
         while (tokenIsOfType(TokenType.COMMA)) {
             consumeToken();
@@ -232,13 +232,13 @@ public class ExpressionParser extends Parser {
             if (expression.isEmpty()) {
                 throwParserError("Expected expression");
             }
-            params.add(expression.get());
+            arguments.add(expression.get());
         }
         if (!tokenIsOfType(TokenType.RIGHT_PARENTHESES)) {
             throwParserError("Expected right parentheses");
         }
         consumeToken();
-        return Optional.of(new FunctionCall(id, params, position));
+        return Optional.of(new FunctionCall(id, arguments, position));
     }
 
     // "(", expression, ")";

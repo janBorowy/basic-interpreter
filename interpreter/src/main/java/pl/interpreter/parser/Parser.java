@@ -2,7 +2,6 @@ package pl.interpreter.parser;
 
 import pl.interpreter.Token;
 import pl.interpreter.TokenType;
-import pl.interpreter.lexical_analyzer.LexicalAnalyzer;
 
 public class Parser {
 
@@ -37,5 +36,11 @@ public class Parser {
 
     protected void throwParserError(String message) {
         throw new ParserException(message.concat(": %d, col: %d".formatted(token().row(), token().col())));
+    }
+
+    protected String parseIdentifier() {
+        var id = (String) mustBe(TokenType.IDENTIFIER).value();
+        consumeToken();
+        return id;
     }
 }

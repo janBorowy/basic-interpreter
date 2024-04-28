@@ -3,15 +3,16 @@ package pl.interpreter.parser;
 import java.util.Optional;
 import pl.interpreter.Token;
 
-public enum PrimitiveType {
+public enum ParameterTypeEnum {
     INT("int"),
     FLOAT("float"),
     STRING("string"),
-    BOOL("boolean");
+    BOOL("boolean"),
+    USER_TYPE("user_type");
 
     private final String str;
 
-    PrimitiveType(String str) {
+    ParameterTypeEnum(String str) {
         this.str = str;
     }
 
@@ -20,12 +21,13 @@ public enum PrimitiveType {
         return str;
     }
 
-    public static Optional<PrimitiveType> parsePrimitiveType(Token token) {
+    public static Optional<ParameterTypeEnum> parseParameterType(Token token) {
         return switch (token.type()) {
             case KW_INT -> Optional.of(INT);
             case KW_FLOAT -> Optional.of(FLOAT);
             case KW_STRING -> Optional.of(STRING);
             case KW_BOOL -> Optional.of(BOOL);
+            case IDENTIFIER -> Optional.of(USER_TYPE);
             default -> Optional.empty();
         };
     }

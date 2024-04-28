@@ -33,4 +33,14 @@ public interface StatementVisitor {
     void visit(Identifier identifier);
 
     void visit(FunctionCall functionCall);
+
+    void visit(StructureDefinition structureDefinition);
+
+    void visit(Program program);
+
+    void visit(Definition definition);
+
+    void visit(ParameterSignatureMap parameterSignatureMap);
+
+    void visit(VariantDefinition variantDefinition);
 }

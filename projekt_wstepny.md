@@ -205,8 +205,8 @@ program                  ::= { definition };
 definition               ::= functionDefinition
                            | structureDefinition
                            | variantDefinition;
-functionDefinition       ::= functionSignature "(" [ parameterSignature { "," parameterSignature } ] ")" block;
-structureDefinition      ::= "struct " identifier "{" { parameterSignature ";" } "}";
+functionDefinition       ::= functionSignature "(" parameters ")" block;
+structureDefinition      ::= "struct " identifier "{" parameters "}";
 variantDefinition        ::= "variant " identifier "{" identifier { "," identifier } "}";
 instruction              ::= block
                            | singleStatement
@@ -217,50 +217,52 @@ singleOrCompoundStatement::= singleStatement
 singleStatement          ::= (identifierStatement
                            | "var" initialization // var initialization
                            | return) ";";
-identifierStatement      ::= identifier ("(" [ cast {"," cast } ] ")" // function call
-                           | "=" cast // assignment
-                           | identifier "=" cast) // user type initialization
+identifierStatement      ::= identifier ("(" [ expression {"," expression } ] ")" // function call
+                           | "=" expression // assignment
+                           | identifier "=" expression) // user type initialization
 compoundStatement        ::= if
                            | while
                            | match;
-initialization           ::= primitiveType identifier "=" cast; // primitive initialization
-                           | identifier identifier "=" cast; // user type initialization
-return                   ::= "return ", [cast];
-while                    ::= "while", "(" condition ")", instruction;
+initialization           ::= primitiveType identifier "=" expression; // primitive initialization
+                           | identifier identifier "=" expression; // user type initialization
+return                   ::= "return ", [expression];
+while                    ::= "while", "(" expression ")", instruction;
 functionCall             ::= identifier, arguments;
-match                    ::= "match", "(", identifierOrFunctionCall, {"." identifier}, ")", "{", matchBranch, {matchBranch}, "}";
+match                    ::= "match", "(", dotAccess, ")", "{", matchBranch, {matchBranch}, "}";
 matchBranch              ::= identifier, identifier, "->" instruction;
-cast                     ::= expression, ["as", primitiveType]
+cast                     ::= sum, ["as", primitiveType]
                            | stringLiteral, ["as", primitiveType];
-expression               ::= term, {additionOperator, term};
-term                     ::= negation, {multiplicativeOperator, negation};
+sum                      ::= multiplication, {additionOperator, multiplication};
+multiplication           ::= negation, {multiplicationOperator, negation};
 additionOperator         ::= "+"
                            | "-";
-multiplicativeOperator   ::= "*"
+multiplicationOperator   ::= "*"
                            | "/"
                            | "%";
 negation                 ::= ["!"] factor;
-factor                   ::= identifierOrFunctionCall {"." identifier} // dot is access to structure field
+factor                   ::= dotAccess
                            | number // integer or float literal
                            | booleanLiteral
-                           | "(", condition, ")";
-identifierOrFunctionCall ::= identifier ["("[ cast {"," cast } ]")"] 
-if                       ::= "if" "(" condition ")" instruction [ "else" instruction ];
-condition                ::= conjunction, {" and ", conjunction};
-conjunction              ::= alternative, {" or ", alternative};
-alternative              ::= cast, [relationalOperator, cast];
+                           | "(", expression, ")";
+dotAccess                ::= identifierOrFunctionCall {"." identifier}
+identifierOrFunctionCall ::= identifier ["("[ expression {"," expression } ]")"]
+if                       ::= "if" "(" expression ")" instruction [ "else" instruction ];
+expression               ::= alternative, {"and", alternative};
+alternative              ::= relation, {"or", relation};
+relation                 ::= cast, [relationalOperator, cast];
 relationalOperator       ::= "=="
                            | "!="
                            | "<"
                            | ">"
                            | "<="
                            | ">=";
-arguments                ::= "(", [ cast {"," cast } ], ")";
+arguments                ::= "(", [ expression {"," expression } ], ")";
 functionSignature        ::= "void", identifier,
                            | primitiveType, identifier
                            | identifier, identifier; // user return type
-parameterSignature       ::= primitiveType, identifier
-                           | identifier, identifier; // user type parameter
+parameters               ::= [ parameterType, identifier { "," parameterType, identifier } ];
+parameterType            ::= primitiveType
+                           | identifier;
 initializationSignature  ::= ["var "] primitiveType, identifier;
 identifierList   ::= identifier { "," identifier };
 primitiveType            ::= "int"

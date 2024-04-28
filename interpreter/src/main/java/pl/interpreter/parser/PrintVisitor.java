@@ -3,6 +3,7 @@ package pl.interpreter.parser;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 
@@ -142,7 +143,49 @@ public class PrintVisitor implements StatementVisitor {
                 new Param(FUNCTION_ID_MSG, functionCall.getFunctionId())
         ), functionCall.getPosition());
         diveIn();
-        functionCall.getParameters().forEach(this::visit);
+        functionCall.getArguments().forEach(this::visit);
+        diveOut();
+    }
+
+    @Override
+    public void visit(StructureDefinition structureDefinition) {
+        printNode(structureDefinition, List.of(
+                new Param(ID_MSG, structureDefinition.getId())
+        ), structureDefinition.getPosition());
+        diveIn();
+        visit(structureDefinition.getParameters());
+        diveOut();
+    }
+
+    @Override
+    public void visit(Program program) {
+        printNode(program, List.of(), program.getPosition());
+        diveIn();
+        program.getDefinitions().forEach(this::visit);
+        diveOut();
+    }
+
+    @Override
+    public void visit(Definition definition) {
+        switch(definition) {
+            case StructureDefinition structureDefinition -> visit(structureDefinition);
+            case VariantDefinition variantDefinition -> visit(variantDefinition);
+            default -> throw new UnknownNodeException();
+        }
+    }
+
+    @Override
+    public void visit(ParameterSignatureMap parameterSignatureMap) {
+        parameterSignatureMap.forEach(this::printParameter);
+    }
+
+    @Override
+    public void visit(VariantDefinition variantDefinition) {
+        printNode(variantDefinition, List.of(
+                new Param(ID_MSG, variantDefinition.getId())
+        ), variantDefinition.getPosition());
+        diveIn();
+        variantDefinition.getStructureIds().forEach(this::printUserType);
         diveOut();
     }
 
@@ -204,6 +247,28 @@ public class PrintVisitor implements StatementVisitor {
                 position.col() +
                 "> " +
                 getParametersString(params) +
+                '\n');
+    }
+
+    private void printParameter(String id, ParameterType parameter) {
+        var userTypeStr = "";
+        if (Objects.nonNull(parameter.userType())) {
+            userTypeStr = ", userType=" + parameter.userType();
+        }
+        write(getPrefix() +
+                "Parameter" +
+                ' ' +
+                "id=" + id +
+                ", type=" + parameter.parameterType().toString() +
+                userTypeStr +
+                '\n');
+    }
+
+    private void printUserType(String id) {
+        write(getPrefix() +
+                "Type" +
+                ' ' +
+                "id=" + id +
                 '\n');
     }
 

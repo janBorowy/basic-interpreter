@@ -7,12 +7,12 @@ import lombok.Getter;
 public class FunctionCall extends Statement implements Expression {
 
     private final String functionId;
-    private final List<Expression> parameters;
+    private final List<Expression> arguments;
 
-    public FunctionCall(String functionId, List<Expression> parameters, Position position) {
+    public FunctionCall(String functionId, List<Expression> arguments, Position position) {
         super(position);
         this.functionId = functionId;
-        this.parameters = parameters;
+        this.arguments = arguments;
     }
 
     @Override

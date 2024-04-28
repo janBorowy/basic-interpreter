@@ -2,8 +2,8 @@ program                  ::= { definition };
 definition               ::= functionDefinition
                            | structureDefinition
                            | variantDefinition;
-functionDefinition       ::= functionSignature "(" [ parameterSignature { "," parameterSignature } ] ")" block;
-structureDefinition      ::= "struct " identifier "{" { parameterSignature ";" } "}";
+functionDefinition       ::= functionSignature "(" parameters ")" block;
+structureDefinition      ::= "struct " identifier "{" parameters "}";
 variantDefinition        ::= "variant " identifier "{" identifier { "," identifier } "}";
 instruction              ::= block
                            | singleStatement
@@ -57,8 +57,9 @@ arguments                ::= "(", [ expression {"," expression } ], ")";
 functionSignature        ::= "void", identifier,
                            | primitiveType, identifier
                            | identifier, identifier; // user return type
-parameterSignature       ::= primitiveType, identifier
-                           | identifier, identifier; // user type parameter
+parameters               ::= [ parameterType, identifier { "," parameterType, identifier } ];
+parameterType            ::= primitiveType
+                           | identifier;
 initializationSignature  ::= ["var "] primitiveType, identifier;
 identifierList   ::= identifier { "," identifier };
 primitiveType            ::= "int"

@@ -68,12 +68,12 @@ class ExpressionParserSpec extends Specification {
     def "Should parse relation"() {
         expect:
             treeStr("2 > 1") ==
-"""Relation <row: 1, col: 1> operator=>
+"""Relation <row: 1, col: 1> operator=">"
 |-IntLiteral <row: 1, col: 1> value=2
 |-IntLiteral <row: 1, col: 5> value=1
 """
             treeStr("2 + 2 == 4") ==
-"""Relation <row: 1, col: 1> operator===
+"""Relation <row: 1, col: 1> operator="=="
 |-Sum <row: 1, col: 1> operator="+"
   |-IntLiteral <row: 1, col: 1> value=2
   |-IntLiteral <row: 1, col: 5> value=2
