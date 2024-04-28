@@ -41,36 +41,23 @@ public class PrintVisitor implements StatementVisitor {
 
     @Override
     public void visit(Expression expression) {
-        if (expression instanceof Alternative alternative) {
-            this.visit(alternative);
-        } else if (expression instanceof Cast cast) {
-            this.visit(cast);
-        } else if (expression instanceof Conjunction conjunction) {
-            this.visit(conjunction);
-        } else if (expression instanceof Relation relation) {
-            this.visit(relation);
-        } else if (expression instanceof BooleanLiteral booleanLiteral) {
-            this.visit(booleanLiteral);
-        } else if (expression instanceof FloatLiteral floatLiteral) {
-            this.visit(floatLiteral);
-        } else if (expression instanceof IntLiteral intLiteral) {
-            this.visit(intLiteral);
-        } else if (expression instanceof Multiplication multiplication) {
-            this.visit(multiplication);
-        } else if (expression instanceof Negation negation) {
-            this.visit(negation);
-        } else if (expression instanceof ReturnStatement returnStatement) {
-            this.visit(returnStatement);
-        } else if (expression instanceof StringLiteral stringLiteral) {
-            this.visit(stringLiteral);
-        } else if (expression instanceof Sum sum) {
-            this.visit(sum);
-        } else if (expression instanceof FunctionCall functionCall) {
-            this.visit(functionCall);
-        } else if (expression instanceof DotAccess dotAccess) {
-            this.visit(dotAccess);
-        } else if (expression instanceof Identifier identifier) {
-            this.visit(identifier);
+        switch (expression) {
+            case Alternative alternative -> this.visit(alternative);
+            case Cast cast -> this.visit(cast);
+            case Conjunction conjunction -> this.visit(conjunction);
+            case Relation relation -> this.visit(relation);
+            case BooleanLiteral booleanLiteral -> this.visit(booleanLiteral);
+            case FloatLiteral floatLiteral -> this.visit(floatLiteral);
+            case IntLiteral intLiteral -> this.visit(intLiteral);
+            case Multiplication multiplication -> this.visit(multiplication);
+            case Negation negation -> this.visit(negation);
+            case ReturnStatement returnStatement -> this.visit(returnStatement);
+            case StringLiteral stringLiteral -> this.visit(stringLiteral);
+            case Sum sum -> this.visit(sum);
+            case FunctionCall functionCall -> this.visit(functionCall);
+            case DotAccess dotAccess -> this.visit(dotAccess);
+            case Identifier identifier -> this.visit(identifier);
+            default -> throw new UnknownNodeException();
         }
     }
 
@@ -205,14 +192,6 @@ public class PrintVisitor implements StatementVisitor {
         return DEPTH_SYMBOL.repeat(depth - NON_DEPTH_PREFIX_LENGTH) +
                 BRANCH_SYMBOL +
                 NAME_PREFIX;
-    }
-
-    private void printNode(Statement statement, List<Param> params) {
-        write(getPrefix() +
-                statement.getClass().getSimpleName() +
-                ' ' +
-                getParametersString(params) +
-                '\n');
     }
 
     private void printNode(Statement statement, List<Param> params, Position position) {
