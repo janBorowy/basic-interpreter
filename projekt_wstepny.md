@@ -205,26 +205,27 @@ program                  ::= { definition };
 definition               ::= functionDefinition
                            | structureDefinition
                            | variantDefinition;
-functionDefinition       ::= functionSignature "(" parameters ")" block;
+functionDefinition       ::= functionReturnType identifier "(" parameters ")" block;
 structureDefinition      ::= "struct " identifier "{" parameters "}";
 variantDefinition        ::= "variant " identifier "{" identifier { "," identifier } "}";
 instruction              ::= block
                            | singleStatement
+                           | var
                            | compoundStatement;
-block                    ::= "{" { singleOrCompoundStatement } "}";
-singleOrCompoundStatement::= singleStatement
-                           | compoundStatement;
+block                    ::= "{" { instruction } "}";
 singleStatement          ::= (identifierStatement
-                           | "var" initialization // var initialization
+                           | primitiveInitialization
                            | return) ";";
-identifierStatement      ::= identifier ("(" [ expression {"," expression } ] ")" // function call
+identifierStatement      ::= identifier (arguments // function call
                            | "=" expression // assignment
-                           | identifier "=" expression) // user type initialization
+                           | identifier "=" expression) // non-var user type initialization
 compoundStatement        ::= if
                            | while
                            | match;
-initialization           ::= primitiveType identifier "=" expression; // primitive initialization
-                           | identifier identifier "=" expression; // user type initialization
+var                      ::= "var" initialization ";"
+initialization           ::= primitiveType identifier "=" expression;
+                           | identifier identifier "=" expression;
+primitiveInitialization  ::= primitiveType identifier "=" expression;
 return                   ::= "return ", [expression];
 while                    ::= "while", "(" expression ")", instruction;
 functionCall             ::= identifier, arguments;
@@ -257,11 +258,11 @@ relationalOperator       ::= "=="
                            | "<="
                            | ">=";
 arguments                ::= "(", [ expression {"," expression } ], ")";
-functionSignature        ::= "void", identifier,
-                           | primitiveType, identifier
-                           | identifier, identifier; // user return type
-parameters               ::= [ parameterType, identifier { "," parameterType, identifier } ];
-parameterType            ::= primitiveType
+functionReturnType       ::= "void"
+                           | primitiveType
+                           | identifier;
+parameters               ::= [ variableType, identifier { "," variableType, identifier } ];
+variableType             ::= primitiveType
                            | identifier;
 initializationSignature  ::= ["var "] primitiveType, identifier;
 identifierList   ::= identifier { "," identifier };

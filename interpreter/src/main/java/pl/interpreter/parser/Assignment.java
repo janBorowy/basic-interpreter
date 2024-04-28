@@ -3,12 +3,14 @@ package pl.interpreter.parser;
 import lombok.Getter;
 
 @Getter
-public class ReturnStatement extends Statement implements Instruction {
+public class Assignment extends Statement implements Instruction {
 
-    private Expression expression;
+    private final String id;
+    private final Expression expression;
 
-    public ReturnStatement(Expression expression, Position tokenPosition) {
+    public Assignment(String id, Expression expression, Position tokenPosition) {
         super(tokenPosition);
+        this.id = id;
         this.expression = expression;
     }
 

@@ -4,7 +4,7 @@ import java.util.List;
 import lombok.Getter;
 
 @Getter
-public class FunctionCall extends Statement implements Expression {
+public class FunctionCall extends Statement implements Expression, Instruction {
 
     private final String functionId;
     private final List<Expression> arguments;

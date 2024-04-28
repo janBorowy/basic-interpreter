@@ -1,3 +1,3 @@
 package pl.interpreter.parser;
 
-public record ParameterType(ParameterTypeEnum parameterType, String userType) { }
+public record ParameterType(VariableType variableType, String userType) { }

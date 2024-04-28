@@ -2,6 +2,7 @@ package pl.interpreter.parser;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -25,6 +26,9 @@ public class PrintVisitor implements StatementVisitor {
     private static final String OPERATOR_MSG = "operator";
     private static final String FUNCTION_ID_MSG = "function_id";
     private static final String FIELD_NAME_MSG = "field_name";
+    private static final String RETURN_TYPE_MSG = "return_type";
+    private static final String USER_TYPE_MSG = "user_type";
+    private static final String VAR_MSG = "var";
 
     public PrintVisitor(@NonNull Writer writer) {
         this.writer = writer;
@@ -52,7 +56,6 @@ public class PrintVisitor implements StatementVisitor {
             case IntLiteral intLiteral -> this.visit(intLiteral);
             case Multiplication multiplication -> this.visit(multiplication);
             case Negation negation -> this.visit(negation);
-            case ReturnStatement returnStatement -> this.visit(returnStatement);
             case StringLiteral stringLiteral -> this.visit(stringLiteral);
             case Sum sum -> this.visit(sum);
             case FunctionCall functionCall -> this.visit(functionCall);
@@ -170,6 +173,7 @@ public class PrintVisitor implements StatementVisitor {
         switch(definition) {
             case StructureDefinition structureDefinition -> visit(structureDefinition);
             case VariantDefinition variantDefinition -> visit(variantDefinition);
+            case FunctionDefinition functionDefinition -> visit(functionDefinition);
             default -> throw new UnknownNodeException();
         }
     }
@@ -186,6 +190,65 @@ public class PrintVisitor implements StatementVisitor {
         ), variantDefinition.getPosition());
         diveIn();
         variantDefinition.getStructureIds().forEach(this::printUserType);
+        diveOut();
+    }
+
+    @Override
+    public void visit(FunctionDefinition functionDefinition) {
+        var params = new ArrayList<>(List.of(new Param(ID_MSG, functionDefinition.getId()),
+                new Param(RETURN_TYPE_MSG, functionDefinition.getReturnType().type().toString())));
+        if (Objects.nonNull(functionDefinition.getReturnType().userType())) {
+            params.add(new Param(USER_TYPE_MSG, functionDefinition.getReturnType().userType()));
+        }
+        printNode(functionDefinition, params, functionDefinition.getPosition());
+        diveIn();
+        functionDefinition.getParameters().forEach(this::printParameter);
+        this.visit(functionDefinition.getBlock());
+        diveOut();
+    }
+
+    @Override
+    public void visit(Block block) {
+        printNode(block, List.of(), block.getPosition());
+        diveIn();
+        block.getInstructions().forEach(this::visit);
+        diveOut();
+    }
+
+    @Override
+    public void visit(Instruction instruction) {
+        switch(instruction) {
+            case ReturnStatement returnStatement -> this.visit(returnStatement);
+            case Assignment assignment -> this.visit(assignment);
+            case FunctionCall functionCall -> this.visit(functionCall);
+            case Initialization initialization -> this.visit(initialization);
+            default -> throw new UnknownNodeException();
+        }
+    }
+
+    @Override
+    public void visit(Assignment assignment) {
+        printNode(assignment, List.of(
+                new Param(ID_MSG, assignment.getId())
+        ), assignment.getPosition());
+        diveIn();
+        this.visit(assignment.getExpression());
+        diveOut();
+    }
+
+    @Override
+    public void visit(Initialization initialization) {
+        var params = new ArrayList<>(List.of(
+                new Param(ID_MSG, initialization.getId()),
+                new Param(VAR_MSG, String.valueOf(initialization.isVar())),
+                new Param(TYPE_MSG, initialization.getType().toString()))
+        );
+        if (Objects.nonNull(initialization.getUserType())) {
+            params.add(new Param(USER_TYPE_MSG, initialization.getUserType()));
+        }
+        printNode(initialization, params, initialization.getPosition());
+        diveIn();
+        this.visit(initialization.getExpression());
         diveOut();
     }
 
@@ -259,7 +322,7 @@ public class PrintVisitor implements StatementVisitor {
                 "Parameter" +
                 ' ' +
                 "id=" + id +
-                ", type=" + parameter.parameterType().toString() +
+                ", type=" + parameter.variableType().toString() +
                 userTypeStr +
                 '\n');
     }

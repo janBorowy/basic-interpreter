@@ -38,7 +38,7 @@ public class Parser {
         throw new ParserException(message.concat(": %d, col: %d".formatted(token().row(), token().col())));
     }
 
-    protected String parseIdentifier() {
+    protected String parseMustBeIdentifier() {
         var id = (String) mustBe(TokenType.IDENTIFIER).value();
         consumeToken();
         return id;

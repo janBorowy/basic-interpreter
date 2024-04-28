@@ -43,4 +43,14 @@ public interface StatementVisitor {
     void visit(ParameterSignatureMap parameterSignatureMap);
 
     void visit(VariantDefinition variantDefinition);
+
+    void visit(FunctionDefinition functionDefinition);
+
+    void visit(Block block);
+
+    void visit(Instruction instruction);
+
+    void visit(Assignment assignment);
+
+    void visit(Initialization initialization);
 }
