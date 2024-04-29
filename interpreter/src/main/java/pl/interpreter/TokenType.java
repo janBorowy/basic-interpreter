@@ -1,7 +1,6 @@
 package pl.interpreter;
 
 public enum TokenType {
-    // TODO: change token type
     KW_STRUCT,
     KW_VARIANT,
     KW_RETURN,
@@ -20,6 +19,7 @@ public enum TokenType {
     KW_AND,
     KW_OR,
     KW_VAR,
+    KW_DEFAULT,
     IDENTIFIER,
     STRING_CONST,
     INT_CONST,

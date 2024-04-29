@@ -296,6 +296,7 @@ string getDateString(MetaData meta) {
     match(meta.date) {
         FunnyDateFormat fdf -> dateStr = parseFdf(fdf);
         SeriousDateFormat sdf -> dateStr = parseSdf(sdf);
+        default -> error("unknown date format");
     }
     return dateStr;
 }
@@ -316,6 +317,9 @@ string getDateString(MetaData meta) {
         |-Assignment <row: 6, col: 42> id=dateStr
           |-FunctionCall <row: 6, col: 44> function_id=parseSdf
             |-Identifier <row: 6, col: 53> id=sdf
+      |-MatchBranch <row: 7, col: 9> type=null, field_name=null
+        |-FunctionCall <row: 7, col: 25> function_id=error
+          |-StringLiteral <row: 7, col: 26> value=unknown date format
 """
         treeStr("""
 string getDateString(MetaData meta) {
@@ -347,4 +351,355 @@ string getDateString(MetaData meta) {
         then:
         ParserException e = thrown()
     }
+
+    def "Should parse demo source code"() {
+        expect:
+        treeStr("""
+/*
+    This is an
+    example of
+    multiline comment
+*/
+int main() { // main is an entry point of every program
+    int a = 2; // Initialize immutable integer
+    int b = 2;
+    int sum = a + b; // Binary(two argument) addition function
+    string str = (2 + 2) as string; // immutable string initialization
+    print(str); // Built-in standard output function
+    
+    return 0; // main return exit code
+}
+""") == """Program <row: 1, col: 1> 
+|-FunctionDefinition <row: 7, col: 1> id=main, return_type=int
+  |-Block <row: 7, col: 12> 
+    |-Initialization <row: 8, col: 5> id=a, var=false, type=int
+      |-IntLiteral <row: 8, col: 13> value=2
+    |-Initialization <row: 9, col: 5> id=b, var=false, type=int
+      |-IntLiteral <row: 9, col: 13> value=2
+    |-Initialization <row: 10, col: 5> id=sum, var=false, type=int
+      |-Sum <row: 10, col: 15> operator="+"
+        |-Identifier <row: 10, col: 15> id=a
+        |-Identifier <row: 10, col: 19> id=b
+    |-Initialization <row: 11, col: 5> id=str, var=false, type=string
+      |-Cast <row: 11, col: 18> type=string
+        |-Sum <row: 11, col: 19> operator="+"
+          |-IntLiteral <row: 11, col: 19> value=2
+          |-IntLiteral <row: 11, col: 23> value=2
+    |-FunctionCall <row: 12, col: 10> function_id=print
+      |-Identifier <row: 12, col: 11> id=str
+    |-ReturnStatement <row: 14, col: 5> 
+      |-IntLiteral <row: 14, col: 12> value=0
+"""
+        treeStr("""int main () {
+    int a = 2;
+    var int b = 2;
+    // a = 3; ERROR!
+    b = 3;
+    return 0;
+}
+""") == """Program <row: 1, col: 1> 
+|-FunctionDefinition <row: 1, col: 1> id=main, return_type=int
+  |-Block <row: 1, col: 13> 
+    |-Initialization <row: 2, col: 5> id=a, var=false, type=int
+      |-IntLiteral <row: 2, col: 13> value=2
+    |-Initialization <row: 3, col: 5> id=b, var=true, type=int
+      |-IntLiteral <row: 3, col: 17> value=2
+    |-Assignment <row: 5, col: 7> id=b
+      |-IntLiteral <row: 5, col: 9> value=3
+    |-ReturnStatement <row: 6, col: 5> 
+      |-IntLiteral <row: 6, col: 12> value=0
+"""
+        treeStr("""int main () {
+    int a = 2;
+    int b = 3;
+    if(a % 2 == 0) {
+        print("a variable's value is even");
+    } else {
+        print("a variable's value is uneven");
+    }
+    return 0;
+}
+""") == """Program <row: 1, col: 1> 
+|-FunctionDefinition <row: 1, col: 1> id=main, return_type=int
+  |-Block <row: 1, col: 13> 
+    |-Initialization <row: 2, col: 5> id=a, var=false, type=int
+      |-IntLiteral <row: 2, col: 13> value=2
+    |-Initialization <row: 3, col: 5> id=b, var=false, type=int
+      |-IntLiteral <row: 3, col: 13> value=3
+    |-IfStatement <row: 4, col: 5> 
+      |-Relation <row: 4, col: 8> operator="=="
+        |-Multiplication <row: 4, col: 8> operator="%"
+          |-Identifier <row: 4, col: 8> id=a
+          |-IntLiteral <row: 4, col: 12> value=2
+        |-IntLiteral <row: 4, col: 17> value=0
+      |-Block <row: 4, col: 20> 
+        |-FunctionCall <row: 5, col: 14> function_id=print
+          |-StringLiteral <row: 5, col: 15> value=a variable's value is even
+      |-Block <row: 6, col: 12> 
+        |-FunctionCall <row: 7, col: 14> function_id=print
+          |-StringLiteral <row: 7, col: 15> value=a variable's value is uneven
+    |-ReturnStatement <row: 9, col: 5> 
+      |-IntLiteral <row: 9, col: 12> value=0
+"""
+
+        treeStr("""int main() {
+    int i = 0;
+    while(i < 10) {
+        print(i as string);
+        i = i + 1;
+    }
+    return 0;
+}
+""") == """Program <row: 1, col: 1> 
+|-FunctionDefinition <row: 1, col: 1> id=main, return_type=int
+  |-Block <row: 1, col: 12> 
+    |-Initialization <row: 2, col: 5> id=i, var=false, type=int
+      |-IntLiteral <row: 2, col: 13> value=0
+    |-WhileStatement <row: 3, col: 5> 
+      |-Relation <row: 3, col: 11> operator="<"
+        |-Identifier <row: 3, col: 11> id=i
+        |-IntLiteral <row: 3, col: 15> value=10
+      |-Block <row: 3, col: 19> 
+        |-FunctionCall <row: 4, col: 14> function_id=print
+          |-Cast <row: 4, col: 15> type=string
+            |-Identifier <row: 4, col: 15> id=i
+        |-Assignment <row: 5, col: 11> id=i
+          |-Sum <row: 5, col: 13> operator="+"
+            |-Identifier <row: 5, col: 13> id=i
+            |-IntLiteral <row: 5, col: 17> value=1
+    |-ReturnStatement <row: 7, col: 5> 
+      |-IntLiteral <row: 7, col: 12> value=0
+"""
+
+        treeStr("""struct Point {
+    float x,
+    float y
+}
+
+int main() {
+    Point point = Point(1, 2);
+    // p.x = 2; ERROR!
+    print(p.x); // p.x is read-only 
+    return 0;
+}
+""") == """Program <row: 1, col: 1> 
+|-StructureDefinition <row: 1, col: 1> id=Point
+  |-Parameter id=x, type=float
+  |-Parameter id=y, type=float
+|-FunctionDefinition <row: 6, col: 1> id=main, return_type=int
+  |-Block <row: 6, col: 12> 
+    |-Initialization <row: 7, col: 11> id=point, var=false, type=user_type, user_type=Point
+      |-FunctionCall <row: 7, col: 19> function_id=Point
+        |-IntLiteral <row: 7, col: 25> value=1
+        |-IntLiteral <row: 7, col: 28> value=2
+    |-FunctionCall <row: 9, col: 10> function_id=print
+      |-DotAccess <row: 9, col: 11> field_name=x
+        |-Identifier <row: 9, col: 11> id=p
+    |-ReturnStatement <row: 10, col: 5> 
+      |-IntLiteral <row: 10, col: 12> value=0
+"""
+
+        treeStr("""struct Person {
+    string name,
+    string surname
+}
+
+struct Book {
+    Person author,
+    string title
+}
+""") == """Program <row: 1, col: 1> 
+|-StructureDefinition <row: 1, col: 1> id=Person
+  |-Parameter id=surname, type=string
+  |-Parameter id=name, type=string
+|-StructureDefinition <row: 6, col: 1> id=Book
+  |-Parameter id=author, type=user_type, userType=Person
+  |-Parameter id=title, type=string
+"""
+
+        treeStr("""struct Person {
+    string name,
+    string surname
+}
+
+struct Book {
+    string title,
+    string isbn,
+    Person author
+}
+
+struct Article {
+    string headline,
+    string shownIn,
+    Person author
+}
+
+variant Publication {
+    Book,
+    Article
+}
+
+void printPublication(Publication pub) {
+    match(pub) {
+        Book book -> print("Book with title - " + book.title);
+        Article article -> print("Article with headline - " + article.headline);
+        default -> print("Unknown publication");
+    }
+}
+""") == """Program <row: 1, col: 1> 
+|-StructureDefinition <row: 1, col: 1> id=Person
+  |-Parameter id=surname, type=string
+  |-Parameter id=name, type=string
+|-StructureDefinition <row: 6, col: 1> id=Book
+  |-Parameter id=author, type=user_type, userType=Person
+  |-Parameter id=isbn, type=string
+  |-Parameter id=title, type=string
+|-StructureDefinition <row: 12, col: 1> id=Article
+  |-Parameter id=author, type=user_type, userType=Person
+  |-Parameter id=headline, type=string
+  |-Parameter id=shownIn, type=string
+|-VariantDefinition <row: 18, col: 1> id=Publication
+  |-Type id=Book
+  |-Type id=Article
+|-FunctionDefinition <row: 23, col: 1> id=printPublication, return_type=void
+  |-Parameter id=pub, type=user_type, userType=Publication
+  |-Block <row: 23, col: 40> 
+    |-MatchStatement <row: 24, col: 5> 
+      |-Identifier <row: 24, col: 11> id=pub
+      |-MatchBranch <row: 25, col: 9> type=Book, field_name=book
+        |-FunctionCall <row: 25, col: 27> function_id=print
+          |-Sum <row: 25, col: 28> operator="+"
+            |-StringLiteral <row: 25, col: 28> value=Book with title - 
+            |-DotAccess <row: 25, col: 51> field_name=title
+              |-Identifier <row: 25, col: 51> id=book
+      |-MatchBranch <row: 26, col: 9> type=Article, field_name=article
+        |-FunctionCall <row: 26, col: 33> function_id=print
+          |-Sum <row: 26, col: 34> operator="+"
+            |-StringLiteral <row: 26, col: 34> value=Article with headline - 
+            |-DotAccess <row: 26, col: 63> field_name=headline
+              |-Identifier <row: 26, col: 63> id=article
+      |-MatchBranch <row: 27, col: 9> type=null, field_name=null
+        |-FunctionCall <row: 27, col: 25> function_id=print
+          |-StringLiteral <row: 27, col: 26> value=Unknown publication
+"""
+
+        treeStr("""struct IntPoint {
+    int ix,
+    int iy
+}
+
+struct FloatPoint {
+    float fx,
+    float fy
+}
+
+variant Point {
+    IntPoint,
+    FloatPoint
+}
+
+float getCoordinatesSum(Point p) {
+    match(p) {
+        IntPoint ip -> {
+            int sum = ip.ix + ip.iy;
+            return sum as float; 
+        }
+        FloatPoint fp -> return fp.fx + fp.fy;
+    }
+}
+""") == """Program <row: 1, col: 1> 
+|-StructureDefinition <row: 1, col: 1> id=IntPoint
+  |-Parameter id=iy, type=int
+  |-Parameter id=ix, type=int
+|-StructureDefinition <row: 6, col: 1> id=FloatPoint
+  |-Parameter id=fx, type=float
+  |-Parameter id=fy, type=float
+|-VariantDefinition <row: 11, col: 1> id=Point
+  |-Type id=IntPoint
+  |-Type id=FloatPoint
+|-FunctionDefinition <row: 16, col: 1> id=getCoordinatesSum, return_type=float
+  |-Parameter id=p, type=user_type, userType=Point
+  |-Block <row: 16, col: 34> 
+    |-MatchStatement <row: 17, col: 5> 
+      |-Identifier <row: 17, col: 11> id=p
+      |-MatchBranch <row: 18, col: 9> type=IntPoint, field_name=ip
+        |-Block <row: 18, col: 24> 
+          |-Initialization <row: 19, col: 13> id=sum, var=false, type=int
+            |-Sum <row: 19, col: 23> operator="+"
+              |-DotAccess <row: 19, col: 23> field_name=ix
+                |-Identifier <row: 19, col: 23> id=ip
+              |-DotAccess <row: 19, col: 31> field_name=iy
+                |-Identifier <row: 19, col: 31> id=ip
+          |-ReturnStatement <row: 20, col: 13> 
+            |-Cast <row: 20, col: 20> type=float
+              |-Identifier <row: 20, col: 20> id=sum
+      |-MatchBranch <row: 22, col: 9> type=FloatPoint, field_name=fp
+        |-ReturnStatement <row: 22, col: 26> 
+          |-Sum <row: 22, col: 33> operator="+"
+            |-DotAccess <row: 22, col: 33> field_name=fx
+              |-Identifier <row: 22, col: 33> id=fp
+            |-DotAccess <row: 22, col: 41> field_name=fy
+              |-Identifier <row: 22, col: 41> id=fp
+"""
+
+        treeStr("""int main() {
+    int a = 2;
+    if(true) {
+        int a = 3;
+        print(a as string); // 3
+    }
+    print(a as string); // 2
+}
+""") == """Program <row: 1, col: 1> 
+|-FunctionDefinition <row: 1, col: 1> id=main, return_type=int
+  |-Block <row: 1, col: 12> 
+    |-Initialization <row: 2, col: 5> id=a, var=false, type=int
+      |-IntLiteral <row: 2, col: 13> value=2
+    |-IfStatement <row: 3, col: 5> 
+      |-BooleanLiteral <row: 3, col: 8> value=true
+      |-Block <row: 3, col: 14> 
+        |-Initialization <row: 4, col: 9> id=a, var=false, type=int
+          |-IntLiteral <row: 4, col: 17> value=3
+        |-FunctionCall <row: 5, col: 14> function_id=print
+          |-Cast <row: 5, col: 15> type=string
+            |-Identifier <row: 5, col: 15> id=a
+    |-FunctionCall <row: 7, col: 10> function_id=print
+      |-Cast <row: 7, col: 11> type=string
+        |-Identifier <row: 7, col: 11> id=a
+"""
+
+        treeStr("""int getNthFibonacciNumber(int n) {
+    if(n == 0 or n == 1) {
+        return n;
+    }
+    return getNthFibonacciNumber(n - 1) + getNthFibonacciNumber(n - 2);
+}
+""") == """Program <row: 1, col: 1> 
+|-FunctionDefinition <row: 1, col: 1> id=getNthFibonacciNumber, return_type=int
+  |-Parameter id=n, type=int
+  |-Block <row: 1, col: 34> 
+    |-IfStatement <row: 2, col: 5> 
+      |-Alternative <row: 2, col: 8> 
+        |-Relation <row: 2, col: 8> operator="=="
+          |-Identifier <row: 2, col: 8> id=n
+          |-IntLiteral <row: 2, col: 13> value=0
+        |-Relation <row: 2, col: 18> operator="=="
+          |-Identifier <row: 2, col: 18> id=n
+          |-IntLiteral <row: 2, col: 23> value=1
+      |-Block <row: 2, col: 26> 
+        |-ReturnStatement <row: 3, col: 9> 
+          |-Identifier <row: 3, col: 16> id=n
+    |-ReturnStatement <row: 5, col: 5> 
+      |-Sum <row: 5, col: 12> operator="+"
+        |-FunctionCall <row: 5, col: 12> function_id=getNthFibonacciNumber
+          |-Sum <row: 5, col: 34> operator="-"
+            |-Identifier <row: 5, col: 34> id=n
+            |-IntLiteral <row: 5, col: 38> value=1
+        |-FunctionCall <row: 5, col: 43> function_id=getNthFibonacciNumber
+          |-Sum <row: 5, col: 65> operator="-"
+            |-Identifier <row: 5, col: 65> id=n
+            |-IntLiteral <row: 5, col: 69> value=2
+"""
+    }
+
 }

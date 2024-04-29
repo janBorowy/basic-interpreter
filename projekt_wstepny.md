@@ -84,8 +84,8 @@ int main() {
 
 ```
 struct Point {
-    float x;
-    float y;
+    float x,
+    float y
 }
 
 int main() {
@@ -98,13 +98,13 @@ int main() {
 
 ```
 struct Person {
-    string name;
-    string surname;
+    string name,
+    string surname
 }
 
 struct Book {
-    Person author;
-    string title;
+    Person author,
+    string title
 }
 
 ```
@@ -113,20 +113,20 @@ struct Book {
 
 ```
 struct Person {
-    string name;
-    string surname;
+    string name,
+    string surname
 }
 
 struct Book {
-    string title;
-    string isbn;
-    Person author;
+    string title,
+    string isbn,
+    Person author
 }
 
 struct Article {
-    string headline;
-    string shownIn;
-    Person author;
+    string headline,
+    string shownIn,
+    Person author
 }
 
 variant Publication {
@@ -136,9 +136,9 @@ variant Publication {
 
 void printPublication(Publication pub) {
     match(pub) {
-        Book book -> print("Book with title - " + book.title)
-        Article article -> print("Article with headline - " + article.headline)
-        default -> print("Unknown publication")
+        Book book -> print("Book with title - " + book.title);
+        Article article -> print("Article with headline - " + article.headline);
+        default -> print("Unknown publication");
     }
 }
 ```
@@ -147,13 +147,13 @@ void printPublication(Publication pub) {
 
 ```
 struct IntPoint {
-    int ix;
-    int iy;
+    int ix,
+    int iy
 }
 
 struct FloatPoint {
-    float fx;
-    float fy;
+    float fx,
+    float fy
 }
 
 variant Point {
@@ -189,7 +189,6 @@ int main() {
 
 ### Rekurencja
 ```
-
 int getNthFibonacciNumber(int n) {
     if(n == 0 or n == 1) {
         return n;
@@ -231,8 +230,8 @@ while                    ::= "while", "(" expression ")", instruction;
 functionCall             ::= identifier, arguments;
 match                    ::= "match", "(", dotAccess, ")", "{", matchBranch, {matchBranch}, "}";
 matchBranch              ::= identifier, identifier, "->" instruction;
-cast                     ::= sum, ["as", primitiveType]
-                           | stringLiteral, ["as", primitiveType];
+                           | "default" "->" instruction;
+cast                     ::= sum, ["as", primitiveType];
 sum                      ::= multiplication, {additionOperator, multiplication};
 multiplication           ::= negation, {multiplicationOperator, negation};
 additionOperator         ::= "+"
@@ -244,6 +243,7 @@ negation                 ::= ["!"] factor;
 factor                   ::= dotAccess
                            | number // integer or float literal
                            | booleanLiteral
+                           | stringLiteral
                            | "(", expression, ")";
 dotAccess                ::= identifierOrFunctionCall {"." identifier}
 identifierOrFunctionCall ::= identifier ["("[ expression {"," expression } ]")"]

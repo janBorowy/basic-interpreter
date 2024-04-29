@@ -1,6 +1,7 @@
 package pl.interpreter.parser;
 
 import pl.interpreter.Token;
+import pl.interpreter.TokenType;
 import pl.interpreter.lexical_analyzer.LexicalAnalyzer;
 
 public class TokenManager {
@@ -18,7 +19,9 @@ public class TokenManager {
     }
 
     public Token next() {
-        token = lexicalAnalyzer.getNextToken();
+        do {
+            token = lexicalAnalyzer.getNextToken();
+        } while (token.type() == TokenType.COMMENT);
         return token;
     }
 }

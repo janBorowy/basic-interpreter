@@ -66,23 +66,8 @@ public class ExpressionParser extends Parser {
     }
 
     // cast ::= sum, ["as", primitiveType]
-    //        | stringLiteral, ["as", primitiveType];
     private Optional<Expression> parseCast() {
         var position = getTokenPosition();
-        if (tokenIsOfType(TokenType.STRING_CONST)) {
-            var value = (String) token().value();
-            consumeToken();
-            if (tokenIsOfType(TokenType.KW_AS)) {
-                consumeToken();
-                var type = PrimitiveType.parsePrimitiveType(token());
-                if (type.isEmpty()) {
-                    throwParserError("Expected primitive type");
-                }
-                consumeToken();
-                return Optional.of(new Cast(new StringLiteral(value, position), type.get(), position));
-            }
-            return Optional.of(new StringLiteral(value, position));
-        }
         var sum = parseSum();
         if (sum.isEmpty()) {
             return Optional.empty();
@@ -161,7 +146,8 @@ public class ExpressionParser extends Parser {
         return parseDotAccess()
                 .or(this::parseNumber)
                 .or(this::parseBooleanLiteral)
-                .or(this::parseNestedExpression);
+                .or(this::parseNestedExpression)
+                .or(this::parseStringLiteral);
     }
 
     // dotAccess ::= identifierOrFunctionCall {"." identifier}
@@ -253,5 +239,15 @@ public class ExpressionParser extends Parser {
         }
         consumeToken();
         return expression;
+    }
+
+    private Optional<Expression> parseStringLiteral() {
+        var position = getTokenPosition();
+        if (!tokenIsOfType(TokenType.STRING_CONST)) {
+            return Optional.empty();
+        }
+        var value = (String) token().value();
+        consumeToken();
+        return Optional.of(new StringLiteral(value, position));
     }
 }

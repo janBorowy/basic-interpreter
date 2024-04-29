@@ -254,9 +254,20 @@ public class ProgramParser extends Parser {
     }
 
     // matchBranch ::= identifier, identifier, "->" instruction;
+    //               | "default" "->" instruction;
     private Optional<MatchBranch> parseMatchBranch() {
         var position = getTokenPosition();
         if (!tokenIsOfType(TokenType.IDENTIFIER)) {
+            if (tokenIsOfType(TokenType.KW_DEFAULT)) {
+                consumeToken();
+                mustBe(TokenType.ARROW);
+                consumeToken();
+                var instruction = parseInstruction();
+                if (instruction.isEmpty()) {
+                    throwParserError("Expected instruction");
+                }
+                return Optional.of(new MatchBranch(null, null, instruction.get(), position));
+            }
             return Optional.empty();
         }
         var structureId = (String) token().value();
