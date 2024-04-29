@@ -53,4 +53,12 @@ public interface StatementVisitor {
     void visit(Assignment assignment);
 
     void visit(Initialization initialization);
+
+    void visit(IfStatement ifStatement);
+
+    void visit(WhileStatement whileStatement);
+
+    void visit(MatchStatement matchStatement);
+
+    void visit(MatchBranch matchBranch);
 }

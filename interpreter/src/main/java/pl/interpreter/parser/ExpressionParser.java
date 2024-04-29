@@ -165,22 +165,19 @@ public class ExpressionParser extends Parser {
     }
 
     // dotAccess ::= identifierOrFunctionCall {"." identifier}
-    private Optional<Expression> parseDotAccess() {
+    public Optional<Expression> parseDotAccess() {
         var position = getTokenPosition();
-        var expression = parseIdentifierOrFunctionCall();
-        if (expression.isEmpty()) {
+        var expressionOptional = parseIdentifierOrFunctionCall();
+        if (expressionOptional.isEmpty()) {
             return Optional.empty();
         }
-        if (!tokenIsOfType(TokenType.DOT)) {
-            return expression;
+        var expression = expressionOptional.get();
+        while (tokenIsOfType(TokenType.DOT)) {
+            consumeToken();
+            var fieldId = parseMustBeIdentifier();
+            expression = new DotAccess(expression, fieldId, position);
         }
-        consumeToken();
-        if (!tokenIsOfType(TokenType.IDENTIFIER)) {
-            throwParserError("Expected identifier");
-        }
-        var fieldName = (String) token().value();
-        consumeToken();
-        return Optional.of(new DotAccess(expression.get(), fieldName, position));
+        return Optional.of(expression);
     }
 
     private Optional<Expression> parseBooleanLiteral() {

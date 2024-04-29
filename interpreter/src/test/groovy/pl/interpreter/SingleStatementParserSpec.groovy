@@ -82,4 +82,15 @@ class SingleStatementParserSpec extends Specification {
 |-IntLiteral <row: 1, col: 9> value=1
 """
     }
+
+    def "Should parse var initialization"() {
+        expect:
+        treeStr("var int a = 1;") == """Initialization <row: 1, col: 1> id=a, var=true, type=int
+|-IntLiteral <row: 1, col: 13> value=1
+"""
+        treeStr("var Circle c = Circle(1);") == """Initialization <row: 1, col: 1> id=c, var=true, type=user_type, user_type=Circle
+|-FunctionCall <row: 1, col: 16> function_id=Circle
+  |-IntLiteral <row: 1, col: 23> value=1
+"""
+    }
 }

@@ -171,20 +171,180 @@ c
 """
     }
 
-    def "Should parse var initialization"() {
+    def "Should throw if duplicated parameter names"() {
+        when:
+        treeStr("int sum (int a, int a) { return a + a; }")
+        then:
+        ParserException e = thrown()
+        e.getMessage() == "Parameter identifier duplicated at row: 1, col: 10"
+    }
+
+    def "Should parse compound statements"() {
         expect:
-        treeStr("int main() { var int a = 1; }") == """Program <row: 1, col: 1> 
-|-FunctionDefinition <row: 1, col: 1> id=main, return_type=int
-  |-Block <row: 1, col: 12> 
-    |-Initialization <row: 1, col: 14> id=a, var=true, type=int
-      |-IntLiteral <row: 1, col: 26> value=1
-"""
-        treeStr("int main () { var Circle c = Circle(1); }") == """Program <row: 1, col: 1> 
+            treeStr("int main () { if (a == 1) return a; else return b; }") == """Program <row: 1, col: 1> 
 |-FunctionDefinition <row: 1, col: 1> id=main, return_type=int
   |-Block <row: 1, col: 13> 
-    |-Initialization <row: 1, col: 15> id=c, var=true, type=user_type, user_type=Circle
-      |-FunctionCall <row: 1, col: 30> function_id=Circle
-        |-IntLiteral <row: 1, col: 37> value=1
+    |-IfStatement <row: 1, col: 15> 
+      |-Relation <row: 1, col: 19> operator="=="
+        |-Identifier <row: 1, col: 19> id=a
+        |-IntLiteral <row: 1, col: 24> value=1
+      |-ReturnStatement <row: 1, col: 27> 
+        |-Identifier <row: 1, col: 34> id=a
+      |-ReturnStatement <row: 1, col: 42> 
+        |-Identifier <row: 1, col: 49> id=b
 """
+
+        treeStr("""int main () {
+    if (a == b and b != 0) {
+        print("Hello");
+        b = b + 1;
+    }
+}""") == """Program <row: 1, col: 1> 
+|-FunctionDefinition <row: 1, col: 1> id=main, return_type=int
+  |-Block <row: 1, col: 13> 
+    |-IfStatement <row: 2, col: 5> 
+      |-Conjunction <row: 2, col: 9> 
+        |-Relation <row: 2, col: 9> operator="=="
+          |-Identifier <row: 2, col: 9> id=a
+          |-Identifier <row: 2, col: 14> id=b
+        |-Relation <row: 2, col: 20> operator="!="
+          |-Identifier <row: 2, col: 20> id=b
+          |-IntLiteral <row: 2, col: 25> value=0
+      |-Block <row: 2, col: 28> 
+        |-FunctionCall <row: 3, col: 14> function_id=print
+          |-StringLiteral <row: 3, col: 15> value=Hello
+        |-Assignment <row: 4, col: 11> id=b
+          |-Sum <row: 4, col: 13> operator="+"
+            |-Identifier <row: 4, col: 13> id=b
+            |-IntLiteral <row: 4, col: 17> value=1
+"""
+        treeStr("int main () { if (a > 1) {} else { a = a + 1; } }")
+    }
+
+    def "Should throw if expression is empty"() {
+        when:
+        treeStr("""int main() { if () print("yes"); }""")
+        then:
+        ParserException e = thrown()
+    }
+
+    def "Should throw if no instruction"() {
+        when:
+        treeStr("""int main() { if () }""")
+        then:
+        ParserException e = thrown()
+    }
+
+    def "Should throw if no instruction after else"() {
+        when:
+        treeStr("""int main(){ if(a <= 1) {} else }""")
+        then:
+        ParserException e = thrown()
+    }
+
+    def "Should parse while statement"() {
+        expect:
+            treeStr("int main () { while(1) doSomething(); }") == """Program <row: 1, col: 1> 
+|-FunctionDefinition <row: 1, col: 1> id=main, return_type=int
+  |-Block <row: 1, col: 13> 
+    |-WhileStatement <row: 1, col: 15> 
+      |-IntLiteral <row: 1, col: 21> value=1
+      |-FunctionCall <row: 1, col: 35> function_id=doSomething
+"""
+        treeStr("""
+int main() {
+    while (keepGoing(a)) {
+        print(\"hello\");
+        incrementCounter();
+    }
+    return 0;
+}
+""") == """Program <row: 1, col: 1> 
+|-FunctionDefinition <row: 2, col: 1> id=main, return_type=int
+  |-Block <row: 2, col: 12> 
+    |-WhileStatement <row: 3, col: 5> 
+      |-FunctionCall <row: 3, col: 12> function_id=keepGoing
+        |-Identifier <row: 3, col: 22> id=a
+      |-Block <row: 3, col: 26> 
+        |-FunctionCall <row: 4, col: 14> function_id=print
+          |-StringLiteral <row: 4, col: 15> value=hello
+        |-FunctionCall <row: 5, col: 25> function_id=incrementCounter
+    |-ReturnStatement <row: 7, col: 5> 
+      |-IntLiteral <row: 7, col: 12> value=0
+"""
+    }
+
+    def "Should throw if no expression in while"() {
+        when:
+        treeStr("int main () { while() doSomething(); }")
+        then:
+        ParserException e = thrown()
+    }
+
+    def "Should throw if no instruction after while"() {
+        when:
+        treeStr("int main() { while(a) }")
+        then:
+        ParserException e = thrown()
+    }
+
+    def "Should parse match"() {
+        expect:
+        treeStr("""
+string getDateString(MetaData meta) {
+    var string dateStr = "";
+    match(meta.date) {
+        FunnyDateFormat fdf -> dateStr = parseFdf(fdf);
+        SeriousDateFormat sdf -> dateStr = parseSdf(sdf);
+    }
+    return dateStr;
+}
+""") == """Program <row: 1, col: 1> 
+|-FunctionDefinition <row: 2, col: 1> id=getDateString, return_type=string
+  |-Parameter id=meta, type=user_type, userType=MetaData
+  |-Block <row: 2, col: 37> 
+    |-Initialization <row: 3, col: 5> id=dateStr, var=true, type=string
+      |-StringLiteral <row: 3, col: 26> value=
+    |-MatchStatement <row: 4, col: 5> 
+      |-DotAccess <row: 4, col: 11> field_name=date
+        |-Identifier <row: 4, col: 11> id=meta
+      |-MatchBranch <row: 5, col: 9> type=FunnyDateFormat, field_name=fdf
+        |-Assignment <row: 5, col: 40> id=dateStr
+          |-FunctionCall <row: 5, col: 42> function_id=parseFdf
+            |-Identifier <row: 5, col: 51> id=fdf
+      |-MatchBranch <row: 6, col: 9> type=SeriousDateFormat, field_name=sdf
+        |-Assignment <row: 6, col: 42> id=dateStr
+          |-FunctionCall <row: 6, col: 44> function_id=parseSdf
+            |-Identifier <row: 6, col: 53> id=sdf
+"""
+        treeStr("""
+string getDateString(MetaData meta) {
+    var string dateStr = "";
+    match(meta.date) {
+        FunnyDateFormat fdf -> dateStr = parseFdf(fdf);
+    }
+    return dateStr;
+}
+""") == """Program <row: 1, col: 1> 
+|-FunctionDefinition <row: 2, col: 1> id=getDateString, return_type=string
+  |-Parameter id=meta, type=user_type, userType=MetaData
+  |-Block <row: 2, col: 37> 
+    |-Initialization <row: 3, col: 5> id=dateStr, var=true, type=string
+      |-StringLiteral <row: 3, col: 26> value=
+    |-MatchStatement <row: 4, col: 5> 
+      |-DotAccess <row: 4, col: 11> field_name=date
+        |-Identifier <row: 4, col: 11> id=meta
+      |-MatchBranch <row: 5, col: 9> type=FunnyDateFormat, field_name=fdf
+        |-Assignment <row: 5, col: 40> id=dateStr
+          |-FunctionCall <row: 5, col: 42> function_id=parseFdf
+            |-Identifier <row: 5, col: 51> id=fdf
+"""
+    }
+
+    def "Should throw in no branches in match"() {
+        when:
+        treeStr("int main () { match(a) { } }")
+        then:
+        ParserException e = thrown()
     }
 }

@@ -15,11 +15,13 @@ public class SingleStatementParser extends Parser {
 
     // singleStatement ::= (identifierStatement
     //                   | primitiveInitialization
+    //                   | var
     //                   | return) ";";
     public Optional<Instruction> parseSingleStatement() {
-        var statement = parseReturn()
-                .or(this::parseIdentifierStatement)
-                .or(this::parsePrimitiveInitialization);
+        var statement = parseIdentifierStatement()
+                .or(this::parsePrimitiveInitialization)
+                .or(this::parseVar)
+                .or(this::parseReturn);
         if (statement.isEmpty()) {
             return Optional.empty();
         }
@@ -127,5 +129,33 @@ public class SingleStatementParser extends Parser {
             return Optional.of(new ReturnStatement(null, position));
         }
         return Optional.of(new ReturnStatement(expression.get(), position));
+    }
+
+    // var                      ::= "var" initialization
+    // initialization           ::= primitiveType identifier "=" expression;
+    //                            | identifier identifier "=" expression;
+    private Optional<Initialization> parseVar() {
+        var position = getTokenPosition();
+        if (!tokenIsOfType(TokenType.KW_VAR)) {
+            return Optional.empty();
+        }
+        consumeToken();
+        var type = VariableType.parseVariableType(token());
+        if (type.isEmpty()) {
+            throwParserError("Expected type");
+        }
+        String userType = null;
+        if (type.get() == VariableType.USER_TYPE) {
+            userType = (String) token().value();
+        }
+        consumeToken();
+        var id = parseMustBeIdentifier();
+        mustBe(TokenType.ASSIGNMENT);
+        consumeToken();
+        var expression = expressionParser.parseExpression();
+        if (expression.isEmpty()) {
+            throwParserError("Expected expression");
+        }
+        return Optional.of(new Initialization(id, userType, type.get(), true, expression.get(), position));
     }
 }

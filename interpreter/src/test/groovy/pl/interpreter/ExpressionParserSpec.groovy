@@ -149,9 +149,17 @@ class ExpressionParserSpec extends Specification {
             treeStr("a.b") == """DotAccess <row: 1, col: 1> field_name=b
 |-Identifier <row: 1, col: 1> id=a
 """
+        treeStr("a.b.c") == """DotAccess <row: 1, col: 1> field_name=c
+|-DotAccess <row: 1, col: 1> field_name=b
+  |-Identifier <row: 1, col: 1> id=a
+"""
             treeStr("a()") == "FunctionCall <row: 1, col: 1> function_id=a\n"
             treeStr("a().b") == """DotAccess <row: 1, col: 1> field_name=b
 |-FunctionCall <row: 1, col: 1> function_id=a
+"""
+            treeStr("a().b.c") == """DotAccess <row: 1, col: 1> field_name=c
+|-DotAccess <row: 1, col: 1> field_name=b
+  |-FunctionCall <row: 1, col: 1> function_id=a
 """
             treeStr("(2 + 2)") == """Sum <row: 1, col: 2> operator="+"
 |-IntLiteral <row: 1, col: 2> value=2

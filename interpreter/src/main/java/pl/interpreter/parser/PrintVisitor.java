@@ -36,7 +36,7 @@ public class PrintVisitor implements StatementVisitor {
 
     @Override
     public void visit(ReturnStatement returnStatement) {
-        printNode(returnStatement, List.of(), returnStatement.getPosition());
+        printNode(returnStatement, List.of());
         if (returnStatement.getExpression() != null) {
             diveIn();
             visit(returnStatement.getExpression());
@@ -47,20 +47,20 @@ public class PrintVisitor implements StatementVisitor {
     @Override
     public void visit(Expression expression) {
         switch (expression) {
-            case Alternative alternative -> this.visit(alternative);
-            case Cast cast -> this.visit(cast);
-            case Conjunction conjunction -> this.visit(conjunction);
-            case Relation relation -> this.visit(relation);
-            case BooleanLiteral booleanLiteral -> this.visit(booleanLiteral);
-            case FloatLiteral floatLiteral -> this.visit(floatLiteral);
-            case IntLiteral intLiteral -> this.visit(intLiteral);
-            case Multiplication multiplication -> this.visit(multiplication);
-            case Negation negation -> this.visit(negation);
-            case StringLiteral stringLiteral -> this.visit(stringLiteral);
-            case Sum sum -> this.visit(sum);
-            case FunctionCall functionCall -> this.visit(functionCall);
-            case DotAccess dotAccess -> this.visit(dotAccess);
-            case Identifier identifier -> this.visit(identifier);
+            case Alternative alternative -> visit(alternative);
+            case Cast cast -> visit(cast);
+            case Conjunction conjunction -> visit(conjunction);
+            case Relation relation -> visit(relation);
+            case BooleanLiteral booleanLiteral -> visit(booleanLiteral);
+            case FloatLiteral floatLiteral -> visit(floatLiteral);
+            case IntLiteral intLiteral -> visit(intLiteral);
+            case Multiplication multiplication -> visit(multiplication);
+            case Negation negation -> visit(negation);
+            case StringLiteral stringLiteral -> visit(stringLiteral);
+            case Sum sum -> visit(sum);
+            case FunctionCall functionCall -> visit(functionCall);
+            case DotAccess dotAccess -> visit(dotAccess);
+            case Identifier identifier -> visit(identifier);
             default -> throw new UnknownNodeException();
         }
     }
@@ -68,83 +68,74 @@ public class PrintVisitor implements StatementVisitor {
     @Override
     public void visit(Sum sum) {
         printNode(sum, List.of(
-                new Param(OPERATOR_MSG, '"' + sum.getOperator().toString() + '"')
-        ), sum.getPosition());
+                new Param(OPERATOR_MSG, '"' + sum.getOperator().toString() + '"')));
         diveIn();
-        this.visit(sum.getLeft());
-        this.visit(sum.getRight());
+        visit(sum.getLeft());
+        visit(sum.getRight());
         diveOut();
     }
 
     @Override
     public void visit(BooleanLiteral booleanLiteral) {
         printNode(booleanLiteral, List.of(
-                new Param(VALUE_MSG, String.valueOf(booleanLiteral.isOn()))
-        ), booleanLiteral.getPosition());
+                new Param(VALUE_MSG, String.valueOf(booleanLiteral.isOn()))));
     }
 
     @Override
     public void visit(FloatLiteral floatLiteral) {
         printNode(floatLiteral, List.of(
-                new Param(VALUE_MSG, String.valueOf(floatLiteral.getValue()))
-        ), floatLiteral.getPosition());
+                new Param(VALUE_MSG, String.valueOf(floatLiteral.getValue()))));
     }
 
     @Override
     public void visit(IntLiteral intLiteral) {
         printNode(intLiteral, List.of(
-                new Param(VALUE_MSG, String.valueOf(intLiteral.getValue()))
-        ), intLiteral.getPosition());
+                new Param(VALUE_MSG, String.valueOf(intLiteral.getValue()))));
     }
 
     @Override
     public void visit(Multiplication multiplication) {
         printNode(multiplication, List.of(
-                new Param(OPERATOR_MSG, '"' + multiplication.getOperator().toString() + '"')
-        ), multiplication.getPosition());
+                new Param(OPERATOR_MSG, '"' + multiplication.getOperator().toString() + '"')));
         diveIn();
-        this.visit(multiplication.getLeft());
-        this.visit(multiplication.getRight());
+        visit(multiplication.getLeft());
+        visit(multiplication.getRight());
         diveOut();
     }
 
     @Override
     public void visit(Negation negation) {
-        printNode(negation, List.of(), negation.getPosition());
+        printNode(negation, List.of());
         diveIn();
-        this.visit(negation.getExpression());
+        visit(negation.getExpression());
         diveOut();
     }
 
     @Override
     public void visit(StringLiteral stringLiteral) {
         printNode(stringLiteral, List.of(
-                new Param(VALUE_MSG, stringLiteral.getValue())
-        ), stringLiteral.getPosition());
+                new Param(VALUE_MSG, stringLiteral.getValue())));
     }
 
     @Override
     public void visit(DotAccess dotAccess) {
         printNode(dotAccess, List.of(
-                new Param(FIELD_NAME_MSG, dotAccess.getFieldName())
-        ), dotAccess.getPosition());
+                new Param(FIELD_NAME_MSG, dotAccess.getFieldName())));
         diveIn();
-        this.visit(dotAccess.getExpression());
+        visit(dotAccess.getExpression());
         diveOut();
     }
 
     @Override
     public void visit(Identifier identifier) {
         printNode(identifier, List.of(
-                new Param(ID_MSG, identifier.getValue())
-        ), identifier.getPosition());
+                new Param(ID_MSG, identifier.getValue())));
     }
 
     @Override
     public void visit(FunctionCall functionCall) {
         printNode(functionCall, List.of(
-                new Param(FUNCTION_ID_MSG, functionCall.getFunctionId())
-        ), functionCall.getPosition());
+                new Param(FUNCTION_ID_MSG, functionCall.getFunctionId())));
         diveIn();
         functionCall.getArguments().forEach(this::visit);
         diveOut();
@@ -153,8 +144,7 @@ public class PrintVisitor implements StatementVisitor {
     @Override
     public void visit(StructureDefinition structureDefinition) {
         printNode(structureDefinition, List.of(
-                new Param(ID_MSG, structureDefinition.getId())
-        ), structureDefinition.getPosition());
+                new Param(ID_MSG, structureDefinition.getId())));
         diveIn();
         visit(structureDefinition.getParameters());
         diveOut();
@@ -162,7 +152,7 @@ public class PrintVisitor implements StatementVisitor {
 
     @Override
     public void visit(Program program) {
-        printNode(program, List.of(), program.getPosition());
+        printNode(program, List.of());
         diveIn();
         program.getDefinitions().forEach(this::visit);
         diveOut();
@@ -186,8 +176,7 @@ public class PrintVisitor implements StatementVisitor {
     @Override
     public void visit(VariantDefinition variantDefinition) {
         printNode(variantDefinition, List.of(
-                new Param(ID_MSG, variantDefinition.getId())
-        ), variantDefinition.getPosition());
+                new Param(ID_MSG, variantDefinition.getId())));
         diveIn();
         variantDefinition.getStructureIds().forEach(this::printUserType);
         diveOut();
@@ -200,16 +189,16 @@ public class PrintVisitor implements StatementVisitor {
         if (Objects.nonNull(functionDefinition.getReturnType().userType())) {
             params.add(new Param(USER_TYPE_MSG, functionDefinition.getReturnType().userType()));
         }
-        printNode(functionDefinition, params, functionDefinition.getPosition());
+        printNode(functionDefinition, params);
         diveIn();
         functionDefinition.getParameters().forEach(this::printParameter);
-        this.visit(functionDefinition.getBlock());
+        visit(functionDefinition.getBlock());
         diveOut();
     }
 
     @Override
     public void visit(Block block) {
-        printNode(block, List.of(), block.getPosition());
+        printNode(block, List.of());
         diveIn();
         block.getInstructions().forEach(this::visit);
         diveOut();
@@ -218,10 +207,14 @@ public class PrintVisitor implements StatementVisitor {
     @Override
     public void visit(Instruction instruction) {
         switch(instruction) {
-            case ReturnStatement returnStatement -> this.visit(returnStatement);
-            case Assignment assignment -> this.visit(assignment);
-            case FunctionCall functionCall -> this.visit(functionCall);
-            case Initialization initialization -> this.visit(initialization);
+            case ReturnStatement returnStatement -> visit(returnStatement);
+            case Assignment assignment -> visit(assignment);
+            case FunctionCall functionCall -> visit(functionCall);
+            case Initialization initialization -> visit(initialization);
+            case IfStatement ifStatement -> visit(ifStatement);
+            case Block block -> visit(block);
+            case WhileStatement whileStatement -> visit(whileStatement);
+            case MatchStatement matchStatement -> visit(matchStatement);
             default -> throw new UnknownNodeException();
         }
     }
@@ -229,10 +222,9 @@ public class PrintVisitor implements StatementVisitor {
     @Override
     public void visit(Assignment assignment) {
         printNode(assignment, List.of(
-                new Param(ID_MSG, assignment.getId())
-        ), assignment.getPosition());
+                new Param(ID_MSG, assignment.getId())));
         diveIn();
-        this.visit(assignment.getExpression());
+        visit(assignment.getExpression());
         diveOut();
     }
 
@@ -246,48 +238,87 @@ public class PrintVisitor implements StatementVisitor {
         if (Objects.nonNull(initialization.getUserType())) {
             params.add(new Param(USER_TYPE_MSG, initialization.getUserType()));
         }
-        printNode(initialization, params, initialization.getPosition());
+        printNode(initialization, params);
         diveIn();
-        this.visit(initialization.getExpression());
+        visit(initialization.getExpression());
+        diveOut();
+    }
+
+    @Override
+    public void visit(IfStatement ifStatement) {
+        printNode(ifStatement, List.of());
+        diveIn();
+        visit(ifStatement.getExpression());
+        visit(ifStatement.getInstruction());
+        if (ifStatement.getElseInstruction() != null) {
+            visit(ifStatement.getElseInstruction());
+        }
+        diveOut();
+    }
+
+    @Override
+    public void visit(WhileStatement whileStatement) {
+        printNode(whileStatement, List.of());
+        diveIn();
+        visit(whileStatement.getExpression());
+        visit(whileStatement.getInstruction());
+        diveOut();
+    }
+
+    @Override
+    public void visit(MatchStatement matchStatement) {
+        printNode(matchStatement, List.of());
+        diveIn();
+        visit(matchStatement.getExpression());
+        matchStatement.getBranches().forEach(this::visit);
+        diveOut();
+    }
+
+    @Override
+    public void visit(MatchBranch matchBranch) {
+        printNode(matchBranch, List.of(
+                new Param(TYPE_MSG, matchBranch.getStructureId()),
+                new Param(FIELD_NAME_MSG, matchBranch.getFieldName())
+        ));
+        diveIn();
+        visit(matchBranch.getInstruction());
         diveOut();
     }
 
     @Override
     public void visit(Alternative alternative) {
-        printNode(alternative, List.of(), alternative.getPosition());
+        printNode(alternative, List.of());
         diveIn();
-        this.visit(alternative.getLeft());
-        this.visit(alternative.getRight());
+        visit(alternative.getLeft());
+        visit(alternative.getRight());
         diveOut();
     }
 
     @Override
     public void visit(Cast cast) {
         printNode(cast, List.of(
-                new Param(TYPE_MSG, cast.getToType().toString())
-        ), cast.getPosition());
+                new Param(TYPE_MSG, cast.getToType().toString())));
         diveIn();
-        this.visit(cast.getExpression());
+        visit(cast.getExpression());
         diveOut();
     }
 
     @Override
     public void visit(Relation relation) {
         printNode(relation, List.of(
-            new Param(OPERATOR_MSG, '"' + relation.getOperator().toString() + '"')
-        ), relation.getPosition());
+            new Param(OPERATOR_MSG, '"' + relation.getOperator().toString() + '"')));
         diveIn();
-        this.visit(relation.getLeft());
-        this.visit(relation.getRight());
+        visit(relation.getLeft());
+        visit(relation.getRight());
         diveOut();
     }
 
     @Override
     public void visit(Conjunction conjunction) {
-        printNode(conjunction, List.of(), conjunction.getPosition());
+        printNode(conjunction, List.of());
         diveIn();
-        this.visit(conjunction.getLeft());
-        this.visit(conjunction.getRight());
+        visit(conjunction.getLeft());
+        visit(conjunction.getRight());
         diveOut();
     }
 
@@ -300,14 +331,14 @@ public class PrintVisitor implements StatementVisitor {
                 NAME_PREFIX;
     }
 
-    private void printNode(Statement statement, List<Param> params, Position position) {
+    private void printNode(Statement statement, List<Param> params) {
         write(getPrefix() +
                 statement.getClass().getSimpleName() +
                 ' ' +
                 "<row: " +
-                position.row() +
+                statement.getPosition().row() +
                 ", col: " +
-                position.col() +
+                statement.getPosition().col() +
                 "> " +
                 getParametersString(params) +
                 '\n');

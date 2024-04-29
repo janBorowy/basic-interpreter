@@ -210,11 +210,11 @@ structureDefinition      ::= "struct " identifier "{" parameters "}";
 variantDefinition        ::= "variant " identifier "{" identifier { "," identifier } "}";
 instruction              ::= block
                            | singleStatement
-                           | var
                            | compoundStatement;
 block                    ::= "{" { instruction } "}";
 singleStatement          ::= (identifierStatement
                            | primitiveInitialization
+                           | var
                            | return) ";";
 identifierStatement      ::= identifier (arguments // function call
                            | "=" expression // assignment
@@ -222,7 +222,7 @@ identifierStatement      ::= identifier (arguments // function call
 compoundStatement        ::= if
                            | while
                            | match;
-var                      ::= "var" initialization ";"
+var                      ::= "var" initialization
 initialization           ::= primitiveType identifier "=" expression;
                            | identifier identifier "=" expression;
 primitiveInitialization  ::= primitiveType identifier "=" expression;
@@ -264,8 +264,6 @@ functionReturnType       ::= "void"
 parameters               ::= [ variableType, identifier { "," variableType, identifier } ];
 variableType             ::= primitiveType
                            | identifier;
-initializationSignature  ::= ["var "] primitiveType, identifier;
-identifierList   ::= identifier { "," identifier };
 primitiveType            ::= "int"
                            | "float"
                            | "string"
@@ -307,7 +305,7 @@ Dostępne są operatory:
 
 Operacje na zmiennych możliwe są tylko wtedy, jeśli po obu stronach operatora zmienne są
 tego samego typu. Przy czym:
-- Dla zmiennych typu `string` dostępny jest tylko operator `+`, który oznacza konkatonację.
+- Dla zmiennych typu `string` dostępny jest tylko operator `+`, który oznacza konkatenację.
 - Dla zmiennych typu `boolean` dostępne są wyłącznie operatory `and or`
 - Dla zmiennych typu `int` lub `float` dostępne są operatory `+ - / % > < <= >=`
 

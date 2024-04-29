@@ -75,9 +75,14 @@ public class ProgramParser extends Parser {
         return Optional.of(new Block(instructions, position));
     }
 
+
+    // instruction ::= block
+    //               | singleStatement
+    //               | compoundStatement;
     private Optional<Instruction> parseInstruction() {
         return singleStatementParser.parseSingleStatement()
-                .or(this::parseVar);
+                .or(this::parseBlock)
+                .or(this::parseCompoundStatement);
     }
 
     // structureDefinition ::= "struct " identifier "{" parameters "}";
@@ -142,36 +147,6 @@ public class ProgramParser extends Parser {
         return Optional.of(new VariantDefinition(id, structureIds, position));
     }
 
-    // var                      ::= "var" initialization ";"
-    // initialization           ::= primitiveType identifier "=" expression;
-    //                            | identifier identifier "=" expression;
-    private Optional<Initialization> parseVar() {
-        var position = getTokenPosition();
-        if (!tokenIsOfType(TokenType.KW_VAR)) {
-            return Optional.empty();
-        }
-        consumeToken();
-        var type = VariableType.parseVariableType(token());
-        if (type.isEmpty()) {
-            throwParserError("Expected type");
-        }
-        String userType = null;
-        if (type.get() == VariableType.USER_TYPE) {
-            userType = (String) token().value();
-        }
-        consumeToken();
-        var id = parseMustBeIdentifier();
-        mustBe(TokenType.ASSIGNMENT);
-        consumeToken();
-        var expression = expressionParser.parseExpression();
-        if (expression.isEmpty()) {
-            throwParserError("Expected expression");
-        }
-        mustBe(TokenType.SEMICOLON);
-        consumeToken();
-        return Optional.of(new Initialization(id, userType, type.get(), true, expression.get(), position));
-    }
-
     private String getUserType(VariableType variableType) {
         if (variableType == VariableType.USER_TYPE) {
             return (String) token().value();
@@ -186,4 +161,113 @@ public class ProgramParser extends Parser {
         return null;
     }
 
+    // compoundStatement ::= if
+    //                     | while
+    //                     | match;
+    public Optional<Instruction> parseCompoundStatement() {
+        return parseIfStatement()
+                .or(this::parseWhileStatement)
+                .or(this::parseMatchStatement);
+    }
+
+    // if ::= "if" "(" expression ")" instruction [ "else" instruction ];
+    public Optional<Instruction> parseIfStatement() {
+        var position = getTokenPosition();
+        if (!tokenIsOfType(TokenType.KW_IF)) {
+            return Optional.empty();
+        }
+        consumeToken();
+        mustBe(TokenType.LEFT_PARENTHESES);
+        consumeToken();
+        var expression = expressionParser.parseExpression();
+        if (expression.isEmpty()) {
+            throwParserError("Expected expression");
+        }
+        mustBe(TokenType.RIGHT_PARENTHESES);
+        consumeToken();
+        var instruction = parseInstruction();
+        if (instruction.isEmpty()) {
+            throwParserError("Expected instruction");
+        }
+        if (!tokenIsOfType(TokenType.KW_ELSE)) {
+            return Optional.of(new IfStatement(expression.get(), instruction.get(), null, position));
+        }
+        consumeToken();
+        var elseInstruction = parseInstruction();
+        if (elseInstruction.isEmpty()) {
+            throwParserError("Expected instruction");
+        }
+        return Optional.of(new IfStatement(expression.get(), instruction.get(), elseInstruction.get(), position));
+    }
+
+    // while ::= "while", "(" expression ")", instruction;
+    public Optional<WhileStatement> parseWhileStatement() {
+        var position = getTokenPosition();
+        if (!tokenIsOfType(TokenType.KW_WHILE)) {
+            return Optional.empty();
+        }
+        consumeToken();
+        mustBe(TokenType.LEFT_PARENTHESES);
+        consumeToken();
+        var expression = expressionParser.parseExpression();
+        if (expression.isEmpty()) {
+            throwParserError("Expected expression");
+        }
+        mustBe(TokenType.RIGHT_PARENTHESES);
+        consumeToken();
+        var instruction = parseInstruction();
+        if (instruction.isEmpty()) {
+            throwParserError("Expected instruction");
+        }
+        return Optional.of(new WhileStatement(expression.get(), instruction.get(), position));
+    }
+
+    // match ::= "match", "(", dotAccess, ")", "{", matchBranch, {matchBranch}, "}";
+    private Optional<Instruction> parseMatchStatement() {
+        var position = getTokenPosition();
+        if (!tokenIsOfType(TokenType.KW_MATCH)) {
+            return Optional.empty();
+        }
+        consumeToken();
+        mustBe(TokenType.LEFT_PARENTHESES);
+        consumeToken();
+        var expression = expressionParser.parseDotAccess();
+        if (expression.isEmpty()) {
+            throwParserError("Expected variant");
+        }
+        mustBe(TokenType.RIGHT_PARENTHESES);
+        consumeToken();
+        mustBe(TokenType.LEFT_CURLY_BRACKET);
+        consumeToken();
+        var branches = new ArrayList<MatchBranch>();
+        var branch = parseMatchBranch();
+        if (branch.isEmpty()) {
+            throwParserError("Expected branch");
+        }
+        branches.add(branch.get());
+        branch = parseMatchBranch();
+        while (branch.isPresent()) {
+            branches.add(branch.get());
+            branch = parseMatchBranch();
+        }
+        return Optional.of(new MatchStatement(expression.get(), branches, position));
+    }
+
+    // matchBranch ::= identifier, identifier, "->" instruction;
+    private Optional<MatchBranch> parseMatchBranch() {
+        var position = getTokenPosition();
+        if (!tokenIsOfType(TokenType.IDENTIFIER)) {
+            return Optional.empty();
+        }
+        var structureId = (String) token().value();
+        consumeToken();
+        var fieldName = parseMustBeIdentifier();
+        mustBe(TokenType.ARROW);
+        consumeToken();
+        var instruction = parseInstruction();
+        if (instruction.isEmpty()) {
+            throwParserError("Expected instruction");
+        }
+        return Optional.of(new MatchBranch(structureId, fieldName, instruction.get(), position));
+    }
 }
