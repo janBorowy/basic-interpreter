@@ -59,7 +59,7 @@ public class LexicalAnalyzer {
         }
         throw new LexicalAnalyzerException("Illegal character found.", cursorRow, cursorCol);
     }
-    // TODO: try to take it out to LexicalAnalysisStaticProvider
+
     private void prepareOperatorTokenSuppliers() {
         operatorTokenSuppliers.put('+', () -> new Token(TokenType.ADD_OPERATOR, '+', cursorRow, cursorCol));
         operatorTokenSuppliers.put('-', () -> chooseOperatorToken('>',
@@ -178,6 +178,8 @@ public class LexicalAnalyzer {
             readNext();
         } else if (tokenValue instanceof Character) {
             cursorCol += 1;
+        } else {
+            throw new LexicalAnalyzerException("Could not build operator token", cursorRow, cursorCol);
         }
         return Optional.of(token);
     }
