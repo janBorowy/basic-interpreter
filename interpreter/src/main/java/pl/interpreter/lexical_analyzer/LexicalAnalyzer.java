@@ -97,7 +97,6 @@ public class LexicalAnalyzer {
         };
     }
 
-    // TODO: handle comments uniformly
     private Token getLineCommentToken() {
         var cursorColIncrement = 0;
         while (lastCharacterRead != 0xFFFF && lastCharacterRead != '\n') {
