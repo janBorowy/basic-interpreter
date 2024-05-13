@@ -53,15 +53,12 @@ public class SingleStatementParser extends Parser {
         }
         consumeToken();
         var arguments = new ArrayList<Expression>();
-        var expression = expressionParser.parseExpression();
-        expression.ifPresent(arguments::add);
+        expressionParser.parseExpression().ifPresent(arguments::add);
         while(tokenIsOfType(TokenType.COMMA)) {
             consumeToken();
-            expression = expressionParser.parseExpression();
-            if (expression.isEmpty()) {
-                throwParserError("Expected expression");
-            }
-            arguments.add(expression.get());
+            var expression = expressionParser.parseExpression()
+                            .orElseThrow(() -> getParserException("Expected expression"));
+            arguments.add(expression);
         }
         mustBe(TokenType.RIGHT_PARENTHESES);
         consumeToken();
@@ -75,17 +72,15 @@ public class SingleStatementParser extends Parser {
             return Optional.empty();
         }
         consumeToken();
-        var expression = expressionParser.parseExpression();
-        if (expression.isEmpty()) {
-            throwParserError("Expected expression");
-        }
-        return Optional.of(new Assignment(id, expression.get(), position));
+        var expression = expressionParser.parseExpression()
+                .orElseThrow(() -> getParserException("Expected expression"));
+        return Optional.of(new Assignment(id, expression, position));
     }
 
     // primitiveInitialization ::= primitiveType identifier "=" expression;
     private Optional<Initialization> parsePrimitiveInitialization() {
         var position = getTokenPosition();
-        var type = VariableType.parseVariableType(token());
+        var type = VariableType.parse(token());
         if (type.isEmpty() || type.get() == VariableType.USER_TYPE) {
             return Optional.empty();
         }
@@ -93,11 +88,9 @@ public class SingleStatementParser extends Parser {
         var id = parseMustBeIdentifier();
         mustBe(TokenType.ASSIGNMENT);
         consumeToken();
-        var expression = expressionParser.parseExpression();
-        if (expression.isEmpty()) {
-            throwParserError("Expected expression");
-        }
-        return Optional.of(new Initialization(id, null, type.get(), false, expression.get(), position));
+        var expression = expressionParser.parseExpression()
+                .orElseThrow(() -> getParserException("Expected expression"));
+        return Optional.of(new Initialization(id, null, type.get(), false, expression, position));
     }
 
     // identifier "=" expression
@@ -110,11 +103,9 @@ public class SingleStatementParser extends Parser {
         consumeToken();
         mustBe(TokenType.ASSIGNMENT);
         consumeToken();
-        var expression = expressionParser.parseExpression();
-        if (expression.isEmpty()) {
-            throwParserError("Expected expression");
-        }
-        return Optional.of(new Initialization(id, userType, VariableType.USER_TYPE, false, expression.get(), position));
+        var expression = expressionParser.parseExpression()
+                .orElseThrow(() -> getParserException("Expected expression"));
+        return Optional.of(new Initialization(id, userType, VariableType.USER_TYPE, false, expression, position));
     }
 
     // return ::= "return", [expression];
@@ -140,22 +131,18 @@ public class SingleStatementParser extends Parser {
             return Optional.empty();
         }
         consumeToken();
-        var type = VariableType.parseVariableType(token());
-        if (type.isEmpty()) {
-            throwParserError("Expected type");
-        }
+        var type = VariableType.parse(token())
+                .orElseThrow(() -> getParserException("Expected type"));
         String userType = null;
-        if (type.get() == VariableType.USER_TYPE) {
+        if (type == VariableType.USER_TYPE) {
             userType = (String) token().value();
         }
         consumeToken();
         var id = parseMustBeIdentifier();
         mustBe(TokenType.ASSIGNMENT);
         consumeToken();
-        var expression = expressionParser.parseExpression();
-        if (expression.isEmpty()) {
-            throwParserError("Expected expression");
-        }
-        return Optional.of(new Initialization(id, userType, type.get(), true, expression.get(), position));
+        var expression = expressionParser.parseExpression()
+                .orElseThrow(() -> getParserException("Expected expression"));
+        return Optional.of(new Initialization(id, userType, type, true, expression, position));
     }
 }

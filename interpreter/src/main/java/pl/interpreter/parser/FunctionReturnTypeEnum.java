@@ -22,7 +22,7 @@ public enum FunctionReturnTypeEnum {
         return str;
     }
 
-    public static Optional<FunctionReturnTypeEnum> parseFunctionReturnType(Token token) {
+    public static Optional<FunctionReturnTypeEnum> parse(Token token) {
         return switch (token.type()) {
             case KW_VOID -> Optional.of(VOID);
             case KW_INT -> Optional.of(INT);

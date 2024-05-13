@@ -13,7 +13,7 @@ public enum AdditionOperator {
         this.str = str;
     }
 
-    public static Optional<AdditionOperator> parseAdditionOperator(Token token) {
+    public static Optional<AdditionOperator> parse(Token token) {
         return switch(token.type()) {
             case ADD_OPERATOR -> Optional.of(PLUS);
             case SUBTRACT_OPERATOR -> Optional.of(MINUS);

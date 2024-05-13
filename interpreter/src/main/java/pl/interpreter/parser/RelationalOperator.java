@@ -22,7 +22,7 @@ public enum RelationalOperator {
         return str;
     }
 
-    public static Optional<RelationalOperator> parseRelationalOperator(Token token) {
+    public static Optional<RelationalOperator> parse(Token token) {
         return switch (token.type()) {
             case EQUALS_OPERATOR -> Optional.of(EQUALS);
             case NOT_EQUALS_OPERATOR -> Optional.of(NOT_EQUALS);

@@ -38,7 +38,7 @@ public class ProgramParser extends Parser {
     // functionDefinition ::= functionReturnType identifier "(" parameters ")" block;
     private Optional<Definition> parseFunctionDefinition() {
         var position = getTokenPosition();
-        var returnType = FunctionReturnTypeEnum.parseFunctionReturnType(token());
+        var returnType = FunctionReturnTypeEnum.parse(token());
         if (returnType.isEmpty()) {
             return Optional.empty();
         }
@@ -50,11 +50,9 @@ public class ProgramParser extends Parser {
         var parameters = parseParameters();
         mustBe(TokenType.RIGHT_PARENTHESES);
         consumeToken();
-        var block = parseBlock();
-        if (block.isEmpty()) {
-            throwParserError("Expected block");
-        }
-        return Optional.of(new FunctionDefinition(new FunctionReturnType(returnType.get(), userType), id, parameters, block.get(), position));
+        var block = parseBlock()
+                .orElseThrow(() -> getParserException("Expected block"));
+        return Optional.of(new FunctionDefinition(new FunctionReturnType(returnType.get(), userType), id, parameters, block, position));
     }
 
     // block ::= "{" { instruction } "}";
@@ -106,7 +104,7 @@ public class ProgramParser extends Parser {
     private ParameterSignatureMap parseParameters() {
         var position = getTokenPosition();
         var parameters = new ParameterSignatureMap();
-        var parameterTypeEnum = VariableType.parseVariableType(token());
+        var parameterTypeEnum = VariableType.parse(token());
         if (parameterTypeEnum.isEmpty()) {
             return parameters;
         }
@@ -116,9 +114,9 @@ public class ProgramParser extends Parser {
         parameters.add(id, parameterTypeEnum.get(), userType, position);
         while (tokenIsOfType(TokenType.COMMA)) {
             consumeToken();
-            parameterTypeEnum = VariableType.parseVariableType(token());
+            parameterTypeEnum = VariableType.parse(token());
             if (parameterTypeEnum.isEmpty()) {
-                throwParserError("Expected type");
+                throwParserException("Expected type");
             }
             userType = getUserType(parameterTypeEnum.get());
             consumeToken();
@@ -179,25 +177,19 @@ public class ProgramParser extends Parser {
         consumeToken();
         mustBe(TokenType.LEFT_PARENTHESES);
         consumeToken();
-        var expression = expressionParser.parseExpression();
-        if (expression.isEmpty()) {
-            throwParserError("Expected expression");
-        }
+        var expression = expressionParser.parseExpression()
+                        .orElseThrow(() -> getParserException("Expected expression"));
         mustBe(TokenType.RIGHT_PARENTHESES);
         consumeToken();
-        var instruction = parseInstruction();
-        if (instruction.isEmpty()) {
-            throwParserError("Expected instruction");
-        }
+        var instruction = parseInstruction()
+                .orElseThrow(() -> getParserException("Expected instruction"));
         if (!tokenIsOfType(TokenType.KW_ELSE)) {
-            return Optional.of(new IfStatement(expression.get(), instruction.get(), null, position));
+            return Optional.of(new IfStatement(expression, instruction, null, position));
         }
         consumeToken();
-        var elseInstruction = parseInstruction();
-        if (elseInstruction.isEmpty()) {
-            throwParserError("Expected instruction");
-        }
-        return Optional.of(new IfStatement(expression.get(), instruction.get(), elseInstruction.get(), position));
+        var elseInstruction = parseInstruction()
+                .orElseThrow(() -> getParserException("Expected instruction"));
+        return Optional.of(new IfStatement(expression, instruction, elseInstruction, position));
     }
 
     // while ::= "while", "(" expression ")", instruction;
@@ -209,17 +201,13 @@ public class ProgramParser extends Parser {
         consumeToken();
         mustBe(TokenType.LEFT_PARENTHESES);
         consumeToken();
-        var expression = expressionParser.parseExpression();
-        if (expression.isEmpty()) {
-            throwParserError("Expected expression");
-        }
+        var expression = expressionParser.parseExpression()
+                        .orElseThrow(() -> getParserException("Expected expression"));
         mustBe(TokenType.RIGHT_PARENTHESES);
         consumeToken();
-        var instruction = parseInstruction();
-        if (instruction.isEmpty()) {
-            throwParserError("Expected instruction");
-        }
-        return Optional.of(new WhileStatement(expression.get(), instruction.get(), position));
+        var instruction = parseInstruction()
+                .orElseThrow(() -> getParserException("Expected instruction"));
+        return Optional.of(new WhileStatement(expression, instruction, position));
     }
 
     // match ::= "match", "(", dotAccess, ")", "{", matchBranch, {matchBranch}, "}";
@@ -231,10 +219,8 @@ public class ProgramParser extends Parser {
         consumeToken();
         mustBe(TokenType.LEFT_PARENTHESES);
         consumeToken();
-        var expression = expressionParser.parseDotAccess();
-        if (expression.isEmpty()) {
-            throwParserError("Expected variant");
-        }
+        var expression = expressionParser.parseDotAccess()
+                        .orElseThrow(() -> getParserException("Expected variant"));
         mustBe(TokenType.RIGHT_PARENTHESES);
         consumeToken();
         mustBe(TokenType.LEFT_CURLY_BRACKET);
@@ -242,7 +228,7 @@ public class ProgramParser extends Parser {
         var branches = new ArrayList<MatchBranch>();
         var branch = parseMatchBranch();
         if (branch.isEmpty()) {
-            throwParserError("Expected branch");
+            throwParserException("Expected branch");
         }
         branches.add(branch.get());
         branch = parseMatchBranch();
@@ -250,7 +236,7 @@ public class ProgramParser extends Parser {
             branches.add(branch.get());
             branch = parseMatchBranch();
         }
-        return Optional.of(new MatchStatement(expression.get(), branches, position));
+        return Optional.of(new MatchStatement(expression, branches, position));
     }
 
     // matchBranch ::= identifier, identifier, "->" instruction;
@@ -262,11 +248,9 @@ public class ProgramParser extends Parser {
                 consumeToken();
                 mustBe(TokenType.ARROW);
                 consumeToken();
-                var instruction = parseInstruction();
-                if (instruction.isEmpty()) {
-                    throwParserError("Expected instruction");
-                }
-                return Optional.of(new MatchBranch(null, null, instruction.get(), position));
+                var instruction = parseInstruction()
+                        .orElseThrow(() -> getParserException("Expected instruction"));
+                return Optional.of(new MatchBranch(null, null, instruction, position));
             }
             return Optional.empty();
         }
@@ -275,10 +259,8 @@ public class ProgramParser extends Parser {
         var fieldName = parseMustBeIdentifier();
         mustBe(TokenType.ARROW);
         consumeToken();
-        var instruction = parseInstruction();
-        if (instruction.isEmpty()) {
-            throwParserError("Expected instruction");
-        }
-        return Optional.of(new MatchBranch(structureId, fieldName, instruction.get(), position));
+        var instruction = parseInstruction()
+                .orElseThrow(() -> getParserException("Expected instruction"));
+        return Optional.of(new MatchBranch(structureId, fieldName, instruction, position));
     }
 }

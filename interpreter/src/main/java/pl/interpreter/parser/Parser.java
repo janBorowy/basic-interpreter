@@ -29,13 +29,17 @@ public class Parser {
 
     protected Token mustBe(TokenType tokenType) {
         if (token().type() != tokenType) {
-            throw new ParserException("Invalid token at row: %d, col: %d".formatted(token().row(), token().col()));
+            throw new ParserException("Invalid token at row: %d, col: %d".formatted(token().row(), token().col()), token().row(), token().col());
         }
         return token();
     }
 
-    protected void throwParserError(String message) {
-        throw new ParserException(message.concat(": %d, col: %d".formatted(token().row(), token().col())));
+    protected ParserException getParserException(String message) {
+        return new ParserException(message.concat(": %d, col: %d".formatted(token().row(), token().col())), token().row(), token().col());
+    }
+
+    protected void throwParserException(String message) {
+        throw new ParserException(message.concat(": %d, col: %d".formatted(token().row(), token().col())), token().row(), token().col());
     }
 
     protected String parseMustBeIdentifier() {

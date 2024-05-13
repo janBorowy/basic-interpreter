@@ -472,11 +472,10 @@ flowchart TD
     sourceCode((Kod źródłowy))
     lexicalAnalyzer(Analizator leksykalny)
     syntaxAnalyzer(Analizator składniowy)
-    semanticAnalyzer(Analizator semantyczny)
-    executer(Wykonawca)
+    executor(Wykonawca)
     errorHandling(Obsługa błędów)
     
-    sourceCode --> lexicalAnalyzer --> syntaxAnalyzer --> semanticAnalyzer --> executer
-    errorHandling --> sourceCode & lexicalAnalyzer & syntaxAnalyzer & semanticAnalyzer & executer
+    sourceCode --> lexicalAnalyzer --> syntaxAnalyzer  --> executor
+    errorHandling --> sourceCode & lexicalAnalyzer & syntaxAnalyzer & executor
     
 ```

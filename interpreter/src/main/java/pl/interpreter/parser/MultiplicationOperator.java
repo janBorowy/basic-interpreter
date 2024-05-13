@@ -14,7 +14,7 @@ public enum MultiplicationOperator {
         this.str = str;
     }
 
-    public static Optional<MultiplicationOperator> parseMultiplicationOperator(Token token) {
+    public static Optional<MultiplicationOperator> parse(Token token) {
         return switch(token.type()) {
             case MULTIPLY_OPERATOR -> Optional.of(MULTIPLY);
             case DIVIDE_OPERATOR -> Optional.of(DIVIDE);

@@ -20,7 +20,7 @@ public enum PrimitiveType {
         return str;
     }
 
-    public static Optional<PrimitiveType> parsePrimitiveType(Token token) {
+    public static Optional<PrimitiveType> parse(Token token) {
         return switch (token.type()) {
             case KW_INT -> Optional.of(INT);
             case KW_FLOAT -> Optional.of(FLOAT);

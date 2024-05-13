@@ -19,11 +19,9 @@ public class ExpressionParser extends Parser {
         }
         while (tokenIsOfType(TokenType.KW_AND)) {
             consumeToken();
-            var right = parseAlternative();
-            if (right.isEmpty()) {
-                throwParserError("Expected operand");
-            }
-            left = Optional.of(new Conjunction(left.get(), right.get(), position));
+            var right = parseAlternative()
+                    .orElseThrow(() -> getParserException("Expected operand"));
+            left = Optional.of(new Conjunction(left.get(), right, position));
         }
         return left;
     }
@@ -37,11 +35,9 @@ public class ExpressionParser extends Parser {
         }
         while (tokenIsOfType(TokenType.KW_OR)) {
             consumeToken();
-            var right = parseRelation();
-            if (right.isEmpty()) {
-                throwParserError("Expected operand");
-            }
-            left = Optional.of(new Alternative(left.get(), right.get(), position));
+            var right = parseRelation()
+                    .orElseThrow(() -> getParserException("Expected operand"));
+            left = Optional.of(new Alternative(left.get(), right, position));
         }
         return left;
     }
@@ -53,16 +49,14 @@ public class ExpressionParser extends Parser {
         if (left.isEmpty()) {
             return Optional.empty();
         }
-        var operator = RelationalOperator.parseRelationalOperator(token());
+        var operator = RelationalOperator.parse(token());
         if (operator.isEmpty()) {
             return left;
         }
         consumeToken();
-        var right = parseCast();
-        if (right.isEmpty()) {
-            throwParserError("Expected operand");
-        }
-        return Optional.of(new Relation(left.get(), operator.get(), right.get(), position));
+        var right = parseCast()
+                .orElseThrow(() -> getParserException("Expected operand"));
+        return Optional.of(new Relation(left.get(), operator.get(), right, position));
     }
 
     // cast ::= sum, ["as", primitiveType]
@@ -74,12 +68,10 @@ public class ExpressionParser extends Parser {
         }
         if (tokenIsOfType(TokenType.KW_AS)) {
             consumeToken();
-            var type = PrimitiveType.parsePrimitiveType(token());
-            if (type.isEmpty()) {
-                throwParserError("Expected primitive type");
-            }
+            var type = PrimitiveType.parse(token())
+                    .orElseThrow(() -> getParserException(" Expected primitive type"));
             consumeToken();
-            return Optional.of(new Cast(sum.get(), type.get(), position));
+            return Optional.of(new Cast(sum.get(), type, position));
         }
         return sum;
     }
@@ -91,15 +83,13 @@ public class ExpressionParser extends Parser {
         if (left.isEmpty()) {
             return Optional.empty();
         }
-        var operator = AdditionOperator.parseAdditionOperator(token());
+        var operator = AdditionOperator.parse(token());
         while (operator.isPresent()) {
             consumeToken();
-            var right = parseMultiplication();
-            if (right.isEmpty()) {
-                throwParserError("Expected expression");
-            }
-            left = Optional.of(new Sum(left.get(), operator.get(), right.get(), position));
-            operator = AdditionOperator.parseAdditionOperator(token());
+            var right = parseMultiplication()
+                    .orElseThrow(() -> getParserException("Expected expression"));
+            left = Optional.of(new Sum(left.get(), operator.get(), right, position));
+            operator = AdditionOperator.parse(token());
         }
         return left;
     }
@@ -111,15 +101,13 @@ public class ExpressionParser extends Parser {
         if (left.isEmpty()) {
             return Optional.empty();
         }
-        var operator = MultiplicationOperator.parseMultiplicationOperator(token());
+        var operator = MultiplicationOperator.parse(token());
         while (operator.isPresent()) {
             consumeToken();
-            var right = parseNegation();
-            if (right.isEmpty()) {
-                throwParserError("Expected expression");
-            }
-            left = Optional.of(new Multiplication(left.get(), operator.get(), right.get(), position));
-            operator = MultiplicationOperator.parseMultiplicationOperator(token());
+            var right = parseNegation()
+                    .orElseThrow(() -> getParserException("Expected expression"));
+            left = Optional.of(new Multiplication(left.get(), operator.get(), right, position));
+            operator = MultiplicationOperator.parse(token());
         }
         return left;
     }
@@ -129,11 +117,9 @@ public class ExpressionParser extends Parser {
         var position = getTokenPosition();
         if (tokenIsOfType(TokenType.NEGATION_OPERATOR)) {
             consumeToken();
-            var factor = parseFactor();
-            if (factor.isEmpty()) {
-                throwParserError("Expected expression");
-            }
-            return Optional.of(new Negation(factor.get(), position));
+            var factor = parseFactor()
+                    .orElseThrow(() -> getParserException("Expected expression"));
+            return Optional.of(new Negation(factor, position));
         }
         return parseFactor();
     }
@@ -171,7 +157,8 @@ public class ExpressionParser extends Parser {
         if (tokenIsOfType(TokenType.KW_TRUE)) {
             consumeToken();
             return Optional.of(new BooleanLiteral(true, position));
-        } else if (tokenIsOfType(TokenType.KW_FALSE)) {
+        }
+        if (tokenIsOfType(TokenType.KW_FALSE)) {
             consumeToken();
             return Optional.of(new BooleanLiteral(false, position));
         }
@@ -205,21 +192,14 @@ public class ExpressionParser extends Parser {
         }
         consumeToken();
         var arguments = new ArrayList<Expression>();
-        var expression = parseExpression();
-        if (expression.isPresent()) {
-            arguments.add(expression.get());
-        }
+        parseExpression().ifPresent(arguments::add);
         while (tokenIsOfType(TokenType.COMMA)) {
             consumeToken();
-            expression = parseExpression();
-            if (expression.isEmpty()) {
-                throwParserError("Expected expression");
-            }
-            arguments.add(expression.get());
+            var expression = parseExpression()
+                    .orElseThrow(() -> getParserException("Expected expression"));
+            arguments.add(expression);
         }
-        if (!tokenIsOfType(TokenType.RIGHT_PARENTHESES)) {
-            throwParserError("Expected right parentheses");
-        }
+        mustBe(TokenType.RIGHT_PARENTHESES);
         consumeToken();
         return Optional.of(new FunctionCall(id, arguments, position));
     }
@@ -232,11 +212,9 @@ public class ExpressionParser extends Parser {
         consumeToken();
         var expression = parseExpression();
         if (expression.isEmpty()) {
-            throwParserError("Expected expression");
+            throwParserException("Expected expression");
         }
-        if (!tokenIsOfType(TokenType.RIGHT_PARENTHESES)) {
-            throwParserError("Expected right parentheses");
-        }
+        mustBe(TokenType.RIGHT_PARENTHESES);
         consumeToken();
         return expression;
     }

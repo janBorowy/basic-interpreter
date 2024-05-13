@@ -21,7 +21,7 @@ public enum VariableType {
         return str;
     }
 
-    public static Optional<VariableType> parseVariableType(Token token) {
+    public static Optional<VariableType> parse(Token token) {
         return switch (token.type()) {
             case KW_INT -> Optional.of(INT);
             case KW_FLOAT -> Optional.of(FLOAT);
