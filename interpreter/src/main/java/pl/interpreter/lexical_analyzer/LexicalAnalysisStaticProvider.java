@@ -20,6 +20,7 @@ public class LexicalAnalysisStaticProvider {
     private static void prepareKeywords() {
         keywords.put("struct", TokenType.KW_STRUCT);
         keywords.put("variant", TokenType.KW_VARIANT);
+        keywords.put("var", TokenType.KW_VAR);
         keywords.put("return", TokenType.KW_RETURN);
         keywords.put("while", TokenType.KW_WHILE);
         keywords.put("match", TokenType.KW_MATCH);
@@ -35,6 +36,7 @@ public class LexicalAnalysisStaticProvider {
         keywords.put("false", TokenType.KW_FALSE);
         keywords.put("and", TokenType.KW_AND);
         keywords.put("or", TokenType.KW_OR);
+        keywords.put("default", TokenType.KW_DEFAULT);
     }
 
 }
