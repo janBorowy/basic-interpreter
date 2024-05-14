@@ -171,6 +171,9 @@ public class LexicalAnalyzer {
         var firstCharacter = lastCharacterRead;
         readNext();
         var token = operatorTokenSuppliers.get(firstCharacter).get();
+        if (token.type() == TokenType.COMMENT) {
+            return Optional.of(token);
+        }
         var tokenValue = token.value();
         if (tokenValue instanceof String s) {
             cursorCol += s.length();

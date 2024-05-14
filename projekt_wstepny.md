@@ -84,8 +84,8 @@ int main() {
 
 ```
 struct Point {
-    float x;
-    float y;
+    float x,
+    float y
 }
 
 int main() {
@@ -98,13 +98,13 @@ int main() {
 
 ```
 struct Person {
-    string name;
-    string surname;
+    string name,
+    string surname
 }
 
 struct Book {
-    Person author;
-    string title;
+    Person author,
+    string title
 }
 
 ```
@@ -113,20 +113,20 @@ struct Book {
 
 ```
 struct Person {
-    string name;
-    string surname;
+    string name,
+    string surname
 }
 
 struct Book {
-    string title;
-    string isbn;
-    Person author;
+    string title,
+    string isbn,
+    Person author
 }
 
 struct Article {
-    string headline;
-    string shownIn;
-    Person author;
+    string headline,
+    string shownIn,
+    Person author
 }
 
 variant Publication {
@@ -136,9 +136,9 @@ variant Publication {
 
 void printPublication(Publication pub) {
     match(pub) {
-        Book book -> print("Book with title - " + book.title)
-        Article article -> print("Article with headline - " + article.headline)
-        default -> print("Unknown publication")
+        Book book -> print("Book with title - " + book.title);
+        Article article -> print("Article with headline - " + article.headline);
+        default -> print("Unknown publication");
     }
 }
 ```
@@ -147,13 +147,13 @@ void printPublication(Publication pub) {
 
 ```
 struct IntPoint {
-    int ix;
-    int iy;
+    int ix,
+    int iy
 }
 
 struct FloatPoint {
-    float fx;
-    float fy;
+    float fx,
+    float fy
 }
 
 variant Point {
@@ -189,7 +189,6 @@ int main() {
 
 ### Rekurencja
 ```
-
 int getNthFibonacciNumber(int n) {
     if(n == 0 or n == 1) {
         return n;
@@ -201,89 +200,76 @@ int getNthFibonacciNumber(int n) {
 ## Gramatyka języka
 
 ```
-program                  ::= { functionDefinition 
-                             | structureDefinition
-                             | variantDefinition };
-functionDefinition       ::= functionSignature functionParameters block;
-structureDefinition      ::= "struct " userTypeIdentifier "{" { parameterSignature ";" } "}";
-variantDefinition        ::= "variant " userTypeIdentifier "{" userTypeIdentifierList "}";
-functionParameters       ::= "(" [ parameterSignature { "," parameterSignature } ] ")";
+program                  ::= { definition };
+definition               ::= functionDefinition
+                           | structureDefinition
+                           | variantDefinition;
+functionDefinition       ::= functionReturnType identifier "(" parameters ")" block;
+structureDefinition      ::= "struct " identifier "{" parameters "}";
+variantDefinition        ::= "variant " identifier "{" identifier { "," identifier } "}";
 instruction              ::= block
                            | singleStatement
                            | compoundStatement;
-block                    ::= "{" { singleStatement, ";" | compoundStatement } "}";
-singleStatement          ::= initialization
-                           | assignment
-                           | return
-                           | functionCall;
+block                    ::= "{" { instruction } "}";
+singleStatement          ::= (identifierStatement
+                           | primitiveInitialization
+                           | var
+                           | return) ";";
+identifierStatement      ::= identifier (arguments // function call
+                           | "=" expression // assignment
+                           | identifier "=" expression) // non-var user type initialization
 compoundStatement        ::= if
                            | while
                            | match;
-initialization           ::= initializationSignature "=" value;
-assignment               ::= identifier, "=", value;
-return                   ::= "return ", [value];
-while                    ::= "while", "(" condition ")", instruction;
+var                      ::= "var" initialization
+initialization           ::= primitiveType identifier "=" expression;
+                           | identifier identifier "=" expression;
+primitiveInitialization  ::= primitiveType identifier "=" expression;
+return                   ::= "return ", [expression];
+while                    ::= "while", "(" expression ")", instruction;
 functionCall             ::= identifier, arguments;
-match                    ::= "match", "(", value, ")", "{", matchBranch, {matchBranch}, "}";
-matchBranch              ::= userTypeIdentifier, " ", identifier, "->" instruction;
-expression               ::= term, {additionOperator, term};
-term                     ::= factor, {multiplicativeOperator, factor};
+match                    ::= "match", "(", dotAccess, ")", "{", matchBranch, {matchBranch}, "}";
+matchBranch              ::= identifier, identifier, "->" instruction;
+                           | "default" "->" instruction;
+cast                     ::= sum, ["as", primitiveType];
+sum                      ::= multiplication, {additionOperator, multiplication};
+multiplication           ::= negation, {multiplicationOperator, negation};
 additionOperator         ::= "+"
                            | "-";
-multiplicativeOperator   ::= "*"
+multiplicationOperator   ::= "*"
                            | "/"
                            | "%";
-factor                   ::= value
-                           | "(", expression, ")"
-if                       ::= "if" "(" condition ")" instruction [ "else" instruction ];
-condition                ::= subcondition, {" and ", subcondition};
-subcondition             ::= negatableBooleanExpression, {" or ", negatableBooleanExpression};
-negatableBooleanExpression ::= ["!"], booleanExpression;
-booleanExpression        ::= booleanLiteral
-                           | equal
-                           | notEqual
-                           | lessThan
-                           | greaterThan
-                           | lessThanOrEqual
-                           | greaterThanOrEqual
-                           | "(" condition ")";
-equal                    ::= value, "==", value;
-notEqual                 ::= value, "!=", value;
-lessThan                 ::= value, "<", value;
-greaterThan              ::= value, ">", value;
-lessThanOrEqual          ::= value, "<=", value;
-greaterThanOrEqual       ::= value, ">=", value;
-arguments                ::= "(", [ value {"," value } ], ")";
-value                    ::= identifier
-                           | constant
-                           | expression
-                           | functionCall
-                           | as;
-as                       ::= value, " as ", legalCastType;
-functionSignature        ::= "void ", identifier,
-                           | variableTypeIdentifier
-parameterSignature       ::= variableTypeIdentifier;
-initializationSignature  ::= ["var "] variableTypeIdentifier;
-variableTypeIdentifier   ::= variableType, " ", identifier;
-userTypeIdentifierList   ::= userTypeIdentifier { "," userTypeIdentifier };
-variableType             ::= "int"
+negation                 ::= ["!"] factor;
+factor                   ::= dotAccess
+                           | number // integer or float literal
+                           | booleanLiteral
+                           | stringLiteral
+                           | "(", expression, ")";
+dotAccess                ::= identifierOrFunctionCall {"." identifier}
+identifierOrFunctionCall ::= identifier ["("[ expression {"," expression } ]")"]
+if                       ::= "if" "(" expression ")" instruction [ "else" instruction ];
+expression               ::= alternative, {"and", alternative};
+alternative              ::= relation, {"or", relation};
+relation                 ::= cast, [relationalOperator, cast];
+relationalOperator       ::= "=="
+                           | "!="
+                           | "<"
+                           | ">"
+                           | "<="
+                           | ">=";
+arguments                ::= "(", [ expression {"," expression } ], ")";
+functionReturnType       ::= "void"
+                           | primitiveType
+                           | identifier;
+parameters               ::= [ variableType, identifier { "," variableType, identifier } ];
+variableType             ::= primitiveType
+                           | identifier;
+primitiveType            ::= "int"
                            | "float"
                            | "string"
-                           | "bool"
-                           | userTypeIdentifier;
-legalCastType           ::= "int"
-                           | "float"
-                           | "string";
-identifier               ::= identifierName
-                           | identifierName, ".", identifierName;
-identifierName           ::= identifierFirstCharacter, { digit | letter | "_" };
-userTypeIdentifier       ::= capitalLetter, { digit | letter | "_" };
+                           | "bool";
+identifier               ::= identifierFirstCharacter, { digit | letter | "_" };
 identifierFirstCharacter ::= "_" | letter;
-constant                 ::= number
-                           | stringLiteral;
-number                   ::= ["-"], nonZeroDigit, {digit}
-                           | "0"
-                           | ["-"], digit, ".", digit, {digit};
 booleanLiteral           ::= "true"
                            | "false";
 stringLiteral            ::= '"'string'"';
@@ -291,6 +277,9 @@ string                   ::= { letter
                            | digit
                            | stringLegalWhitespace
                            | otherStringLegalCharacters };
+number                   ::= ["-"], nonZeroDigit, {digit}
+                          | "0"
+                          | ["-"], digit, ".", digit, {digit};
 digit                    ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
 nonZeroDigit             ::= "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
 stringLegalWhitespace    ::= " ";
@@ -316,7 +305,7 @@ Dostępne są operatory:
 
 Operacje na zmiennych możliwe są tylko wtedy, jeśli po obu stronach operatora zmienne są
 tego samego typu. Przy czym:
-- Dla zmiennych typu `string` dostępny jest tylko operator `+`, który oznacza konkatonację.
+- Dla zmiennych typu `string` dostępny jest tylko operator `+`, który oznacza konkatenację.
 - Dla zmiennych typu `boolean` dostępne są wyłącznie operatory `and or`
 - Dla zmiennych typu `int` lub `float` dostępne są operatory `+ - / % > < <= >=`
 
@@ -483,11 +472,10 @@ flowchart TD
     sourceCode((Kod źródłowy))
     lexicalAnalyzer(Analizator leksykalny)
     syntaxAnalyzer(Analizator składniowy)
-    semanticAnalyzer(Analizator semantyczny)
-    executer(Wykonawca)
+    executor(Wykonawca)
     errorHandling(Obsługa błędów)
     
-    sourceCode --> lexicalAnalyzer --> syntaxAnalyzer --> semanticAnalyzer --> executer
-    errorHandling --> sourceCode & lexicalAnalyzer & syntaxAnalyzer & semanticAnalyzer & executer
+    sourceCode --> lexicalAnalyzer --> syntaxAnalyzer  --> executor
+    errorHandling --> sourceCode & lexicalAnalyzer & syntaxAnalyzer & executor
     
 ```

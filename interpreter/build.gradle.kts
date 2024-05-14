@@ -12,11 +12,18 @@ repositories {
 }
 
 dependencies {
-    testImplementation("org.spockframework:spock-core:2.4-M1-groovy-4.0")
+    testImplementation("org.spockframework:spock-core:2.4-M4-groovy-4.0")
 }
 
 tasks.named<Test>("test"){
-    useJUnitPlatform();
+    useJUnitPlatform()
 }
 
-tasks.register("prepareKotlinBuildScriptModel"){}
+tasks.register("prepareKotlinBuildScriptModel") {}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+        vendor = JvmVendorSpec.AMAZON
+    }
+}
