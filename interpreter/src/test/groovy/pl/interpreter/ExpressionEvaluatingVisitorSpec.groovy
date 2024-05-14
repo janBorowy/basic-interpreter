@@ -12,6 +12,8 @@ import pl.interpreter.parser.BooleanLiteral
 import pl.interpreter.parser.Expression
 import pl.interpreter.parser.FloatLiteral
 import pl.interpreter.parser.IntLiteral
+import pl.interpreter.parser.Multiplication
+import pl.interpreter.parser.MultiplicationOperator
 import pl.interpreter.parser.StringLiteral
 import pl.interpreter.parser.Sum
 import spock.lang.Specification
@@ -71,13 +73,13 @@ class ExpressionEvaluatingVisitorSpec extends Specification {
                 new Sum(
                         new IntLiteral(2, null),
                         AdditionOperator.MINUS,
-                        new IntLiteral(2, null),
+                        new IntLiteral(5, null),
                         null
                 )
         )
         expect:
         result in IntValue
-        (result as IntValue).getValue() == 0
+        (result as IntValue).getValue() == -3
     }
 
     def "Should evaluate float plus sum correctly"() {
@@ -91,7 +93,7 @@ class ExpressionEvaluatingVisitorSpec extends Specification {
         )
         expect:
         result in FloatValue
-        (result as FloatValue).getValue() == 5.0f
+        TestUtils.isClose((result as FloatValue).getValue(), 5.0f)
     }
 
     def "Should evaluate float minus sum correctly"() {
@@ -105,7 +107,7 @@ class ExpressionEvaluatingVisitorSpec extends Specification {
         )
         expect:
         result in FloatValue
-        (result as FloatValue).getValue() == 0.5f
+        TestUtils.isClose((result as FloatValue).getValue(), 0.5f)
     }
 
     def "Should concat strings"() {
@@ -162,5 +164,117 @@ class ExpressionEvaluatingVisitorSpec extends Specification {
         )
         then:
         InvalidValueTypeException e = thrown()
+    }
+
+    def "Should multiply integers correctly"() {
+        var result = evaluateExpression(
+                new Multiplication(
+                        new IntLiteral(2, null),
+                        MultiplicationOperator.MULTIPLY,
+                        new IntLiteral(2, null),
+                        null
+                )
+        )
+        expect:
+        result in IntValue
+        (result as IntValue).getValue() == 4
+    }
+
+    def "Should multiply float correctly"() {
+        var result = evaluateExpression(
+                new Multiplication(
+                        new FloatLiteral(2.5, null),
+                        MultiplicationOperator.MULTIPLY,
+                        new IntLiteral(2, null),
+                        null
+                )
+        )
+        expect:
+        result in FloatValue
+        TestUtils.isClose((result as FloatValue).getValue(), 5)
+    }
+
+    def "Should divide integers correctly"() {
+        var result = evaluateExpression(
+                new Multiplication(
+                        new IntLiteral(11, null),
+                        MultiplicationOperator.DIVIDE,
+                        new IntLiteral(2, null),
+                        null
+                )
+        )
+        expect:
+        result in IntValue
+        (result as IntValue).getValue() == 5
+    }
+
+    def "Should divide floats correctly"() {
+        var result = evaluateExpression(
+                new Multiplication(
+                        new FloatLiteral(5.5f, null),
+                        MultiplicationOperator.DIVIDE,
+                        new FloatLiteral(0.5f, null),
+                        null
+                )
+        )
+        expect:
+        result in FloatValue
+        TestUtils.isClose((result as FloatValue).getValue(), 11.0f)
+    }
+
+    def "Should modulo integers correctly"() {
+        var result = evaluateExpression(
+                new Multiplication(
+                        new IntLiteral(5, null),
+                        MultiplicationOperator.MODULO,
+                        new IntLiteral(2, null),
+                        null
+                )
+        )
+        expect:
+        result in IntValue
+        (result as IntValue).getValue() == 1
+    }
+
+    def "Should modulo floats correctly"() {
+        var result = evaluateExpression(
+                new Multiplication(
+                        new FloatLiteral(0.5, null),
+                        MultiplicationOperator.MODULO,
+                        new FloatLiteral(0.3, null),
+                        null
+                )
+        )
+        expect:
+        result in FloatValue
+        TestUtils.isClose((result as FloatValue).getValue(), 0.2f)
+    }
+
+    def "Should throw when dividing by zero"() {
+        when:
+        var result = evaluateExpression(
+                new Multiplication(
+                        new IntLiteral(1, null),
+                        MultiplicationOperator.DIVIDE,
+                        new FloatLiteral(0.0f, null),
+                        null
+                )
+        )
+        then:
+        ExpressionEvaluationException e = thrown()
+    }
+
+    def "Should throw when modulo by zero"() {
+        when:
+        var result = evaluateExpression(
+                new Multiplication(
+                        new IntLiteral(1, null),
+                        MultiplicationOperator.MODULO,
+                        new FloatLiteral(0.0f, null),
+                        null
+                )
+        )
+        then:
+        ExpressionEvaluationException e = thrown()
     }
 }

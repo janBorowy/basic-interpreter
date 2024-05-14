@@ -97,7 +97,15 @@ public class ExpressionEvaluatingVisitor implements ExpressionVisitor {
 
     @Override
     public void visit(Multiplication multiplication) {
-
+        visit(multiplication.getLeft());
+        var leftHandSide = value;
+        visit(multiplication.getRight());
+        var operator = switch(multiplication.getOperator()){
+            case MULTIPLY -> MultiplicationEvaluator.MultiplicationOperator.MULTIPLICATION;
+            case DIVIDE -> MultiplicationEvaluator.MultiplicationOperator.DIVISION;
+            case MODULO -> MultiplicationEvaluator.MultiplicationOperator.MODULO;
+        };
+        value = new MultiplicationEvaluator(leftHandSide, value, operator).evaluate();
     }
 
     @Override
