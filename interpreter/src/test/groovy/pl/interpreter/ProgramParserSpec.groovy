@@ -18,7 +18,7 @@ class ProgramParserSpec extends Specification {
 
     def treeStr(code) {
         var parser = getProgramParser(code)
-        var statement = parser.parseProgram()
+        var statement = parser.parse()
         var writer = new StringWriter();
         (new PrintVisitor(writer)).visit(statement)
         return writer.toString();
@@ -509,12 +509,12 @@ struct Book {
     string title
 }
 """) == """Program <row: 1, col: 1> 
-|-StructureDefinition <row: 1, col: 1> id=Person
-  |-Parameter id=surname, type=string
-  |-Parameter id=name, type=string
 |-StructureDefinition <row: 6, col: 1> id=Book
   |-Parameter id=author, type=user_type, userType=Person
   |-Parameter id=title, type=string
+|-StructureDefinition <row: 1, col: 1> id=Person
+  |-Parameter id=surname, type=string
+  |-Parameter id=name, type=string
 """
 
         treeStr("""struct Person {
@@ -547,17 +547,17 @@ void printPublication(Publication pub) {
     }
 }
 """) == """Program <row: 1, col: 1> 
-|-StructureDefinition <row: 1, col: 1> id=Person
-  |-Parameter id=surname, type=string
-  |-Parameter id=name, type=string
-|-StructureDefinition <row: 6, col: 1> id=Book
-  |-Parameter id=author, type=user_type, userType=Person
-  |-Parameter id=isbn, type=string
-  |-Parameter id=title, type=string
 |-StructureDefinition <row: 12, col: 1> id=Article
   |-Parameter id=author, type=user_type, userType=Person
   |-Parameter id=headline, type=string
   |-Parameter id=shownIn, type=string
+|-StructureDefinition <row: 6, col: 1> id=Book
+  |-Parameter id=author, type=user_type, userType=Person
+  |-Parameter id=isbn, type=string
+  |-Parameter id=title, type=string
+|-StructureDefinition <row: 1, col: 1> id=Person
+  |-Parameter id=surname, type=string
+  |-Parameter id=name, type=string
 |-VariantDefinition <row: 18, col: 1> id=Publication
   |-Type id=Book
   |-Type id=Article
@@ -608,12 +608,12 @@ float getCoordinatesSum(Point p) {
     }
 }
 """) == """Program <row: 1, col: 1> 
-|-StructureDefinition <row: 1, col: 1> id=IntPoint
-  |-Parameter id=iy, type=int
-  |-Parameter id=ix, type=int
 |-StructureDefinition <row: 6, col: 1> id=FloatPoint
   |-Parameter id=fx, type=float
   |-Parameter id=fy, type=float
+|-StructureDefinition <row: 1, col: 1> id=IntPoint
+  |-Parameter id=iy, type=int
+  |-Parameter id=ix, type=int
 |-VariantDefinition <row: 11, col: 1> id=Point
   |-Type id=IntPoint
   |-Type id=FloatPoint

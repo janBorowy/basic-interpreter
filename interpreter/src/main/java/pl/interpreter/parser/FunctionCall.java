@@ -19,4 +19,7 @@ public class FunctionCall extends Statement implements Expression, Instruction {
     public void accept(StatementVisitor visitor) {
         visitor.visit(this);
     }
+    public void accept(ExpressionVisitor visitor) {
+        visitor.visit(this);
+    }
 }

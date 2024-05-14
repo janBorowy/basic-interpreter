@@ -19,4 +19,7 @@ public class Conjunction extends Statement implements Expression {
     public void accept(StatementVisitor visitor) {
         visitor.visit(this);
     }
+    public void accept(ExpressionVisitor visitor) {
+        visitor.visit(this);
+    }
 }

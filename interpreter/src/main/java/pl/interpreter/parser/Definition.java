@@ -1,3 +1,5 @@
 package pl.interpreter.parser;
 
-public interface Definition {}
+public interface Definition {
+    String getId();
+}

@@ -3,6 +3,7 @@ package pl.interpreter.parser;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -78,7 +79,7 @@ public class PrintVisitor implements StatementVisitor {
     @Override
     public void visit(BooleanLiteral booleanLiteral) {
         printNode(booleanLiteral, List.of(
-                new Param(VALUE_MSG, String.valueOf(booleanLiteral.isOn()))));
+                new Param(VALUE_MSG, String.valueOf(booleanLiteral.isTruthy()))));
     }
 
     @Override
@@ -154,7 +155,7 @@ public class PrintVisitor implements StatementVisitor {
     public void visit(Program program) {
         printNode(program, List.of());
         diveIn();
-        program.getDefinitions().forEach(this::visit);
+        program.getDefinitions().values().stream().sorted(Comparator.comparing(Definition::getId)).forEach(this::visit);
         diveOut();
     }
 

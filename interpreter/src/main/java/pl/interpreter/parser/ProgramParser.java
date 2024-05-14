@@ -1,6 +1,8 @@
 package pl.interpreter.parser;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import pl.interpreter.TokenType;
 
@@ -16,11 +18,15 @@ public class ProgramParser extends Parser {
     }
 
     // program ::= { definition };
-    public Program parseProgram() {
-        var definitions = new ArrayList<Definition>();
-        var definition = parseDefinition();
-        while (definition.isPresent()) {
-            definitions.add(definition.get());
+    public Program parse() {
+        Map<String, Definition> definitions = new HashMap<>();
+        Optional<Definition> definition = parseDefinition();
+        while(definition.isPresent()) {
+            var it = definition.get();
+            if (definitions.containsKey(it.getId())) {
+                throwParserException("Multiple functions with same id found: " + it.getId());
+            }
+            definitions.put(it.getId(), it);
             definition = parseDefinition();
         }
         return new Program(definitions, new Position(1, 1));
