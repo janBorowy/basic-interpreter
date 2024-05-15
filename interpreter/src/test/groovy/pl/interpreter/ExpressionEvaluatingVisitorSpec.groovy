@@ -1,29 +1,51 @@
 package pl.interpreter
 
 import pl.interpreter.executor.BooleanValue
+import pl.interpreter.executor.CallContext
 import pl.interpreter.executor.ExpressionEvaluatingVisitor
 import pl.interpreter.executor.FloatValue
 import pl.interpreter.executor.IntValue
+import pl.interpreter.executor.Scope
 import pl.interpreter.executor.StringValue
+import pl.interpreter.executor.Value
 import pl.interpreter.executor.exceptions.ExpressionEvaluationException
 import pl.interpreter.executor.exceptions.InvalidValueTypeException
+import pl.interpreter.lexical_analyzer.LexicalAnalyzer
 import pl.interpreter.parser.AdditionOperator
 import pl.interpreter.parser.BooleanLiteral
 import pl.interpreter.parser.Expression
+import pl.interpreter.parser.ExpressionParser
 import pl.interpreter.parser.FloatLiteral
 import pl.interpreter.parser.IntLiteral
 import pl.interpreter.parser.Multiplication
 import pl.interpreter.parser.MultiplicationOperator
 import pl.interpreter.parser.StringLiteral
 import pl.interpreter.parser.Sum
+import pl.interpreter.parser.TokenManager
 import spock.lang.Specification
 
 class ExpressionEvaluatingVisitorSpec extends Specification {
 
+    def getTestingContext() {
+        var context = new CallContext(new ArrayList<>())
+        context.setVariableForClosestScope("a", new IntValue(1))
+        context.setVariableForClosestScope("b", new FloatValue(1.5f))
+        context.setVariableForClosestScope("c", new StringValue("abc"))
+        context.setVariableForClosestScope("d", new BooleanValue(true))
+        return context
+    }
+
     def evaluateExpression(Expression expression) {
-        var visitor = new ExpressionEvaluatingVisitor()
+        var visitor = new ExpressionEvaluatingVisitor(getTestingContext())
         visitor.visit(expression)
         return visitor.getValue()
+    }
+
+    def evaluateExpression(String code) {
+        var analyzer = new LexicalAnalyzer(new StringReader(code))
+        var tokenManager = new TokenManager(analyzer)
+        var tree = new ExpressionParser(tokenManager)
+        return evaluateExpression(tree.parseExpression().get())
     }
 
     def "Should evaluate integer literals"() {
@@ -276,5 +298,109 @@ class ExpressionEvaluatingVisitorSpec extends Specification {
         )
         then:
         ExpressionEvaluationException e = thrown()
+    }
+
+    def "Should evaluate sum and mul correctly"() {
+        var result = evaluateExpression("2 * 2 + 0.3f")
+        expect:
+        result in FloatValue
+        TestUtils.isClose((result as FloatValue).getValue(), 4.3f)
+    }
+
+    def "Should evaluate complex"() {
+        var result = evaluateExpression("((3 / (2 + 5 % 3)) * 1 + (9 / (1 - 2)))")
+        expect:
+        result in IntValue
+        TestUtils.isClose((result as IntValue).getValue(), -9)
+    }
+
+    def "Should evaluate to true"() {
+        var result = evaluateExpression("2 + 2 == 4")
+        expect:
+        result in BooleanValue
+        (result as BooleanValue).isTruthy()
+    }
+
+    def "Should evaluate to false"() {
+        var result = evaluateExpression("2 + 2 != 4")
+        expect:
+        result in BooleanValue
+        !(result as BooleanValue).isTruthy()
+    }
+
+    def "Should evaluate to true"() {
+        var result = evaluateExpression("5 > 4")
+        expect:
+        result in BooleanValue
+        (result as BooleanValue).isTruthy()
+    }
+
+    def "Should evaluate to false"() {
+        var result = evaluateExpression("5 < 4")
+        expect:
+        result in BooleanValue
+        !(result as BooleanValue).isTruthy()
+    }
+
+    def "Should evaluate to true"() {
+        var result = evaluateExpression("5 >= 5")
+        expect:
+        result in BooleanValue
+        (result as BooleanValue).isTruthy()
+    }
+
+    def "Should evaluate to true"() {
+        var result = evaluateExpression("5 <= 6")
+        expect:
+        result in BooleanValue
+        (result as BooleanValue).isTruthy()
+    }
+
+    def "Should evaluate conjunction correctly"() {
+        expect:
+        result == (evaluateExpression(expression) as BooleanValue)
+        where:
+        expression        | result
+        "true and true"   | new BooleanValue(true)
+        "false and true"  | new BooleanValue(false)
+        "true and false"  | new BooleanValue(false)
+        "false and false" | new BooleanValue(false)
+    }
+
+    def "Should evaluate alternative correctly"() {
+        expect:
+        result == (evaluateExpression(expression) as BooleanValue)
+        where:
+        expression       | result
+        "true or true"   | new BooleanValue(true)
+        "false or true"  | new BooleanValue(true)
+        "true or false"  | new BooleanValue(true)
+        "false or false" | new BooleanValue(false)
+    }
+
+    def "Should evaluate negation correctly"() {
+        expect:
+        result == (evaluateExpression(expression) as BooleanValue)
+        where:
+        expression | result
+        "true"     | new BooleanValue(true)
+        "!true"    | new BooleanValue(false)
+        "false"    | new BooleanValue(false)
+        "!false"   | new BooleanValue(true)
+    }
+
+    def "Should evaluate identifiers correctly"() {
+        expect:
+        result == (evaluateExpression(expression) as Value)
+        where:
+        expression | result
+        "a"        | new IntValue(1)
+        "a + a"    | new IntValue(2)
+        "a > 0"    | new BooleanValue(true)
+        "a == b"   | new BooleanValue(false)
+        "a != 1"   | new BooleanValue(false)
+        "b"        | new FloatValue(1.5f)
+        "c"        | new StringValue("abc")
+        "d"        | new BooleanValue(true)
     }
 }

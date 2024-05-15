@@ -26,6 +26,14 @@ public class Environment {
         loadDefinitions(program);
     }
 
+    public void pushNewContext() {
+        callContexts.push(new CallContext(new ArrayList<>()));
+    }
+
+    public void popContext() {
+        callContexts.pop();
+    }
+
     private void loadDefinitions(Program program) {
         program.getDefinitions()
                 .values()

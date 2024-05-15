@@ -7,15 +7,15 @@ import pl.interpreter.executor.exceptions.InvalidValueTypeException;
 @AllArgsConstructor
 public class MultiplicationEvaluator {
 
-    public enum MultiplicationOperator {
+    public enum Operator {
         MULTIPLICATION,
         DIVISION,
         MODULO
     }
 
-    private Value leftHandSide;
-    private Value rightHandSide;
-    private MultiplicationOperator operator;
+    private final Value leftHandSide;
+    private final Value rightHandSide;
+    private final Operator operator;
 
     public Value evaluate() {
         return switch (leftHandSide) {

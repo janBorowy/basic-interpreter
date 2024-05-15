@@ -6,13 +6,13 @@ import pl.interpreter.executor.exceptions.InvalidValueTypeException;
 
 @AllArgsConstructor
 public class SumEvaluator {
-    public enum SumOperator {
+    public enum Operator {
         PLUS,
         MINUS
     }
-    private Value leftHandSide;
-    private Value rightHandSide;
-    private SumOperator operator;
+    private final Value leftHandSide;
+    private final Value rightHandSide;
+    private Operator operator;
 
     public Value evaluate() {
         validate();
@@ -28,7 +28,7 @@ public class SumEvaluator {
         switch(leftHandSide) {
             case BooleanValue b -> throw new InvalidValueTypeException("Boolean values do not support sum operation");
             case StringValue s -> {
-                if (operator.equals(SumOperator.MINUS)) {
+                if (operator.equals(Operator.MINUS)) {
                     throw new ExpressionEvaluationException("Expected \"+\" operator");
                 }
                 if (!(rightHandSide instanceof StringValue)) {

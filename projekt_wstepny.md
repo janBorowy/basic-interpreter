@@ -1,4 +1,4 @@
-# Techniki Kompilacji 24L
+git# Techniki Kompilacji 24L
 ### Jan Borowy 318364
 
 ## Projekt

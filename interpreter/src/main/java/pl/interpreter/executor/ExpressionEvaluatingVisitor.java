@@ -1,7 +1,6 @@
 package pl.interpreter.executor;
 
 import lombok.Getter;
-import pl.interpreter.executor.exceptions.InvalidValueTypeException;
 import pl.interpreter.parser.Alternative;
 import pl.interpreter.parser.BooleanLiteral;
 import pl.interpreter.parser.Cast;
@@ -24,35 +23,43 @@ import pl.interpreter.parser.UnknownNodeException;
 public class ExpressionEvaluatingVisitor implements ExpressionVisitor {
 
     private Value value;
+    private final CallContext callContext;
+
+    public ExpressionEvaluatingVisitor(CallContext callContext) {
+        this.callContext = callContext;
+    }
 
     @Override
     public void visit(Expression expression) {
-        try {
-            switch (expression) {
-                case Alternative alternative -> visit(alternative);
-                case Cast cast -> visit(cast);
-                case Conjunction conjunction -> visit(conjunction);
-                case Relation relation -> visit(relation);
-                case BooleanLiteral booleanLiteral -> visit(booleanLiteral);
-                case FloatLiteral floatLiteral -> visit(floatLiteral);
-                case IntLiteral intLiteral -> visit(intLiteral);
-                case Multiplication multiplication -> visit(multiplication);
-                case Negation negation -> visit(negation);
-                case StringLiteral stringLiteral -> visit(stringLiteral);
-                case Sum sum -> visit(sum);
-                case FunctionCall functionCall -> visit(functionCall);
-                case DotAccess dotAccess -> visit(dotAccess);
-                case Identifier identifier -> visit(identifier);
-                default -> throw new UnknownNodeException();
-            }
-        } catch (InvalidValueTypeException exception) {
-
+        switch (expression) {
+            case Alternative alternative -> visit(alternative);
+            case Cast cast -> visit(cast);
+            case Conjunction conjunction -> visit(conjunction);
+            case Relation relation -> visit(relation);
+            case BooleanLiteral booleanLiteral -> visit(booleanLiteral);
+            case FloatLiteral floatLiteral -> visit(floatLiteral);
+            case IntLiteral intLiteral -> visit(intLiteral);
+            case Multiplication multiplication -> visit(multiplication);
+            case Negation negation -> visit(negation);
+            case StringLiteral stringLiteral -> visit(stringLiteral);
+            case Sum sum -> visit(sum);
+            case FunctionCall functionCall -> visit(functionCall);
+            case DotAccess dotAccess -> visit(dotAccess);
+            case Identifier identifier -> visit(identifier);
+            default -> throw new UnknownNodeException();
         }
     }
 
     @Override
     public void visit(Alternative alternative) {
-
+        visit(alternative.getLeft());
+        var lhs = value;
+        if (ConjunctionOrAlternativeEvaluator.shouldShortCircuit(value, ConjunctionOrAlternativeEvaluator.Operator.ALTERNATIVE)) {
+            value = new BooleanValue(true);
+            return;
+        }
+        visit(alternative.getRight());
+        value = new ConjunctionOrAlternativeEvaluator(lhs, value, ConjunctionOrAlternativeEvaluator.Operator.ALTERNATIVE).evaluate();
     }
 
     @Override
@@ -67,7 +74,14 @@ public class ExpressionEvaluatingVisitor implements ExpressionVisitor {
 
     @Override
     public void visit(Conjunction conjunction) {
-
+        visit(conjunction.getLeft());
+        var lhs = value;
+        if (ConjunctionOrAlternativeEvaluator.shouldShortCircuit(value, ConjunctionOrAlternativeEvaluator.Operator.CONJUNCTION)) {
+            value = new BooleanValue(false);
+            return;
+        }
+        visit(conjunction.getRight());
+        value = new ConjunctionOrAlternativeEvaluator(lhs, value, ConjunctionOrAlternativeEvaluator.Operator.CONJUNCTION).evaluate();
     }
 
     @Override
@@ -87,7 +101,7 @@ public class ExpressionEvaluatingVisitor implements ExpressionVisitor {
 
     @Override
     public void visit(Identifier identifier) {
-
+        value = callContext.resolveVariable(identifier.getValue());
     }
 
     @Override
@@ -100,22 +114,34 @@ public class ExpressionEvaluatingVisitor implements ExpressionVisitor {
         visit(multiplication.getLeft());
         var leftHandSide = value;
         visit(multiplication.getRight());
-        var operator = switch(multiplication.getOperator()){
-            case MULTIPLY -> MultiplicationEvaluator.MultiplicationOperator.MULTIPLICATION;
-            case DIVIDE -> MultiplicationEvaluator.MultiplicationOperator.DIVISION;
-            case MODULO -> MultiplicationEvaluator.MultiplicationOperator.MODULO;
+        var operator = switch (multiplication.getOperator()) {
+            case MULTIPLY -> MultiplicationEvaluator.Operator.MULTIPLICATION;
+            case DIVIDE -> MultiplicationEvaluator.Operator.DIVISION;
+            case MODULO -> MultiplicationEvaluator.Operator.MODULO;
         };
         value = new MultiplicationEvaluator(leftHandSide, value, operator).evaluate();
     }
 
     @Override
     public void visit(Negation negation) {
-
+        visit(negation.getExpression());
+        value = new NegationEvaluator(value).evaluate();
     }
 
     @Override
     public void visit(Relation relation) {
-
+        visit(relation.getLeft());
+        var leftHandSide = value;
+        visit(relation.getRight());
+        var operator = switch (relation.getOperator()) {
+            case EQUALS -> RelationEvaluator.Operator.EQUAL;
+            case NOT_EQUALS -> RelationEvaluator.Operator.NOT_EQUAL;
+            case LESS_THAN -> RelationEvaluator.Operator.LESS_THAN;
+            case GREATER_THAN -> RelationEvaluator.Operator.GREATER_THAN;
+            case LESS_THAN_OR_EQUALS -> RelationEvaluator.Operator.LESS_THAN_OR_EQUAL;
+            case GREATER_THAN_OR_EQUALS -> RelationEvaluator.Operator.GREATER_THAN_OR_EQUAL;
+        };
+        value = new RelationEvaluator(leftHandSide, value, operator).evaluate();
     }
 
     @Override
@@ -128,9 +154,9 @@ public class ExpressionEvaluatingVisitor implements ExpressionVisitor {
         visit(sum.getLeft());
         var leftHandSide = value;
         visit(sum.getRight());
-        var operator = switch(sum.getOperator()) {
-            case PLUS -> SumEvaluator.SumOperator.PLUS;
-            case MINUS -> SumEvaluator.SumOperator.MINUS;
+        var operator = switch (sum.getOperator()) {
+            case PLUS -> SumEvaluator.Operator.PLUS;
+            case MINUS -> SumEvaluator.Operator.MINUS;
         };
         value = new SumEvaluator(leftHandSide, value, operator).evaluate();
     }
