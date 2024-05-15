@@ -40,8 +40,6 @@ public interface StatementVisitor {
 
     void visit(Definition definition);
 
-    void visit(ParameterSignatureMap parameterSignatureMap);
-
     void visit(VariantDefinition variantDefinition);
 
     void visit(FunctionDefinition functionDefinition);

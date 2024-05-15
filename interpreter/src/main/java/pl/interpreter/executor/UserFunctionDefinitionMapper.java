@@ -1,17 +1,17 @@
 package pl.interpreter.executor;
 
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
 import pl.interpreter.parser.FunctionDefinition;
 import pl.interpreter.parser.FunctionReturnType;
-import pl.interpreter.parser.ParameterSignatureMap;
+import pl.interpreter.parser.Parameter;
 import pl.interpreter.parser.ParameterType;
 
 @UtilityClass
 public class UserFunctionDefinitionMapper {
 
-    public Function map(FunctionDefinition functionDefinition) {
+    public UserFunction map(FunctionDefinition functionDefinition) {
         functionDefinition.getReturnType();
         return new UserFunction(mapReturnType(functionDefinition.getReturnType()),
                 mapParameters(functionDefinition.getParameters()),
@@ -29,10 +29,8 @@ public class UserFunctionDefinitionMapper {
         };
     }
 
-    private Map<String, ValueType> mapParameters(ParameterSignatureMap astParameters) {
-        Map<String, ValueType> parameters = new HashMap<>();
-        astParameters.forEach((k, param) -> parameters.put(k, mapParameterType(param)));
-        return parameters;
+    private List<FunctionParameter> mapParameters(List<Parameter> astParameters) {
+        return astParameters.stream().map((param) -> new FunctionParameter(param.getId(), mapParameterType(param.getType()))).toList();
     }
 
     private ValueType mapParameterType(ParameterType parameterType) {

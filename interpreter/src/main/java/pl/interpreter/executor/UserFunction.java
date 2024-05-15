@@ -1,24 +1,20 @@
 package pl.interpreter.executor;
 
 import java.util.List;
-import java.util.Map;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import pl.interpreter.parser.Block;
 
+@Getter
 @AllArgsConstructor
 public class UserFunction implements Function {
 
     private ValueType returnType;
-    private Map<String, ValueType> parameters;
+    private List<FunctionParameter> parameters;
     private Block block;
 
     @Override
     public Value execute(List<Value> arguments) {
-        return null;
-    }
-
-    @Override
-    public ValueType getReturnType() {
         return null;
     }
 }

@@ -1,12 +1,14 @@
 package pl.interpreter
 
 import pl.interpreter.executor.BooleanValue
-import pl.interpreter.executor.CallContext
+import pl.interpreter.executor.Environment
 import pl.interpreter.executor.ExpressionEvaluatingVisitor
 import pl.interpreter.executor.FloatValue
 import pl.interpreter.executor.IntValue
 import pl.interpreter.executor.StringValue
+import pl.interpreter.executor.StructureValue
 import pl.interpreter.executor.exceptions.ExpressionEvaluationException
+import pl.interpreter.executor.exceptions.InvalidAccessException
 import pl.interpreter.executor.exceptions.InvalidValueTypeException
 import pl.interpreter.lexical_analyzer.LexicalAnalyzer
 import pl.interpreter.parser.AdditionOperator
@@ -17,6 +19,7 @@ import pl.interpreter.parser.FloatLiteral
 import pl.interpreter.parser.IntLiteral
 import pl.interpreter.parser.Multiplication
 import pl.interpreter.parser.MultiplicationOperator
+import pl.interpreter.parser.Program
 import pl.interpreter.parser.StringLiteral
 import pl.interpreter.parser.Sum
 import pl.interpreter.parser.TokenManager
@@ -24,17 +27,27 @@ import spock.lang.Specification
 
 class ExpressionEvaluatingVisitorSpec extends Specification {
 
-    def getTestingContext() {
-        var context = new CallContext(new ArrayList<>())
+    def getTestingEnvironment() {
+        var environment = new Environment(new Program(Map.of(), null))
+        environment.pushNewContext()
+        var context = environment.getCurrentContext()
+        context.openNewScope()
         context.setVariableForClosestScope("a", new IntValue(1))
         context.setVariableForClosestScope("b", new FloatValue(1.5f))
         context.setVariableForClosestScope("c", new StringValue("abc"))
         context.setVariableForClosestScope("d", new BooleanValue(true))
-        return context
+        context.setVariableForClosestScope("point", new StructureValue(
+            "Point",
+            Map.of(
+                    "x", new IntValue(3),
+                    "y", new IntValue(4)
+            )
+        ))
+        return environment
     }
 
     def evaluateExpression(Expression expression) {
-        var visitor = new ExpressionEvaluatingVisitor(getTestingContext())
+        var visitor = new ExpressionEvaluatingVisitor(getTestingEnvironment())
         visitor.visit(expression)
         return visitor.getValue()
     }
@@ -400,5 +413,42 @@ class ExpressionEvaluatingVisitorSpec extends Specification {
         "b"        | new FloatValue(1.5f)
         "c"        | new StringValue("abc")
         "d"        | new BooleanValue(true)
+    }
+
+    def "Should evaluate cast correctly"() {
+        expect:
+        result == evaluateExpression(expression)
+        where:
+        expression          | result
+        "a as string"       | new StringValue("1")
+        "1 as string"       | new StringValue("1")
+        "1.5 as string"     | new StringValue("1.5")
+        "1.5 as int"        | new IntValue(1)
+        "11 as float"       | new FloatValue(11.0f)
+        "1 as int"            | new IntValue(1)
+        "\"abc\" as string" | new StringValue("abc")
+    }
+
+    def "Should throw when trying to cast to boolean type"() {
+        when:
+        evaluateExpression("1 as bool")
+        then:
+        InvalidValueTypeException e = thrown()
+    }
+
+    def "Should evaluate dot access correctly"() {
+        expect:
+        result == evaluateExpression(expression)
+        where:
+        expression          | result
+        "point.x" | new IntValue(3)
+        "point.y" | new IntValue(4)
+    }
+
+    def "Should throw if field does not exist"() {
+        when:
+        evaluateExpression("point.z")
+        then:
+        InvalidAccessException e = thrown()
     }
 }

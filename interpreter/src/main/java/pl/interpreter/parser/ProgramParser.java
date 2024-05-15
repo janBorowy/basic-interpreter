@@ -54,7 +54,7 @@ public class ProgramParser extends Parser {
         var id = parseMustBeIdentifier();
         mustBe(TokenType.LEFT_PARENTHESES);
         consumeToken();
-        var parameters = parseParametersMap();
+        var parameters = parseParameterList();
         mustBe(TokenType.RIGHT_PARENTHESES);
         consumeToken();
         var block = parseBlock()
@@ -105,32 +105,6 @@ public class ProgramParser extends Parser {
         mustBe(TokenType.RIGHT_CURLY_BRACKET);
         consumeToken();
         return Optional.of(new StructureDefinition(id, parameters, position));
-    }
-
-    // parameters ::= [ parameterType, identifier { "," parameterType, identifier } ];
-    private ParameterSignatureMap parseParametersMap() {
-        var position = getTokenPosition();
-        var parameters = new ParameterSignatureMap();
-        var parameterTypeEnum = VariableType.parse(token());
-        if (parameterTypeEnum.isEmpty()) {
-            return parameters;
-        }
-        var userType = getUserType(parameterTypeEnum.get());
-        consumeToken();
-        var id = parseMustBeIdentifier();
-        parameters.add(id, parameterTypeEnum.get(), userType, position);
-        while (tokenIsOfType(TokenType.COMMA)) {
-            consumeToken();
-            parameterTypeEnum = VariableType.parse(token());
-            if (parameterTypeEnum.isEmpty()) {
-                throwParserException("Expected type");
-            }
-            userType = getUserType(parameterTypeEnum.get());
-            consumeToken();
-            id = parseMustBeIdentifier();
-            parameters.add(id, parameterTypeEnum.get(), userType, position);
-        }
-        return parameters;
     }
 
     // parameters ::= [ parameterType, identifier { "," parameterType, identifier } ];

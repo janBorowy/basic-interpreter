@@ -13,7 +13,6 @@ public class CallContext {
 
     public CallContext(List<Scope> scopes) {
         this.scopes = scopes;
-        openNewScope();
     }
 
     public void openNewScope() {

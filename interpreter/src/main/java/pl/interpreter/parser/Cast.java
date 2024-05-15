@@ -6,7 +6,6 @@ import lombok.Getter;
 public class Cast extends Statement implements Expression {
 
     private Expression expression;
-
     private PrimitiveType toType;
 
     public Cast(Expression expression, PrimitiveType toType, Position tokenPosition) {

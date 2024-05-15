@@ -22,11 +22,11 @@ import pl.interpreter.parser.UnknownNodeException;
 @Getter
 public class ExpressionEvaluatingVisitor implements ExpressionVisitor {
 
-    private pl.interpreter.executor.Value value;
-    private final CallContext callContext;
+    private Value value;
+    private final Environment environment;
 
-    public ExpressionEvaluatingVisitor(CallContext callContext) {
-        this.callContext = callContext;
+    public ExpressionEvaluatingVisitor(Environment environment) {
+        this.environment = environment;
     }
 
     @Override
@@ -69,7 +69,14 @@ public class ExpressionEvaluatingVisitor implements ExpressionVisitor {
 
     @Override
     public void visit(Cast cast) {
-
+        visit(cast.getExpression());
+        var castType = switch (cast.getToType()) {
+            case INT -> CastEvaluator.LegalCastType.INT;
+            case FLOAT -> CastEvaluator.LegalCastType.FLOAT;
+            case STRING -> CastEvaluator.LegalCastType.STRING;
+            case BOOL -> CastEvaluator.LegalCastType.BOOLEAN;
+        };
+        value = new CastEvaluator(value, castType).evaluate();
     }
 
     @Override
@@ -86,7 +93,8 @@ public class ExpressionEvaluatingVisitor implements ExpressionVisitor {
 
     @Override
     public void visit(DotAccess dotAccess) {
-
+        visit(dotAccess.getExpression());
+        value = new DotAccessEvaluator(value, dotAccess.getFieldName()).evaluate();
     }
 
     @Override
@@ -101,7 +109,7 @@ public class ExpressionEvaluatingVisitor implements ExpressionVisitor {
 
     @Override
     public void visit(Identifier identifier) {
-        value = callContext.resolveVariable(identifier.getValue());
+        value = environment.getCurrentContext().resolveVariable(identifier.getValue());
     }
 
     @Override

@@ -170,11 +170,6 @@ public class PrintVisitor implements StatementVisitor {
     }
 
     @Override
-    public void visit(ParameterSignatureMap parameterSignatureMap) {
-        parameterSignatureMap.forEach(this::printParameter);
-    }
-
-    @Override
     public void visit(VariantDefinition variantDefinition) {
         printNode(variantDefinition, List.of(
                 new Param(ID_MSG, variantDefinition.getId())));
@@ -192,7 +187,7 @@ public class PrintVisitor implements StatementVisitor {
         }
         printNode(functionDefinition, params);
         diveIn();
-        functionDefinition.getParameters().forEach(this::printParameter);
+        functionDefinition.getParameters().forEach(this::visit);
         visit(functionDefinition.getBlock());
         diveOut();
     }

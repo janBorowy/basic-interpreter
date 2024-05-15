@@ -171,14 +171,6 @@ c
 """
     }
 
-    def "Should throw if duplicated parameter names"() {
-        when:
-        treeStr("int sum (int a, int a) { return a + a; }")
-        then:
-        ParserException e = thrown()
-        e.getMessage() == "Parameter identifier duplicated at row: 1, col: 10"
-    }
-
     def "Should parse compound statements"() {
         expect:
             treeStr("int main () { if (a == 1) return a; else return b; }") == """Program <row: 1, col: 1> 

@@ -396,20 +396,21 @@ int main() {
 
 Konwersja typów odbywa się przez słowo kluczowe `as`.
 
-| Typ 1  | Typ 2  | Konwersja 1 -> 2 | Wynik |
-|--------|--------|------------------|-------|
-| int    | float  | `1 as float`     | 1.0   |
-| int    | string | `123 as string`  | "123" |
-| float  | int    | `1.5 as int`     | 1     |
-| float  | string | `1.5 as string`  | "1.5" |
-| string | int    | `123 as int`     | 123   |
-| string | float  | `"1.5" as float` | 1.5   |
+| Typ 1  | Typ 2  | Konwersja 1 -> 2 | Wynik  |
+|--------|--------|------------------|--------|
+| int    | float  | `1 as float`     | 1.0    |
+| int    | string | `123 as string`  | "123"  |
+| float  | int    | `1.5 as int`     | 1      |
+| float  | string | `1.5 as string`  | "1.5"  |
+| string | int    | `123 as int`     | 123    |
+| string | float  | `"1.5" as float` | 1.5    |
+| bool   | string | `true as string` | "true" |
 
 #### Uwagi:
 
 - W wypadku błędnej konwersji, zostanie zgłoszony błąd interpretacji i koniec programu, np. konwersja `"abc" as int`.
-- Konwersja liczby zmiennoprzecinkowej na całkowitoprzecinkową powoduje zaokroąglenie liczby w dół do liczby jedności.
-- Konwersja nie jest dozwolona między strukturami i typami boolowskimi.
+- Konwersja liczby zmiennoprzecinkowej na całkowitą powoduje zaokrąglenie liczby w dół do liczby jedności.
+- Konwersja nie jest dozwolona między strukturami.
 
 ## Rekord wariantowy
 Typ zmiennej, który przechowuje wartość jednego z wariantów - struktur.
