@@ -1,3 +1,3 @@
 package pl.interpreter.parser;
 
-public interface Value {}
+public interface Expression {}

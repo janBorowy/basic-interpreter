@@ -3,12 +3,12 @@ package pl.interpreter.parser;
 import lombok.Getter;
 
 @Getter
-public class DotAccess extends Statement implements Value {
+public class DotAccess extends Statement implements Expression {
 
-    private final Value expression;
+    private final Expression expression;
     private final String fieldName;
 
-    public DotAccess(Value expression, String fieldName, Position tokenPosition) {
+    public DotAccess(Expression expression, String fieldName, Position tokenPosition) {
         super(tokenPosition);
         this.expression = expression;
         this.fieldName = fieldName;

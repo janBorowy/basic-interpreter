@@ -3,13 +3,13 @@ package pl.interpreter.parser;
 import lombok.Getter;
 
 @Getter
-public class Conjunction extends Statement implements Value {
+public class Conjunction extends Statement implements Expression {
 
-    private final Value left;
+    private final Expression left;
 
-    private final Value right;
+    private final Expression right;
 
-    public Conjunction(Value left, Value right, Position tokenPosition) {
+    public Conjunction(Expression left, Expression right, Position tokenPosition) {
         super(tokenPosition);
         this.left = left;
         this.right = right;

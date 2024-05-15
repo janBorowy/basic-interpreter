@@ -46,7 +46,7 @@ public class PrintVisitor implements StatementVisitor {
     }
 
     @Override
-    public void visit(Value expression) {
+    public void visit(Expression expression) {
         switch (expression) {
             case Alternative alternative -> visit(alternative);
             case Cast cast -> visit(cast);

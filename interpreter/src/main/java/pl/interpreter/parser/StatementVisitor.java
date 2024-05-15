@@ -12,7 +12,7 @@ public interface StatementVisitor {
 
     void visit(Relation relation);
 
-    void visit(Value expression);
+    void visit(Expression expression);
 
     void visit(Sum sum);
 

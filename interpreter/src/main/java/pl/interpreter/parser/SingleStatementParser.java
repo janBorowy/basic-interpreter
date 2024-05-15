@@ -52,7 +52,7 @@ public class SingleStatementParser extends Parser {
             return Optional.empty();
         }
         consumeToken();
-        var arguments = new ArrayList<Value>();
+        var arguments = new ArrayList<Expression>();
         expressionParser.parseExpression().ifPresent(arguments::add);
         while(tokenIsOfType(TokenType.COMMA)) {
             consumeToken();

@@ -4,12 +4,12 @@ import java.util.List;
 import lombok.Getter;
 
 @Getter
-public class FunctionCall extends Statement implements Value, Instruction {
+public class FunctionCall extends Statement implements Expression, Instruction {
 
     private final String functionId;
-    private final List<Value> arguments;
+    private final List<Expression> arguments;
 
-    public FunctionCall(String functionId, List<Value> arguments, Position position) {
+    public FunctionCall(String functionId, List<Expression> arguments, Position position) {
         super(position);
         this.functionId = functionId;
         this.arguments = arguments;

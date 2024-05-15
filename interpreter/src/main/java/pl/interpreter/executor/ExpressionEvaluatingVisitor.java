@@ -6,7 +6,7 @@ import pl.interpreter.parser.BooleanLiteral;
 import pl.interpreter.parser.Cast;
 import pl.interpreter.parser.Conjunction;
 import pl.interpreter.parser.DotAccess;
-import pl.interpreter.parser.Value;
+import pl.interpreter.parser.Expression;
 import pl.interpreter.parser.ExpressionVisitor;
 import pl.interpreter.parser.FloatLiteral;
 import pl.interpreter.parser.FunctionCall;
@@ -30,7 +30,7 @@ public class ExpressionEvaluatingVisitor implements ExpressionVisitor {
     }
 
     @Override
-    public void visit(Value expression) {
+    public void visit(Expression expression) {
         switch (expression) {
             case Alternative alternative -> visit(alternative);
             case Cast cast -> visit(cast);

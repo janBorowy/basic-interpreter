@@ -11,7 +11,7 @@ import pl.interpreter.executor.exceptions.InvalidValueTypeException
 import pl.interpreter.lexical_analyzer.LexicalAnalyzer
 import pl.interpreter.parser.AdditionOperator
 import pl.interpreter.parser.BooleanLiteral
-import pl.interpreter.parser.Value
+import pl.interpreter.parser.Expression
 import pl.interpreter.parser.ExpressionParser
 import pl.interpreter.parser.FloatLiteral
 import pl.interpreter.parser.IntLiteral
@@ -33,7 +33,7 @@ class ExpressionEvaluatingVisitorSpec extends Specification {
         return context
     }
 
-    def evaluateExpression(Value expression) {
+    def evaluateExpression(Expression expression) {
         var visitor = new ExpressionEvaluatingVisitor(getTestingContext())
         visitor.visit(expression)
         return visitor.getValue()

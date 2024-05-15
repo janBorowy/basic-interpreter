@@ -11,7 +11,7 @@ public class ExpressionParser extends Parser {
     }
 
     // expression ::= alternative, {"and", alternative};
-    public Optional<Value> parseExpression() {
+    public Optional<Expression> parseExpression() {
         var position = getTokenPosition();
         var left = parseAlternative();
         if (left.isEmpty()) {
@@ -27,7 +27,7 @@ public class ExpressionParser extends Parser {
     }
 
     // alternative ::= relation, {"or", relation};
-    private Optional<Value> parseAlternative() {
+    private Optional<Expression> parseAlternative() {
         var position = getTokenPosition();
         var left = parseRelation();
         if (left.isEmpty()) {
@@ -43,7 +43,7 @@ public class ExpressionParser extends Parser {
     }
 
     // relation ::= cast, [relationalOperator, cast];
-    private Optional<Value> parseRelation() {
+    private Optional<Expression> parseRelation() {
         var position = getTokenPosition();
         var left = parseCast();
         if (left.isEmpty()) {
@@ -60,7 +60,7 @@ public class ExpressionParser extends Parser {
     }
 
     // cast ::= sum, ["as", primitiveType]
-    private Optional<Value> parseCast() {
+    private Optional<Expression> parseCast() {
         var position = getTokenPosition();
         var sum = parseSum();
         if (sum.isEmpty()) {
@@ -77,7 +77,7 @@ public class ExpressionParser extends Parser {
     }
 
     // sum ::= multiplication, {additionOperator, multiplication};
-    private Optional<Value> parseSum() {
+    private Optional<Expression> parseSum() {
         var position = getTokenPosition();
         var left = parseMultiplication();
         if (left.isEmpty()) {
@@ -95,7 +95,7 @@ public class ExpressionParser extends Parser {
     }
 
     // multiplication ::= negation, {multiplicationOperator, negation};
-    private Optional<Value> parseMultiplication() {
+    private Optional<Expression> parseMultiplication() {
         var position = getTokenPosition();
         var left = parseNegation();
         if (left.isEmpty()) {
@@ -113,7 +113,7 @@ public class ExpressionParser extends Parser {
     }
 
     // negation ::= ["!"] factor;
-    private Optional<Value> parseNegation() {
+    private Optional<Expression> parseNegation() {
         var position = getTokenPosition();
         if (tokenIsOfType(TokenType.NEGATION_OPERATOR)) {
             consumeToken();
@@ -128,7 +128,7 @@ public class ExpressionParser extends Parser {
     //          | number // integer or float literal
     //          | booleanLiteral
     //          | "(", expression, ")";
-    private Optional<Value> parseFactor() {
+    private Optional<Expression> parseFactor() {
         return parseDotAccess()
                 .or(this::parseNumber)
                 .or(this::parseBooleanLiteral)
@@ -137,7 +137,7 @@ public class ExpressionParser extends Parser {
     }
 
     // dotAccess ::= identifierOrFunctionCall {"." identifier}
-    public Optional<Value> parseDotAccess() {
+    public Optional<Expression> parseDotAccess() {
         var position = getTokenPosition();
         var expressionOptional = parseIdentifierOrFunctionCall();
         if (expressionOptional.isEmpty()) {
@@ -152,7 +152,7 @@ public class ExpressionParser extends Parser {
         return Optional.of(expression);
     }
 
-    private Optional<Value> parseBooleanLiteral() {
+    private Optional<Expression> parseBooleanLiteral() {
         var position = getTokenPosition();
         if (tokenIsOfType(TokenType.KW_TRUE)) {
             consumeToken();
@@ -165,7 +165,7 @@ public class ExpressionParser extends Parser {
         return Optional.empty();
     }
 
-    private Optional<Value> parseNumber() {
+    private Optional<Expression> parseNumber() {
         var position = getTokenPosition();
         if (tokenIsOfType(TokenType.INT_CONST)) {
             var value = (int) token().value();
@@ -180,7 +180,7 @@ public class ExpressionParser extends Parser {
     }
 
     // identifierOrFunctionCall ::= identifier ["("[ expression {"," expression } ]")"]
-    private Optional<Value> parseIdentifierOrFunctionCall() {
+    private Optional<Expression> parseIdentifierOrFunctionCall() {
         var position = getTokenPosition();
         if (!tokenIsOfType(TokenType.IDENTIFIER)) {
             return Optional.empty();
@@ -191,7 +191,7 @@ public class ExpressionParser extends Parser {
             return Optional.of(new Identifier(id, position));
         }
         consumeToken();
-        var arguments = new ArrayList<Value>();
+        var arguments = new ArrayList<Expression>();
         parseExpression().ifPresent(arguments::add);
         while (tokenIsOfType(TokenType.COMMA)) {
             consumeToken();
@@ -205,7 +205,7 @@ public class ExpressionParser extends Parser {
     }
 
     // "(", expression, ")";
-    private Optional<Value> parseNestedExpression() {
+    private Optional<Expression> parseNestedExpression() {
         if (!tokenIsOfType(TokenType.LEFT_PARENTHESES)) {
             return Optional.empty();
         }
@@ -219,7 +219,7 @@ public class ExpressionParser extends Parser {
         return expression;
     }
 
-    private Optional<Value> parseStringLiteral() {
+    private Optional<Expression> parseStringLiteral() {
         var position = getTokenPosition();
         if (!tokenIsOfType(TokenType.STRING_CONST)) {
             return Optional.empty();

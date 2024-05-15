@@ -3,13 +3,13 @@ package pl.interpreter.parser;
 import lombok.Getter;
 
 @Getter
-public class Multiplication extends Statement implements Value {
+public class Multiplication extends Statement implements Expression {
 
-    private Value left;
+    private Expression left;
     private MultiplicationOperator operator;
-    private Value right;
+    private Expression right;
 
-    public Multiplication(Value left, MultiplicationOperator operator, Value right, Position tokenPosition) {
+    public Multiplication(Expression left, MultiplicationOperator operator, Expression right, Position tokenPosition) {
         super(tokenPosition);
         this.left = left;
         this.operator = operator;

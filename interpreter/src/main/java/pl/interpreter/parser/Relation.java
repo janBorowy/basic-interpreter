@@ -2,16 +2,16 @@ package pl.interpreter.parser;
 
 import lombok.Getter;
 
-public class Relation extends Statement implements Value {
+public class Relation extends Statement implements Expression {
 
     @Getter
-    private final Value left;
+    private final Expression left;
     @Getter
-    private final Value right;
+    private final Expression right;
     @Getter
     private final RelationalOperator operator;
 
-    public Relation(Value left, RelationalOperator operator, Value right, Position position) {
+    public Relation(Expression left, RelationalOperator operator, Expression right, Position position) {
         super(position);
         this.left = left;
         this.operator = operator;
