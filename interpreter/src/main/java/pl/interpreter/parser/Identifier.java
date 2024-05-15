@@ -3,7 +3,7 @@ package pl.interpreter.parser;
 import lombok.Getter;
 
 @Getter
-public class Identifier extends Statement implements Expression{
+public class Identifier extends Statement implements Value {
 
     private final String value;
 

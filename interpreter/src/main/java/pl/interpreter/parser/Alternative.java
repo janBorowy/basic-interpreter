@@ -3,12 +3,12 @@ package pl.interpreter.parser;
 import lombok.Getter;
 
 @Getter
-public class Alternative extends Statement implements Expression {
+public class Alternative extends Statement implements Value {
 
-    private Expression left;
-    private Expression right;
+    private Value left;
+    private Value right;
 
-    public Alternative(Expression left, Expression right, Position tokenPosition) {
+    public Alternative(Value left, Value right, Position tokenPosition) {
         super(tokenPosition);
         this.left = left;
         this.right = right;

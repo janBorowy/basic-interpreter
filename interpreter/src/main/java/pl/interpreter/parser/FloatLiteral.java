@@ -3,7 +3,7 @@ package pl.interpreter.parser;
 import lombok.Getter;
 
 @Getter
-public class FloatLiteral extends Statement implements Expression {
+public class FloatLiteral extends Statement implements Value {
 
     private final float value;
 

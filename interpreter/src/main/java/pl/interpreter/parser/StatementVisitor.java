@@ -12,7 +12,7 @@ public interface StatementVisitor {
 
     void visit(Relation relation);
 
-    void visit(Expression expression);
+    void visit(Value expression);
 
     void visit(Sum sum);
 
@@ -61,4 +61,6 @@ public interface StatementVisitor {
     void visit(MatchStatement matchStatement);
 
     void visit(MatchBranch matchBranch);
+
+    void visit(Parameter parameter);
 }

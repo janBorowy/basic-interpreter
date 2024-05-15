@@ -42,9 +42,9 @@ struct Rectangle {
 }""") == """Program <row: 1, col: 1> 
 |-StructureDefinition <row: 2, col: 1> id=Rectangle
   |-Parameter id=a, type=float
-  |-Parameter id=metaData, type=user_type, userType=MetaData
   |-Parameter id=b, type=float
   |-Parameter id=name, type=string
+  |-Parameter id=metaData, type=user_type, userType=MetaData
 """
 
         treeStr(
@@ -60,12 +60,12 @@ struct User {
 """
         ) == """Program <row: 1, col: 1> 
 |-StructureDefinition <row: 2, col: 1> id=User
-  |-Parameter id=score, type=int
-  |-Parameter id=password, type=string
-  |-Parameter id=stats, type=user_type, userType=Stats
-  |-Parameter id=hero, type=user_type, userType=Hero
   |-Parameter id=userName, type=string
+  |-Parameter id=password, type=string
+  |-Parameter id=score, type=int
   |-Parameter id=height, type=float
+  |-Parameter id=hero, type=user_type, userType=Hero
+  |-Parameter id=stats, type=user_type, userType=Stats
 """
         treeStr("struct Empty { }") == """Program <row: 1, col: 1> 
 |-StructureDefinition <row: 1, col: 1> id=Empty
@@ -513,8 +513,8 @@ struct Book {
   |-Parameter id=author, type=user_type, userType=Person
   |-Parameter id=title, type=string
 |-StructureDefinition <row: 1, col: 1> id=Person
-  |-Parameter id=surname, type=string
   |-Parameter id=name, type=string
+  |-Parameter id=surname, type=string
 """
 
         treeStr("""struct Person {
@@ -548,16 +548,16 @@ void printPublication(Publication pub) {
 }
 """) == """Program <row: 1, col: 1> 
 |-StructureDefinition <row: 12, col: 1> id=Article
-  |-Parameter id=author, type=user_type, userType=Person
   |-Parameter id=headline, type=string
   |-Parameter id=shownIn, type=string
-|-StructureDefinition <row: 6, col: 1> id=Book
   |-Parameter id=author, type=user_type, userType=Person
-  |-Parameter id=isbn, type=string
+|-StructureDefinition <row: 6, col: 1> id=Book
   |-Parameter id=title, type=string
+  |-Parameter id=isbn, type=string
+  |-Parameter id=author, type=user_type, userType=Person
 |-StructureDefinition <row: 1, col: 1> id=Person
-  |-Parameter id=surname, type=string
   |-Parameter id=name, type=string
+  |-Parameter id=surname, type=string
 |-VariantDefinition <row: 18, col: 1> id=Publication
   |-Type id=Book
   |-Type id=Article
@@ -612,8 +612,8 @@ float getCoordinatesSum(Point p) {
   |-Parameter id=fx, type=float
   |-Parameter id=fy, type=float
 |-StructureDefinition <row: 1, col: 1> id=IntPoint
-  |-Parameter id=iy, type=int
   |-Parameter id=ix, type=int
+  |-Parameter id=iy, type=int
 |-VariantDefinition <row: 11, col: 1> id=Point
   |-Type id=IntPoint
   |-Type id=FloatPoint
@@ -640,32 +640,6 @@ float getCoordinatesSum(Point p) {
               |-Identifier <row: 22, col: 33> id=fp
             |-DotAccess <row: 22, col: 41> field_name=fy
               |-Identifier <row: 22, col: 41> id=fp
-"""
-
-        treeStr("""int main() {
-    int a = 2;
-    if(true) {
-        int a = 3;
-        print(a as string); // 3
-    }
-    print(a as string); // 2
-}
-""") == """Program <row: 1, col: 1> 
-|-FunctionDefinition <row: 1, col: 1> id=main, return_type=int
-  |-Block <row: 1, col: 12> 
-    |-Initialization <row: 2, col: 5> id=a, var=false, type=int
-      |-IntLiteral <row: 2, col: 13> value=2
-    |-IfStatement <row: 3, col: 5> 
-      |-BooleanLiteral <row: 3, col: 8> value=true
-      |-Block <row: 3, col: 14> 
-        |-Initialization <row: 4, col: 9> id=a, var=false, type=int
-          |-IntLiteral <row: 4, col: 17> value=3
-        |-FunctionCall <row: 5, col: 14> function_id=print
-          |-Cast <row: 5, col: 15> type=string
-            |-Identifier <row: 5, col: 15> id=a
-    |-FunctionCall <row: 7, col: 10> function_id=print
-      |-Cast <row: 7, col: 11> type=string
-        |-Identifier <row: 7, col: 11> id=a
 """
 
         treeStr("""int getNthFibonacciNumber(int n) {

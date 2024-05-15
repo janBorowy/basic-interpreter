@@ -1,5 +1,8 @@
 package pl.interpreter.executor;
 
+import java.util.List;
+
 public interface Function {
-    void execute(/*List<Expression> arguments*/);
+    Value execute(List<Value> arguments);
+    ValueType getReturnType();
 }

@@ -6,6 +6,9 @@ import pl.interpreter.executor.exceptions.InvalidValueTypeException;
 
 @AllArgsConstructor
 public class SumEvaluator {
+
+    private final static String ONLY_INT_FLOAT_ALLOWED_MSG = "Only int and float sum operations are allowed";
+
     public enum Operator {
         PLUS,
         MINUS
@@ -26,7 +29,6 @@ public class SumEvaluator {
 
     private void validate() {
         switch(leftHandSide) {
-            case BooleanValue b -> throw new InvalidValueTypeException("Boolean values do not support sum operation");
             case StringValue s -> {
                 if (operator.equals(Operator.MINUS)) {
                     throw new ExpressionEvaluationException("Expected \"+\" operator");
@@ -37,15 +39,15 @@ public class SumEvaluator {
             }
             case IntValue i -> {
                 if (rightHandSide instanceof StringValue || rightHandSide instanceof BooleanValue) {
-                    throw new InvalidValueTypeException("Only int and float sum operations are allowed");
+                    throw new InvalidValueTypeException(ONLY_INT_FLOAT_ALLOWED_MSG);
                 }
             }
             case FloatValue f -> {
                 if (rightHandSide instanceof StringValue || rightHandSide instanceof BooleanValue) {
-                    throw new InvalidValueTypeException("Only int and float sum operations are allowed");
+                    throw new InvalidValueTypeException(ONLY_INT_FLOAT_ALLOWED_MSG);
                 }
             }
-            default -> {}
+            default -> throw new InvalidValueTypeException(ONLY_INT_FLOAT_ALLOWED_MSG);
         }
     }
 

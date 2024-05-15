@@ -3,13 +3,13 @@ package pl.interpreter.parser;
 import lombok.Getter;
 
 @Getter
-public class Sum extends Statement implements Expression {
+public class Sum extends Statement implements Value {
 
-    private Expression left;
+    private Value left;
     private AdditionOperator operator;
-    private Expression right;
+    private Value right;
 
-    public Sum(Expression left, AdditionOperator operator, Expression right, Position tokenPosition) {
+    public Sum(Value left, AdditionOperator operator, Value right, Position tokenPosition) {
         super(tokenPosition);
         this.left = left;
         this.operator = operator;

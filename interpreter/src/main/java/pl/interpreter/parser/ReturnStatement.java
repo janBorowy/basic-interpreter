@@ -5,9 +5,9 @@ import lombok.Getter;
 @Getter
 public class ReturnStatement extends Statement implements Instruction {
 
-    private Expression expression;
+    private Value expression;
 
-    public ReturnStatement(Expression expression, Position tokenPosition) {
+    public ReturnStatement(Value expression, Position tokenPosition) {
         super(tokenPosition);
         this.expression = expression;
     }

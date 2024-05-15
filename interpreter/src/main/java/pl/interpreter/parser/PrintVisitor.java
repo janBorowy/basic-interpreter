@@ -46,7 +46,7 @@ public class PrintVisitor implements StatementVisitor {
     }
 
     @Override
-    public void visit(Expression expression) {
+    public void visit(Value expression) {
         switch (expression) {
             case Alternative alternative -> visit(alternative);
             case Cast cast -> visit(cast);
@@ -147,7 +147,7 @@ public class PrintVisitor implements StatementVisitor {
         printNode(structureDefinition, List.of(
                 new Param(ID_MSG, structureDefinition.getId())));
         diveIn();
-        visit(structureDefinition.getParameters());
+        structureDefinition.getParameters().forEach(this::visit);
         diveOut();
     }
 
@@ -284,6 +284,11 @@ public class PrintVisitor implements StatementVisitor {
         diveIn();
         visit(matchBranch.getInstruction());
         diveOut();
+    }
+
+    @Override
+    public void visit(Parameter parameter) {
+        printParameter(parameter.getId(), parameter.getType());
     }
 
     @Override

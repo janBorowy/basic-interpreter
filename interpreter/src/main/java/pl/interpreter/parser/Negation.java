@@ -3,11 +3,11 @@ package pl.interpreter.parser;
 import lombok.Getter;
 
 @Getter
-public class Negation extends Statement implements Expression {
+public class Negation extends Statement implements Value {
 
-    private final Expression expression;
+    private final Value expression;
 
-    public Negation(Expression expression, Position tokenPosition) {
+    public Negation(Value expression, Position tokenPosition) {
         super(tokenPosition);
         this.expression = expression;
     }

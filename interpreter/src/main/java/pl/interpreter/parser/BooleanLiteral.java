@@ -3,7 +3,7 @@ package pl.interpreter.parser;
 import lombok.Getter;
 
 @Getter
-public class BooleanLiteral extends Statement implements Expression {
+public class BooleanLiteral extends Statement implements Value {
 
     private final boolean truthy;
 

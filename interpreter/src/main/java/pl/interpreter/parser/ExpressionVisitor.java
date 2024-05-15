@@ -1,7 +1,7 @@
 package pl.interpreter.parser;
 
 public interface ExpressionVisitor {
-    void visit(Expression expression);
+    void visit(Value expression);
 
     void visit(Alternative alternative);
 

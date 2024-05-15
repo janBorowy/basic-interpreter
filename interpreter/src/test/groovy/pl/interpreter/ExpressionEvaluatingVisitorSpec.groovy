@@ -5,15 +5,13 @@ import pl.interpreter.executor.CallContext
 import pl.interpreter.executor.ExpressionEvaluatingVisitor
 import pl.interpreter.executor.FloatValue
 import pl.interpreter.executor.IntValue
-import pl.interpreter.executor.Scope
 import pl.interpreter.executor.StringValue
-import pl.interpreter.executor.Value
 import pl.interpreter.executor.exceptions.ExpressionEvaluationException
 import pl.interpreter.executor.exceptions.InvalidValueTypeException
 import pl.interpreter.lexical_analyzer.LexicalAnalyzer
 import pl.interpreter.parser.AdditionOperator
 import pl.interpreter.parser.BooleanLiteral
-import pl.interpreter.parser.Expression
+import pl.interpreter.parser.Value
 import pl.interpreter.parser.ExpressionParser
 import pl.interpreter.parser.FloatLiteral
 import pl.interpreter.parser.IntLiteral
@@ -35,7 +33,7 @@ class ExpressionEvaluatingVisitorSpec extends Specification {
         return context
     }
 
-    def evaluateExpression(Expression expression) {
+    def evaluateExpression(Value expression) {
         var visitor = new ExpressionEvaluatingVisitor(getTestingContext())
         visitor.visit(expression)
         return visitor.getValue()
@@ -391,7 +389,7 @@ class ExpressionEvaluatingVisitorSpec extends Specification {
 
     def "Should evaluate identifiers correctly"() {
         expect:
-        result == (evaluateExpression(expression) as Value)
+        result == evaluateExpression(expression)
         where:
         expression | result
         "a"        | new IntValue(1)

@@ -5,11 +5,11 @@ import lombok.Getter;
 @Getter
 public class IfStatement extends Statement implements Instruction {
 
-    private final Expression expression;
+    private final Value expression;
     private final Instruction instruction;
     private final Instruction elseInstruction;
 
-    public IfStatement(Expression expression, Instruction instruction, Instruction elseInstruction, Position tokenPosition) {
+    public IfStatement(Value expression, Instruction instruction, Instruction elseInstruction, Position tokenPosition) {
         super(tokenPosition);
         this.expression = expression;
         this.instruction = instruction;

@@ -3,13 +3,13 @@ package pl.interpreter.parser;
 import lombok.Getter;
 
 @Getter
-public class Cast extends Statement implements Expression {
+public class Cast extends Statement implements Value {
 
-    private Expression expression;
+    private Value expression;
 
     private PrimitiveType toType;
 
-    public Cast(Expression expression, PrimitiveType toType, Position tokenPosition) {
+    public Cast(Value expression, PrimitiveType toType, Position tokenPosition) {
         super(tokenPosition);
         this.expression = expression;
         this.toType = toType;
