@@ -2,9 +2,11 @@ package pl.interpreter.executor;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
 @AllArgsConstructor
 @EqualsAndHashCode
+@Getter
 public class ValueType {
     public enum Type {
         INT,
@@ -25,6 +27,8 @@ public class ValueType {
             case FloatValue f -> type == Type.FLOAT;
             case StringValue s -> type == Type.STRING;
             case BooleanValue b -> type == Type.BOOLEAN;
+            case StructureValue s -> type == Type.USER_TYPE;
+            case VariantValue v -> type == Type.USER_TYPE;
             default -> throw new IllegalStateException("Unexpected implementation: " + value);
         };
     }

@@ -1,6 +1,9 @@
 package pl.interpreter
 
 import pl.interpreter.executor.Environment
+import pl.interpreter.executor.StringValue
+import pl.interpreter.executor.StructureValue
+import pl.interpreter.executor.VariantValue
 import pl.interpreter.executor.exceptions.AssignmentException
 import pl.interpreter.executor.exceptions.InitializationException
 import pl.interpreter.lexical_analyzer.LexicalAnalyzer
@@ -9,7 +12,7 @@ import pl.interpreter.parser.ProgramParser
 import pl.interpreter.parser.TokenManager
 import spock.lang.Specification
 
-class UserFunctionCallingVisitorFunctionalSpec extends Specification{
+class UserFunctionCallingVisitorFunctionalSpec extends Specification {
 
     Program parseProgram(String code) {
         return new ProgramParser(new TokenManager(new LexicalAnalyzer(new StringReader(code)))).parse()
@@ -29,7 +32,7 @@ print((a as string) + "\\n");
 return a;
 }
 """
-        , writer)
+                , writer)
         environment.runFunction("initializeA", List.of())
         expect:
         writer.toString() == "5\n";
@@ -120,5 +123,48 @@ return a;
         environment.runFunction("main", List.of())
         then:
         AssignmentException e = thrown()
+    }
+
+    def "Should define structures correctly"() {
+        var writer = new StringWriter()
+        var environment = prepareEnvironment(
+                """
+struct Person {
+    string name,
+    string surname
+}
+
+struct Book {
+    Person author,
+    string title
+}
+
+struct Article {
+    string headline,
+    string shownIn,
+    Person author
+}
+
+variant Publication {
+    Book,
+    Article
+}
+
+void printPublication(Publication pub) {
+    match(pub) {
+        Book book -> print("Book with title - " + book.title);
+        Article article -> print("Article with headline - " + article.headline);
+        default -> print("Unknown publication");
+    }
+}
+""",
+                writer
+        )
+        environment.runFunction("printPublication", List.of(new VariantValue("Publication", new StructureValue("Book", Map.of(
+                "author", new StructureValue("Person", Map.of("name", new StringValue("James"), "surname", new StringValue("Black"))),
+                "title", new StringValue("my story")
+        )))))
+        expect:
+        writer.toString() == ""
     }
 }

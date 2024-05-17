@@ -13,13 +13,13 @@ class TestUtils {
         return Math.abs(a - b) <= DELTA
     }
 
-    static Environment prepareEnvironmentWithCode(final String code, final Writer standardOutput) {
+    static Environment prepareEnvironmentWithCode(final String code) {
         var final reader = new StringReader(code)
         var final lexer = new LexicalAnalyzer(reader)
         var final tokenManager = new TokenManager(lexer)
         var final parser = new ProgramParser(tokenManager)
         var final program = parser.parse()
 
-        return new Environment(program, standardOutput)
+        return new Environment(program)
     }
 }

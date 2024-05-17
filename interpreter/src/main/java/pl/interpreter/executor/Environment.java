@@ -6,11 +6,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Stack;
 import lombok.Getter;
 import pl.interpreter.executor.built_in_functions.BuiltInFunctionRegistry;
 import pl.interpreter.executor.exceptions.EnvironmentException;
 import pl.interpreter.executor.exceptions.FunctionCallException;
+import pl.interpreter.executor.exceptions.VariantException;
 import pl.interpreter.parser.Definition;
 import pl.interpreter.parser.FunctionDefinition;
 import pl.interpreter.parser.Program;
@@ -20,6 +22,7 @@ import pl.interpreter.parser.VariantDefinition;
 public class Environment {
 
     private final Map<String, Function> functions;
+    private final Map<String, Variant> variants;
     private final Stack<CallContext> callContexts;
     @Getter
     private final Writer standardOutput;
@@ -30,9 +33,14 @@ public class Environment {
 
     public Environment(Program program, Writer standardOutputWriter) {
         functions = new HashMap<>();
+        variants = new HashMap<>();
         callContexts = new Stack<>();
         loadBuiltInFunctions();
         loadDefinitions(program);
+        var validator = new EnvironmentValidator(this);
+        validator.validateFunctions(functions);
+        validator.validateStructures(functions);
+        validator.validateVariants(variants);
         this.standardOutput = standardOutputWriter;
     }
 
@@ -48,12 +56,12 @@ public class Environment {
         callContexts.pop();
     }
 
-    public Function getFunction(String functionId) {
-        var function = functions.get(functionId);
-        if (function == null) {
-            throw new FunctionCallException("Function \"" + functionId + "\" does not exist");
-        }
-        return function;
+    public Optional<Function> getFunction(String functionId) {
+        return Optional.ofNullable(functions.get(functionId));
+    }
+
+    public Optional<Variant> getVariant(String variantId) {
+        return Optional.ofNullable(variants.get(variantId));
     }
 
     public Value runFunction(String functionId, List<Value> arguments) {
@@ -74,7 +82,7 @@ public class Environment {
         switch (d) {
             case FunctionDefinition fd -> registerFunction(d.getId(), UserFunctionDefinitionMapper.map(fd));
             case StructureDefinition sd -> registerFunction(sd.getId(), StructureToFunctionMapper.map(sd));
-            case VariantDefinition vd -> {/*TODO: add variants support*/}
+            case VariantDefinition vd -> registerVariant(vd.getId(), new Variant(vd.getStructureIds()));
             default -> throw new IllegalStateException("Unimplemented definition: " + d);
         }
     }
@@ -84,5 +92,15 @@ public class Environment {
             throw new EnvironmentException("Function with name \"" + id + "\" already exists");
         }
         functions.put(id, function);
+    }
+
+    private void registerVariant(String id, Variant variant) {
+        if (variants.containsKey(id)) {
+            throw new EnvironmentException("Variant with name \"" + id + "\" already exists");
+        }
+        if (functions.containsKey(id)) {
+            throw new EnvironmentException("Clashing variant and function name: \"" + id + "\"");
+        }
+        variants.put(id, variant);
     }
 }

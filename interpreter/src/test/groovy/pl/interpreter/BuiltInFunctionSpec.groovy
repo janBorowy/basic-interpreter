@@ -7,7 +7,9 @@ import pl.interpreter.parser.FunctionDefinition
 import pl.interpreter.parser.FunctionReturnType
 import pl.interpreter.parser.FunctionReturnTypeEnum
 import pl.interpreter.parser.Instruction
+import pl.interpreter.parser.IntLiteral
 import pl.interpreter.parser.Program
+import pl.interpreter.parser.ReturnStatement
 import pl.interpreter.parser.StringLiteral
 import spock.lang.Specification
 
@@ -25,7 +27,8 @@ class BuiltInFunctionSpec extends Specification {
                                         List.of(),
                                         new Block(
                                                 List.of(
-                                                        new FunctionCall("print", List.of(new StringLiteral("Hello world!", null)), null) as Instruction
+                                                        new FunctionCall("print", List.of(new StringLiteral("Hello world!", null)), null) as Instruction,
+                                                        new ReturnStatement(new IntLiteral(0, null), null)
                                                 ),
                                                 null
                                         ),
@@ -54,7 +57,8 @@ class BuiltInFunctionSpec extends Specification {
                                         new Block(
                                                 List.of(
                                                         new FunctionCall("print", List.of(new StringLiteral("Hello world!\n", null)), null) as Instruction,
-                                                        new FunctionCall("print", List.of(new StringLiteral("Hello you!", null)), null) as Instruction
+                                                        new FunctionCall("print", List.of(new StringLiteral("Hello you!", null)), null) as Instruction,
+                                                        new ReturnStatement(new IntLiteral(0, null), null)
                                                 ),
                                                 null
                                         ),

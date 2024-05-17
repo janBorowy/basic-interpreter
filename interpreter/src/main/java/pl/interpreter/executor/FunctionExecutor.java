@@ -18,7 +18,8 @@ public class FunctionExecutor {
     private final Environment environment;
 
     public Value executeFunction(String functionId, List<Value> arguments) {
-        var function = environment.getFunction(functionId);
+        var function = environment.getFunction(functionId)
+                .orElseThrow(() -> new FunctionCallException("Function \"" + functionId + "\" does not exist"));
         return switch (function) {
             case UserFunction uf -> executeUserFunction(uf, arguments);
             case StructureConstructor sc -> executeStructureConstructor(sc, arguments);
@@ -41,6 +42,15 @@ public class FunctionExecutor {
         }
         if (Objects.nonNull(returnType) && Objects.isNull(typeReturned)) {
             throw new FunctionCallException("Function did not return, but was expected to return " + returnType);
+        }
+        if (Objects.isNull(returnType) && Objects.isNull(typeReturned)) {
+            return;
+        }
+        if (returnType.getType() == ValueType.Type.USER_TYPE && typeReturned.getType() == ValueType.Type.USER_TYPE) {
+            var variant = environment.getVariant(returnType.getUserType());
+            if (variant.isPresent() && variant.get().getStructures().contains(typeReturned.getUserType())) {
+                return;
+            }
         }
         if (!returnType.equals(typeReturned)) {
             throw new FunctionCallException("Function returned \"%s\", where \"%s\" was expected".formatted(typeReturned, returnType));
@@ -82,7 +92,24 @@ public class FunctionExecutor {
 
     private boolean argumentTypesDontMatch(List<ValueType> expectedParameterTypes, List<Value> arguments) {
         return !IntStream.range(0, arguments.size())
-                .allMatch(i -> expectedParameterTypes.get(i).isTypeOf(arguments.get(i)));
+                .allMatch(i -> expectedParameterTypes.get(i).isTypeOf(arguments.get(i)) &&
+                        userTypesMatch(expectedParameterTypes.get(i), arguments.get(i)));
+    }
+
+    private boolean userTypesMatch(ValueType type, Value value) {
+        return switch (value) {
+            case StructureValue s -> Objects.equals(s.getStructureName(), type.getUserType()) || structureIsVariant(s, type.getUserType());
+            case VariantValue v -> Objects.equals(v.getVariantId(), type.getUserType());
+            default -> true;
+        };
+    }
+
+    private boolean structureIsVariant(StructureValue value, String variantId) {
+        var variant = environment.getVariant(variantId);
+        if (variant.isEmpty()) {
+            return false;
+        }
+        return variant.map(it -> it.getStructures().contains(value.getStructureName())).get();
     }
 
     private Map<String, Value> getStructureFields(List<String> fieldNames, List<Value> arguments) {

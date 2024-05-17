@@ -1,6 +1,7 @@
 package pl.interpreter.executor;
 
 import lombok.experimental.UtilityClass;
+import pl.interpreter.executor.exceptions.EnvironmentException;
 
 @UtilityClass
 public class TypeUtils {
@@ -12,8 +13,20 @@ public class TypeUtils {
             case FloatValue f -> new ValueType(ValueType.Type.FLOAT);
             case BooleanValue b -> new ValueType(ValueType.Type.BOOLEAN);
             case StructureValue sv -> new ValueType(ValueType.Type.USER_TYPE, sv.getStructureName());
-            case null -> null;
-            default -> throw new IllegalStateException("Unknown implementation: " + value);
+            case VariantValue vv -> new ValueType(ValueType.Type.USER_TYPE, vv.getVariantId());
+            case null, default -> null;
         };
+    }
+
+    public void validateUserTypeExists(ValueType type, Environment environment) {
+        if (type != null && type.getType() == ValueType.Type.USER_TYPE) {
+            validateUserTypeExists(type.getUserType(), environment);
+        }
+    }
+
+    public void validateUserTypeExists(String type, Environment environment) {
+        if (!(environment.getFunction(type).isPresent() || environment.getVariant(type).isPresent())) {
+            throw new EnvironmentException("User type \"%s\" does not exist".formatted(type));
+        }
     }
 }
