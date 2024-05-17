@@ -261,6 +261,9 @@ public class LexicalAnalyzer {
             if(lastCharacterRead == 0xFFFF || lastCharacterRead == '\n') {
                 throw new LexicalAnalyzerException("Expected '\"'" , cursorCol, cursorRow);
             }
+            if (escapeNext && lastCharacterRead == 'n') {
+                lastCharacterRead = '\n';
+            }
             escapeNext = false;
             builder.append(lastCharacterRead);
             readNext();

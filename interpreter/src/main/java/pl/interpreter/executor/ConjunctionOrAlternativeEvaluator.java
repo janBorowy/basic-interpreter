@@ -1,8 +1,7 @@
 package pl.interpreter.executor;
 
-import java.util.Optional;
 import lombok.AllArgsConstructor;
-import pl.interpreter.executor.exceptions.InvalidValueTypeException;
+import pl.interpreter.executor.exceptions.ValueTypeException;
 
 @AllArgsConstructor
 public class ConjunctionOrAlternativeEvaluator {
@@ -19,14 +18,14 @@ public class ConjunctionOrAlternativeEvaluator {
     public Value evaluate() {
         return switch (leftHandSide) {
             case BooleanValue lhs -> validateRight(lhs);
-            default -> throw new InvalidValueTypeException("Expected boolean");
+            default -> throw new ValueTypeException("Expected boolean");
         };
     }
 
     public static boolean shouldShortCircuit(Value leftHandSide, Operator operator) {
         return switch (leftHandSide) {
             case BooleanValue lhs -> shouldShortCircuitOn(lhs.isTruthy(), operator);
-            default -> throw new InvalidValueTypeException("Expected boolean");
+            default -> throw new ValueTypeException("Expected boolean");
         };
     }
 
@@ -40,7 +39,7 @@ public class ConjunctionOrAlternativeEvaluator {
     private Value validateRight(BooleanValue lhs) {
         return switch (rightHandSide) {
             case BooleanValue rhs -> doConjunction(lhs, rhs);
-            default -> throw new InvalidValueTypeException("Expected boolean");
+            default -> throw new ValueTypeException("Expected boolean");
         };
     }
 

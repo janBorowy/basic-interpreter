@@ -7,9 +7,10 @@ import pl.interpreter.executor.FloatValue
 import pl.interpreter.executor.IntValue
 import pl.interpreter.executor.StringValue
 import pl.interpreter.executor.StructureValue
+import pl.interpreter.executor.Variable
 import pl.interpreter.executor.exceptions.ExpressionEvaluationException
-import pl.interpreter.executor.exceptions.InvalidAccessException
-import pl.interpreter.executor.exceptions.InvalidValueTypeException
+import pl.interpreter.executor.exceptions.AccessException
+import pl.interpreter.executor.exceptions.ValueTypeException
 import pl.interpreter.lexical_analyzer.LexicalAnalyzer
 import pl.interpreter.parser.AdditionOperator
 import pl.interpreter.parser.BooleanLiteral
@@ -32,17 +33,17 @@ class ExpressionEvaluatingVisitorSpec extends Specification {
         environment.pushNewContext()
         var context = environment.getCurrentContext()
         context.openNewScope()
-        context.setVariableForClosestScope("a", new IntValue(1))
-        context.setVariableForClosestScope("b", new FloatValue(1.5f))
-        context.setVariableForClosestScope("c", new StringValue("abc"))
-        context.setVariableForClosestScope("d", new BooleanValue(true))
-        context.setVariableForClosestScope("point", new StructureValue(
+        context.initializeVariableForClosestScope("a", new Variable(new IntValue(1), false))
+        context.initializeVariableForClosestScope("b", new Variable(new FloatValue(1.5f), false))
+        context.initializeVariableForClosestScope("c", new Variable(new StringValue("abc"), false))
+        context.initializeVariableForClosestScope("d", new Variable(new BooleanValue(true), false))
+        context.initializeVariableForClosestScope("point", new Variable(new StructureValue(
             "Point",
             Map.of(
                     "x", new IntValue(3),
                     "y", new IntValue(4)
             )
-        ))
+        ), false))
         return environment
     }
 
@@ -182,7 +183,7 @@ class ExpressionEvaluatingVisitorSpec extends Specification {
                 )
         )
         then:
-        InvalidValueTypeException e = thrown()
+        ValueTypeException e = thrown()
     }
 
     def "Should throw when summing boolean value"() {
@@ -196,7 +197,7 @@ class ExpressionEvaluatingVisitorSpec extends Specification {
                 )
         )
         then:
-        InvalidValueTypeException e = thrown()
+        ValueTypeException e = thrown()
     }
 
     def "Should multiply integers correctly"() {
@@ -433,7 +434,7 @@ class ExpressionEvaluatingVisitorSpec extends Specification {
         when:
         evaluateExpression("1 as bool")
         then:
-        InvalidValueTypeException e = thrown()
+        ValueTypeException e = thrown()
     }
 
     def "Should evaluate dot access correctly"() {
@@ -449,6 +450,6 @@ class ExpressionEvaluatingVisitorSpec extends Specification {
         when:
         evaluateExpression("point.z")
         then:
-        InvalidAccessException e = thrown()
+        AccessException e = thrown()
     }
 }

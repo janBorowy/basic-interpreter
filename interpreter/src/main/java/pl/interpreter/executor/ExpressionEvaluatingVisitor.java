@@ -1,6 +1,7 @@
 package pl.interpreter.executor;
 
 import lombok.Getter;
+import pl.interpreter.executor.exceptions.FunctionCallException;
 import pl.interpreter.parser.Alternative;
 import pl.interpreter.parser.BooleanLiteral;
 import pl.interpreter.parser.Cast;
@@ -104,12 +105,16 @@ public class ExpressionEvaluatingVisitor implements ExpressionVisitor {
 
     @Override
     public void visit(FunctionCall functionCall) {
-
+        var arguments = ExpressionUtils.evaluateExpressionListInEnvironment(functionCall.getArguments(), environment);
+        value = environment.runFunction(functionCall.getFunctionId(), arguments);
+        if (value == null) {
+            throw new FunctionCallException("Function returns void, but value is expected");
+        }
     }
 
     @Override
     public void visit(Identifier identifier) {
-        value = environment.getCurrentContext().resolveVariable(identifier.getValue());
+        value = environment.getCurrentContext().resolveVariable(identifier.getValue()).getValue();
     }
 
     @Override

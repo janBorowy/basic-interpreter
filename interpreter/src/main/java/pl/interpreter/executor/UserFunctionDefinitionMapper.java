@@ -1,7 +1,6 @@
 package pl.interpreter.executor;
 
 import java.util.List;
-import java.util.Map;
 import lombok.experimental.UtilityClass;
 import pl.interpreter.parser.FunctionDefinition;
 import pl.interpreter.parser.FunctionReturnType;
@@ -34,12 +33,6 @@ public class UserFunctionDefinitionMapper {
     }
 
     private ValueType mapParameterType(ParameterType parameterType) {
-        return switch (parameterType.variableType()) {
-            case INT -> new ValueType(ValueType.Type.INT);
-            case FLOAT -> new ValueType(ValueType.Type.FLOAT);
-            case STRING -> new ValueType(ValueType.Type.STRING);
-            case BOOL -> new ValueType(ValueType.Type.BOOLEAN);
-            case USER_TYPE -> new ValueType(ValueType.Type.USER_TYPE, parameterType.userType());
-        };
+        return ASTUtils.valueTypeFromVariableType(parameterType.variableType(), parameterType.userType());
     }
 }

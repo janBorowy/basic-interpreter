@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import lombok.AllArgsConstructor;
 import pl.interpreter.executor.exceptions.EnvironmentException;
 
 public class CallContext {
@@ -19,7 +18,7 @@ public class CallContext {
         scopes.add(getScopeImpl());
     }
 
-    public void openNewScope(Map<String, Value> variablesToRegister) {
+    public void openNewScope(Map<String, Variable> variablesToRegister) {
         scopes.add(new Scope(variablesToRegister));
     }
 
@@ -33,6 +32,13 @@ public class CallContext {
                 .orElseThrow(() -> new IllegalStateException(MISSING_SCOPE_MESSAGE));
     }
 
+    public void initializeVariableForClosestScope(String id, Variable variable) {
+        scopes.reversed().stream()
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(MISSING_SCOPE_MESSAGE))
+                .initializeVariable(id, variable);
+    }
+
     public void setVariableForClosestScope(String id, Value value) {
         scopes.reversed().stream()
                 .findFirst()
@@ -40,7 +46,7 @@ public class CallContext {
                 .setVariable(id, value);
     }
 
-    public Value resolveVariable(String id) {
+    public Variable resolveVariable(String id) {
         return scopes.reversed().stream()
                 .map(s -> s.getVariable(id))
                 .filter(Optional::isPresent)

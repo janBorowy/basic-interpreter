@@ -9,11 +9,13 @@ public interface FunctionVisitor {
 
     void visit(Initialization initialization);
 
-    void visit(ReturnStatement Statement);
+    void visit(ReturnStatement statement);
 
     void visit(IfStatement statement);
 
     void visit(WhileStatement statement);
 
     void visit(MatchStatement statement);
+
+    void visit(Instruction instruction);
 }

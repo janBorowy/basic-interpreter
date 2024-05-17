@@ -2,7 +2,7 @@ package pl.interpreter.executor;
 
 import lombok.AllArgsConstructor;
 import pl.interpreter.executor.exceptions.ExpressionEvaluationException;
-import pl.interpreter.executor.exceptions.InvalidValueTypeException;
+import pl.interpreter.executor.exceptions.ValueTypeException;
 
 @AllArgsConstructor
 public class SumEvaluator {
@@ -34,20 +34,20 @@ public class SumEvaluator {
                     throw new ExpressionEvaluationException("Expected \"+\" operator");
                 }
                 if (!(rightHandSide instanceof StringValue)) {
-                    throw new InvalidValueTypeException("Right hand-side must be string");
+                    throw new ValueTypeException("Right hand-side must be string");
                 }
             }
             case IntValue i -> {
                 if (rightHandSide instanceof StringValue || rightHandSide instanceof BooleanValue) {
-                    throw new InvalidValueTypeException(ONLY_INT_FLOAT_ALLOWED_MSG);
+                    throw new ValueTypeException(ONLY_INT_FLOAT_ALLOWED_MSG);
                 }
             }
             case FloatValue f -> {
                 if (rightHandSide instanceof StringValue || rightHandSide instanceof BooleanValue) {
-                    throw new InvalidValueTypeException(ONLY_INT_FLOAT_ALLOWED_MSG);
+                    throw new ValueTypeException(ONLY_INT_FLOAT_ALLOWED_MSG);
                 }
             }
-            default -> throw new InvalidValueTypeException(ONLY_INT_FLOAT_ALLOWED_MSG);
+            default -> throw new ValueTypeException(ONLY_INT_FLOAT_ALLOWED_MSG);
         }
     }
 

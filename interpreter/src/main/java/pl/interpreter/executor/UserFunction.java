@@ -12,9 +12,4 @@ public class UserFunction implements Function {
     private ValueType returnType;
     private List<FunctionParameter> parameters;
     private Block block;
-
-    @Override
-    public Value execute(List<Value> arguments) {
-        return null;
-    }
 }

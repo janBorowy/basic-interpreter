@@ -2,7 +2,7 @@ package pl.interpreter.executor;
 
 import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
-import pl.interpreter.executor.exceptions.InvalidValueTypeException;
+import pl.interpreter.executor.exceptions.ValueTypeException;
 
 @AllArgsConstructor
 public class CastEvaluator {
@@ -22,7 +22,7 @@ public class CastEvaluator {
             case INT -> validateIntCast();
             case FLOAT -> validateFloatCast();
             case STRING -> validateStringCast();
-            case BOOLEAN -> throw new InvalidValueTypeException("Can't cast to boolean values");
+            case BOOLEAN -> throw new ValueTypeException("Can't cast to boolean values");
         };
     }
 
@@ -30,7 +30,7 @@ public class CastEvaluator {
         return switch (leftHandSide) {
             case IntValue i -> leftHandSide;
             case FloatValue f -> new IntValue((int) f.getValue());
-            default -> throw new InvalidValueTypeException("Conversion to integer is only allowed for integer and float types");
+            default -> throw new ValueTypeException("Conversion to integer is only allowed for integer and float types");
         };
     }
 
@@ -38,7 +38,7 @@ public class CastEvaluator {
         return switch (leftHandSide) {
             case IntValue i -> new FloatValue(i.getValue());
             case FloatValue f -> leftHandSide;
-            default -> throw new InvalidValueTypeException("Conversion to integer is only allowed for integer and float types");
+            default -> throw new ValueTypeException("Conversion to integer is only allowed for integer and float types");
         };
     }
 

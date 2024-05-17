@@ -2,7 +2,7 @@ package pl.interpreter.executor;
 
 import lombok.AllArgsConstructor;
 import pl.interpreter.executor.exceptions.ExpressionEvaluationException;
-import pl.interpreter.executor.exceptions.InvalidValueTypeException;
+import pl.interpreter.executor.exceptions.ValueTypeException;
 
 @AllArgsConstructor
 public class MultiplicationEvaluator {
@@ -21,7 +21,7 @@ public class MultiplicationEvaluator {
         return switch (leftHandSide) {
             case IntValue i -> doMultiplication(i);
             case FloatValue f -> doMultiplication(f);
-            default -> throw new InvalidValueTypeException("Multiplication operations are only allowed for integer and float types");
+            default -> throw new ValueTypeException("Multiplication operations are only allowed for integer and float types");
         };
     }
 

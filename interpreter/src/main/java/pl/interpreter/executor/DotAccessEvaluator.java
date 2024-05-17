@@ -1,8 +1,8 @@
 package pl.interpreter.executor;
 
 import lombok.AllArgsConstructor;
-import pl.interpreter.executor.exceptions.InvalidAccessException;
-import pl.interpreter.executor.exceptions.InvalidValueTypeException;
+import pl.interpreter.executor.exceptions.AccessException;
+import pl.interpreter.executor.exceptions.ValueTypeException;
 
 @AllArgsConstructor
 public class DotAccessEvaluator {
@@ -13,12 +13,12 @@ public class DotAccessEvaluator {
     public Value evaluate() {
         return switch (leftHandSide) {
             case StructureValue struct -> doDotAccess(struct);
-            default -> throw new InvalidValueTypeException("Can only access fields of structures");
+            default -> throw new ValueTypeException("Can only access fields of structures");
         };
     }
 
     private Value doDotAccess(StructureValue struct) {
         return struct.getField(fieldName)
-                .orElseThrow(() -> new InvalidAccessException("Structure does not have a field: " + fieldName));
+                .orElseThrow(() -> new AccessException("Structure does not have a field: " + fieldName));
     }
 }

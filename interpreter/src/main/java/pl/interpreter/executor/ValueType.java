@@ -19,13 +19,24 @@ public class ValueType {
         this.userType = null;
     }
 
-    public boolean typeOf(Value value) {
+    public boolean isTypeOf(Value value) {
         return switch (value) {
             case IntValue i -> type == Type.INT;
             case FloatValue f -> type == Type.FLOAT;
             case StringValue s -> type == Type.STRING;
             case BooleanValue b -> type == Type.BOOLEAN;
             default -> throw new IllegalStateException("Unexpected implementation: " + value);
+        };
+    }
+
+    @Override
+    public String toString() {
+        return switch (type) {
+            case INT -> "int";
+            case FLOAT -> "float";
+            case STRING -> "string";
+            case BOOLEAN -> "boolean";
+            case USER_TYPE -> userType;
         };
     }
 

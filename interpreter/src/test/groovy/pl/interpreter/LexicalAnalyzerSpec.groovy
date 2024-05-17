@@ -245,16 +245,16 @@ class LexicalAnalyzerSpec extends Specification {
         tokenize(code) == tokens
 
         where:
-        code << ["string quote = \"Albert Einstain said \\\"Reality is merely an illusion, albeit a very persistent one.\\\"\";",
+        code << ["string quote = \"Albert Einstain said\\n \\\"Reality is merely an illusion, albeit a very persistent one.\\\"\";",
                  "string hint = \"To type quotes use backslash \\\"\\\\\\\".\";"]
         tokens << [
                 [
                         new Token(TokenType.KW_STRING, "string", 1, 1),
                         new Token(TokenType.IDENTIFIER, "quote", 1, 8),
                         new Token(TokenType.ASSIGNMENT, '=' as char, 1, 14),
-                        new Token(TokenType.STRING_CONST, "Albert Einstain said \"Reality is merely an illusion, albeit a very persistent one.\"", 1, 16),
-                        new Token(TokenType.SEMICOLON, ';' as char, 1, 103),
-                        new Token(TokenType.EOF, null, 1, 104)
+                        new Token(TokenType.STRING_CONST, "Albert Einstain said\n \"Reality is merely an illusion, albeit a very persistent one.\"", 1, 16),
+                        new Token(TokenType.SEMICOLON, ';' as char, 1, 105),
+                        new Token(TokenType.EOF, null, 1, 106)
                 ],
                 [
                         new Token(TokenType.KW_STRING, "string", 1, 1),

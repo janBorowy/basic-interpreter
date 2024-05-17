@@ -1,13 +1,16 @@
 package pl.interpreter.executor;
 
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
-import java.util.stream.IntStream;
+import lombok.Getter;
+import pl.interpreter.executor.built_in_functions.BuiltInFunctionRegistry;
 import pl.interpreter.executor.exceptions.EnvironmentException;
-import pl.interpreter.executor.exceptions.InvalidFunctionCallException;
+import pl.interpreter.executor.exceptions.FunctionCallException;
 import pl.interpreter.parser.Definition;
 import pl.interpreter.parser.FunctionDefinition;
 import pl.interpreter.parser.Program;
@@ -18,11 +21,19 @@ public class Environment {
 
     private final Map<String, Function> functions;
     private final Stack<CallContext> callContexts;
+    @Getter
+    private final Writer standardOutput;
 
     public Environment(Program program) {
+        this(program, new StringWriter());
+    }
+
+    public Environment(Program program, Writer standardOutputWriter) {
         functions = new HashMap<>();
         callContexts = new Stack<>();
+        loadBuiltInFunctions();
         loadDefinitions(program);
+        this.standardOutput = standardOutputWriter;
     }
 
     public CallContext getCurrentContext() {
@@ -37,43 +48,26 @@ public class Environment {
         callContexts.pop();
     }
 
-    public Value executeUserFunction(String functionId, List<Value> arguments) {
+    public Function getFunction(String functionId) {
         var function = functions.get(functionId);
         if (function == null) {
-            throw new InvalidFunctionCallException("Function \"" + functionId + "\" does not exist");
+            throw new FunctionCallException("Function \"" + functionId + "\" does not exist");
         }
-        if (!(function instanceof UserFunction) ) {
-            throw new InvalidFunctionCallException(functionId + " is not a function");
-        }
-        var userFunction = (UserFunction) function;
-        pushNewContext();
-        var returnValue = executeFunctionBody(userFunction, arguments);
-        popContext();
-        return returnValue;
+        return function;
     }
 
-    private Value executeFunctionBody(UserFunction function, List<Value> arguments) {
-        getCurrentContext().openNewScope();
-        validateFunctionArguments(function.getParameters(), arguments);
-        var visitor = new UserFunctionCallingVisitor(this);
-        visitor.visit(function.getBlock());
-        getCurrentContext().closeClosestScope();
-        return visitor.getReturnedValue();
-    }
-
-    private void validateFunctionArguments(List<FunctionParameter> parameters, List<Value> arguments) {
-        var isValid = IntStream.range(0, parameters.size())
-                .mapToObj(i -> parameters.get(i).valueType().typeOf(arguments.get(i)))
-                .allMatch(Boolean::booleanValue);
-        if (!isValid) {
-            throw new InvalidFunctionCallException("Argument types do not match parameters");
-        }
+    public Value runFunction(String functionId, List<Value> arguments) {
+        return new FunctionExecutor(this).executeFunction(functionId, arguments);
     }
 
     private void loadDefinitions(Program program) {
         program.getDefinitions()
                 .values()
                 .forEach(this::loadDefinition);
+    }
+
+    private void loadBuiltInFunctions() {
+        functions.putAll(BuiltInFunctionRegistry.prepareBuiltInFunctionsForEnvironment(this));
     }
 
     private void loadDefinition(Definition d) {
