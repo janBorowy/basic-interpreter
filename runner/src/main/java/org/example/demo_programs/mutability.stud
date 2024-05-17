@@ -1,0 +1,9 @@
+int main () {
+    int a = 2;
+    var int b = 2;
+    // a = 3; ERROR!
+    println(b as string);
+    b = 3;
+    println(b as string);
+    return 0;
+}

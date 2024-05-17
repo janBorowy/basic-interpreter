@@ -12,6 +12,7 @@ public class BuiltInFunctionRegistry {
     public static Map<String, BuiltInFunction> prepareBuiltInFunctionsForEnvironment(Environment environment) {
         Map<String, BuiltInFunction> map = new HashMap<>();
         map.put("print", new PrintFunction(environment));
+        map.put("println", new PrintLineFunction(environment));
         return map;
     }
 }

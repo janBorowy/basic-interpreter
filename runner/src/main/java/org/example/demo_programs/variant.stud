@@ -1,0 +1,39 @@
+struct Person {
+    string name,
+    string surname
+}
+
+struct Book {
+    string title,
+    string isbn,
+    Person author
+}
+
+struct Article {
+    string headline,
+    string shownIn,
+    Person author
+}
+
+variant Publication {
+    Book,
+    Article
+}
+
+void printPublication(Publication pub) {
+    match(pub) {
+        Book book -> print("Book with title - " + book.title);
+        Article article -> print("Article with headline - " + article.headline);
+        default -> print("Unknown publication");
+    }
+}
+
+int main() {
+    Person robert = Person("Robert", "Jordan");
+    Person neil = Person("Neil", "Postman");
+    Publication book = Book("The Wheel Of Time: Eye Of The World", "123", robert);
+    Publication article = Article("Amusing ourselves to death", "New York Times", neil);
+    printPublication(book);
+    printPublication(article);
+    return 0;
+}

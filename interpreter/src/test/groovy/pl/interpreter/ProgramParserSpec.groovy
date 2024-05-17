@@ -312,6 +312,8 @@ string getDateString(MetaData meta) {
       |-MatchBranch <row: 7, col: 9> type=null, field_name=null
         |-FunctionCall <row: 7, col: 25> function_id=error
           |-StringLiteral <row: 7, col: 26> value=unknown date format
+    |-ReturnStatement <row: 9, col: 5> 
+      |-Identifier <row: 9, col: 12> id=dateStr
 """
         treeStr("""
 string getDateString(MetaData meta) {
@@ -334,6 +336,8 @@ string getDateString(MetaData meta) {
         |-Assignment <row: 5, col: 40> id=dateStr
           |-FunctionCall <row: 5, col: 42> function_id=parseFdf
             |-Identifier <row: 5, col: 51> id=fdf
+    |-ReturnStatement <row: 7, col: 5> 
+      |-Identifier <row: 7, col: 12> id=dateStr
 """
     }
 

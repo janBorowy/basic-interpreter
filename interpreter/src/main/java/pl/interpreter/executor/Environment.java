@@ -83,7 +83,7 @@ public class Environment {
             case FunctionDefinition fd -> registerFunction(d.getId(), UserFunctionDefinitionMapper.map(fd));
             case StructureDefinition sd -> registerFunction(sd.getId(), StructureToFunctionMapper.map(sd));
             case VariantDefinition vd -> registerVariant(vd.getId(), new Variant(vd.getStructureIds()));
-            default -> throw new IllegalStateException("Unimplemented definition: " + d);
+            default -> { }
         }
     }
 

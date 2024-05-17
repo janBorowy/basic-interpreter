@@ -2,6 +2,7 @@ package pl.interpreter.executor;
 
 import lombok.Getter;
 import pl.interpreter.executor.exceptions.InitializationException;
+import pl.interpreter.executor.exceptions.ValueTypeException;
 import pl.interpreter.parser.Assignment;
 import pl.interpreter.parser.Block;
 import pl.interpreter.parser.FunctionCall;
@@ -63,7 +64,15 @@ public class UserFunctionCallingVisitor implements FunctionVisitor {
 
     @Override
     public void visit(IfStatement statement) {
-
+        var value = ExpressionUtils.evaluateExpressionInEnvironment(statement.getExpression(), environment);
+        if (!(value instanceof BooleanValue condition)) {
+            throw new ValueTypeException("Expected boolean, got " + TypeUtils.getTypeOf(value));
+        }
+        if (condition.isTruthy()) {
+            visit(statement.getInstruction());
+        } else if (statement.getElseInstruction() != null) {
+            visit(statement.getElseInstruction());
+        }
     }
 
     @Override

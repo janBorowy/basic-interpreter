@@ -243,6 +243,8 @@ public class ProgramParser extends Parser {
             branches.add(branch.get());
             branch = parseMatchBranch();
         }
+        mustBe(TokenType.RIGHT_CURLY_BRACKET);
+        consumeToken();
         return Optional.of(new MatchStatement(expression, branches, position));
     }
 

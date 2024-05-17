@@ -18,10 +18,6 @@ public class CallContext {
         scopes.add(getScopeImpl());
     }
 
-    public void openNewScope(Map<String, Variable> variablesToRegister) {
-        scopes.add(new Scope(variablesToRegister));
-    }
-
     public void closeClosestScope() {
         scopes.removeLast();
     }

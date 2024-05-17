@@ -75,6 +75,7 @@ public class FunctionExecutor {
         environment.getCurrentContext().openNewScope();
         var parameterValueTypes = function.getParameters().stream().map(FunctionParameter::valueType).toList();
         validateFunctionCall(parameterValueTypes, arguments);
+        setFunctionArguments(function.getParameters(), arguments);
         var visitor = new UserFunctionCallingVisitor(environment);
         visitor.visit(function.getBlock());
         environment.getCurrentContext().closeClosestScope();
@@ -117,5 +118,12 @@ public class FunctionExecutor {
         IntStream.range(0, fieldNames.size())
                 .forEach(i -> fields.put(fieldNames.get(i), arguments.get(i)));
         return fields;
+    }
+
+    private void setFunctionArguments(List<FunctionParameter> parameters, List<Value> functionArguments) {
+        IntStream.range(0, parameters.size())
+                .forEach(i ->
+                    environment.getCurrentContext()
+                            .initializeVariableForClosestScope(parameters.get(i).id(), new Variable(functionArguments.get(i), false)));
     }
 }
