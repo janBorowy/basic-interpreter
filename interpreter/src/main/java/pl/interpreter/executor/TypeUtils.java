@@ -12,7 +12,7 @@ public class TypeUtils {
             case StringValue s -> new ValueType(ValueType.Type.STRING);
             case FloatValue f -> new ValueType(ValueType.Type.FLOAT);
             case BooleanValue b -> new ValueType(ValueType.Type.BOOLEAN);
-            case StructureValue sv -> new ValueType(ValueType.Type.USER_TYPE, sv.getStructureName());
+            case StructureValue sv -> new ValueType(ValueType.Type.USER_TYPE, sv.getStructureId());
             case VariantValue vv -> new ValueType(ValueType.Type.USER_TYPE, vv.getVariantId());
             case null, default -> null;
         };
@@ -28,5 +28,20 @@ public class TypeUtils {
         if (!(environment.getFunction(type).isPresent() || environment.getVariant(type).isPresent())) {
             throw new EnvironmentException("User type \"%s\" does not exist".formatted(type));
         }
+    }
+
+    public boolean structureIsVariant(StructureValue value, String variantId, Environment environment) {
+        var variant = environment.getVariant(variantId);
+        if (variant.isEmpty()) {
+            return false;
+        }
+        return variant.map(it -> it.getStructures().contains(value.getStructureId())).get();
+    }
+
+    public boolean isVariant(ValueType type, Environment environment) {
+        if (type.getType() != ValueType.Type.USER_TYPE) {
+            return false;
+        }
+        return environment.getVariant(type.getUserType()).isPresent();
     }
 }

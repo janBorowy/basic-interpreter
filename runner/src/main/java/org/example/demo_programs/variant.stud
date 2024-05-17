@@ -22,9 +22,9 @@ variant Publication {
 
 void printPublication(Publication pub) {
     match(pub) {
-        Book book -> print("Book with title - " + book.title);
-        Article article -> print("Article with headline - " + article.headline);
-        default -> print("Unknown publication");
+        Book book -> println("Book with title - " + book.title);
+        Article article -> println("Article with headline - " + article.headline);
+        default -> println("Unknown publication");
     }
 }
 

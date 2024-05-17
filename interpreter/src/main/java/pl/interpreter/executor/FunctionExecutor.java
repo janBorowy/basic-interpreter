@@ -99,18 +99,10 @@ public class FunctionExecutor {
 
     private boolean userTypesMatch(ValueType type, Value value) {
         return switch (value) {
-            case StructureValue s -> Objects.equals(s.getStructureName(), type.getUserType()) || structureIsVariant(s, type.getUserType());
+            case StructureValue s -> Objects.equals(s.getStructureId(), type.getUserType()) || TypeUtils.structureIsVariant(s, type.getUserType(), environment);
             case VariantValue v -> Objects.equals(v.getVariantId(), type.getUserType());
             default -> true;
         };
-    }
-
-    private boolean structureIsVariant(StructureValue value, String variantId) {
-        var variant = environment.getVariant(variantId);
-        if (variant.isEmpty()) {
-            return false;
-        }
-        return variant.map(it -> it.getStructures().contains(value.getStructureName())).get();
     }
 
     private Map<String, Value> getStructureFields(List<String> fieldNames, List<Value> arguments) {
@@ -122,8 +114,23 @@ public class FunctionExecutor {
 
     private void setFunctionArguments(List<FunctionParameter> parameters, List<Value> functionArguments) {
         IntStream.range(0, parameters.size())
-                .forEach(i ->
-                    environment.getCurrentContext()
-                            .initializeVariableForClosestScope(parameters.get(i).id(), new Variable(functionArguments.get(i), false)));
+                .forEach(i -> initializeVariable(parameters.get(i), functionArguments.get(i)));
+    }
+
+    private void initializeVariable(FunctionParameter parameter, Value argument) {
+        if (TypeUtils.isVariant(parameter.valueType(), environment)) {
+            environment.getCurrentContext()
+                    .initializeVariableForClosestScope(parameter.id(), new Variable(getStructAsVariant(argument, parameter.valueType()), false));
+        } else {
+            environment.getCurrentContext()
+                    .initializeVariableForClosestScope(parameter.id(), new Variable(argument, false));
+        }
+    }
+
+    private Value getStructAsVariant(Value value, ValueType parameterType) {
+        if (value instanceof StructureValue structureValue) {
+            return new VariantValue(parameterType.getUserType(), structureValue);
+        }
+        return value;
     }
 }

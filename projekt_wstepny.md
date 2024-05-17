@@ -89,9 +89,9 @@ struct Point {
 }
 
 int main() {
-    Point point = Point(1, 2);
-    // p.x = 2; ERROR!
-    print(p.x); // p.x is read-only 
+    Point point = Point(1.5, 2.25);
+    // point.x = 2; ERROR!
+    print(point.x as string); // point.x is read-only
     return 0;
 }
 ```

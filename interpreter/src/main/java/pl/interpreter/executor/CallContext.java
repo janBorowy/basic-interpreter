@@ -2,7 +2,6 @@ package pl.interpreter.executor;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import pl.interpreter.executor.exceptions.EnvironmentException;
 
@@ -20,12 +19,6 @@ public class CallContext {
 
     public void closeClosestScope() {
         scopes.removeLast();
-    }
-
-    private Scope getClosestScope() {
-        return scopes.reversed().stream()
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException(MISSING_SCOPE_MESSAGE));
     }
 
     public void initializeVariableForClosestScope(String id, Variable variable) {

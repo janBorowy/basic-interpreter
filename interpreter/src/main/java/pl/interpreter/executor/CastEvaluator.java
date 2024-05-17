@@ -48,7 +48,7 @@ public class CastEvaluator {
             case FloatValue f -> new StringValue(getFormattedFloatString(f.getValue()));
             case StringValue s -> leftHandSide;
             case BooleanValue b -> new StringValue(b.isTruthy() ? "true" : "false");
-            default -> throw new ValueTypeException("Conversion to structure and variant types is not allowed");
+            default -> throw new ValueTypeException("Conversion of structure and variant types is not allowed");
         };
     }
 

@@ -23,7 +23,7 @@ public class Scope {
 
     public Variable setVariable(String id, Value value) {
         var variable = getVariable(id)
-                .orElseThrow(() -> new AssignmentException("Variable was not initialized"));
+                .orElseThrow(() -> new AssignmentException("Variable with id \"%s\" was not initialized".formatted(id)));
         checkIfVariableIsMutable(id, variable);
         checkIfVariableIsOfTheSameType(id, value, variable);
         variables.put(id, new Variable(value, true));
@@ -45,10 +45,9 @@ public class Scope {
     }
 
     private void checkIfVariableIsOfTheSameType(String id, Value value, Variable variable) {
-        var givenType = TypeUtils.getTypeOf(value);
         var expectedType = TypeUtils.getTypeOf(variable.getValue());
-        if (!givenType.equals(expectedType)) {
-            throw new AssignmentException("Cannot change type of %s from %s to %s".formatted(id, expectedType, givenType));
+        if (!expectedType.isTypeOf(value)) {
+            throw new AssignmentException("Cannot change type of %s from %s to %s".formatted(id, expectedType, TypeUtils.getTypeOf(value)));
         }
     }
 }

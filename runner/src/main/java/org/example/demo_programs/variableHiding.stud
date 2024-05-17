@@ -1,0 +1,14 @@
+int main() {
+    int a = 2;
+    if(true) {
+        int a = 3;
+        println(a as string); // 3
+    }
+    println(a as string); // 2
+    println(5 as string);
+    return 0;
+}
+
+void printInt(int a) {
+    println(a as string);
+}

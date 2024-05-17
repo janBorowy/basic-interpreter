@@ -165,6 +165,6 @@ void printPublication(Publication pub) {
                 "title", new StringValue("my story")
         )))))
         expect:
-        writer.toString() == ""
+        writer.toString() == "Book with title - my story"
     }
 }

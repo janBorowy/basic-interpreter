@@ -8,4 +8,9 @@ import lombok.Getter;
 public class VariantValue implements Value {
     private String variantId;
     private StructureValue structureValue;
+
+    @Override
+    public String toString() {
+        return variantId + "(" + structureValue + ")";
+    }
 }
