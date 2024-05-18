@@ -10,4 +10,9 @@ import lombok.Setter;
 @EqualsAndHashCode
 public class FloatValue implements Value {
     private float value;
+
+    @Override
+    public String toString() {
+        return "Float(%f)".formatted(value);
+    }
 }

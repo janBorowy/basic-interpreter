@@ -461,11 +461,11 @@ z błędem, zastosuje on domyślne działanie pozwalające na dalsze wykonanie k
 - Brak `;` na końcu wyrażenia - dodanie `;` przez interpreter i kontynuacja interpretacji
 
 ### Przykładowe komunikaty błędu:
-- `Invalid conversion at line 5, col 10: "a.bc" is not convertable.`
-- `Invalid type name at line 1, col 1: double is not a valid type name.`
-- `Invalid operation at line 5, col 10: 1 + "abc": operand types do not match`
-- `Undefined structure at line 150, col 25: structure "Matrix" is undefined`
-- `Undefined function at line 120, col 1: function "apply" was not defined`
+- `Error at line 5, col 10: "a.bc" is not convertable.`
+- `Error at line 1, col 1: double is not a valid type name.`
+- `Error at line 5, col 10: 1 + "abc": operand types do not match`
+- `Error at line 150, col 25: structure "Matrix" is undefined`
+- `Error at line 120, col 1: function "apply" was not defined`
 
 ## Struktura projektu
 ```mermaid

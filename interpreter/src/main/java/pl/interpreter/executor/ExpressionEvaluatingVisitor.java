@@ -1,7 +1,12 @@
 package pl.interpreter.executor;
 
 import lombok.Getter;
+import pl.interpreter.executor.exceptions.AccessException;
+import pl.interpreter.executor.exceptions.ExpressionEvaluationException;
 import pl.interpreter.executor.exceptions.FunctionCallException;
+import pl.interpreter.executor.exceptions.InterpretationException;
+import pl.interpreter.executor.exceptions.ParameterTypeException;
+import pl.interpreter.executor.exceptions.ValueTypeException;
 import pl.interpreter.parser.Alternative;
 import pl.interpreter.parser.BooleanLiteral;
 import pl.interpreter.parser.Cast;
@@ -15,6 +20,7 @@ import pl.interpreter.parser.Identifier;
 import pl.interpreter.parser.IntLiteral;
 import pl.interpreter.parser.Multiplication;
 import pl.interpreter.parser.Negation;
+import pl.interpreter.parser.Position;
 import pl.interpreter.parser.Relation;
 import pl.interpreter.parser.StringLiteral;
 import pl.interpreter.parser.Sum;
@@ -60,7 +66,11 @@ public class ExpressionEvaluatingVisitor implements ExpressionVisitor {
             return;
         }
         visit(alternative.getRight());
-        value = new ConjunctionOrAlternativeEvaluator(lhs, value, ConjunctionOrAlternativeEvaluator.Operator.ALTERNATIVE).evaluate();
+        try {
+            value = new ConjunctionOrAlternativeEvaluator(lhs, value, ConjunctionOrAlternativeEvaluator.Operator.ALTERNATIVE).evaluate();
+        } catch (ValueTypeException e) {
+            throw new InterpretationException(e.getMessage(), alternative.getPosition());
+        }
     }
 
     @Override
@@ -77,7 +87,11 @@ public class ExpressionEvaluatingVisitor implements ExpressionVisitor {
             case STRING -> CastEvaluator.LegalCastType.STRING;
             case BOOL -> CastEvaluator.LegalCastType.BOOLEAN;
         };
-        value = new CastEvaluator(value, castType).evaluate();
+        try {
+            value = new CastEvaluator(value, castType).evaluate();
+        } catch (ValueTypeException e) {
+            throw new InterpretationException(e.getMessage(), cast.getPosition());
+        }
     }
 
     @Override
@@ -89,13 +103,21 @@ public class ExpressionEvaluatingVisitor implements ExpressionVisitor {
             return;
         }
         visit(conjunction.getRight());
-        value = new ConjunctionOrAlternativeEvaluator(lhs, value, ConjunctionOrAlternativeEvaluator.Operator.CONJUNCTION).evaluate();
+        try {
+            value = new ConjunctionOrAlternativeEvaluator(lhs, value, ConjunctionOrAlternativeEvaluator.Operator.CONJUNCTION).evaluate();
+        } catch (ValueTypeException e) {
+            throw new InterpretationException(e.getMessage(), conjunction.getPosition());
+        }
     }
 
     @Override
     public void visit(DotAccess dotAccess) {
         visit(dotAccess.getExpression());
-        value = new DotAccessEvaluator(value, dotAccess.getFieldName()).evaluate();
+        try {
+            value = new DotAccessEvaluator(value, dotAccess.getFieldName()).evaluate();
+        } catch (ValueTypeException | AccessException e) {
+            throw new InterpretationException(e.getMessage(), dotAccess.getPosition());
+        }
     }
 
     @Override
@@ -106,9 +128,13 @@ public class ExpressionEvaluatingVisitor implements ExpressionVisitor {
     @Override
     public void visit(FunctionCall functionCall) {
         var arguments = ExpressionUtils.evaluateExpressionListInEnvironment(functionCall.getArguments(), environment);
-        value = environment.runFunction(functionCall.getFunctionId(), arguments);
-        if (value == null) {
-            throw new FunctionCallException("Function returns void, but value is expected");
+        try {
+            value = environment.runFunction(functionCall.getFunctionId(), arguments);
+            if (value == null) {
+                throw new FunctionCallException("Function returns void, but value is expected");
+            }
+        } catch (FunctionCallException | ParameterTypeException e) {
+            throw new InterpretationException(e.getMessage(), functionCall.getPosition());
         }
     }
 
@@ -132,13 +158,21 @@ public class ExpressionEvaluatingVisitor implements ExpressionVisitor {
             case DIVIDE -> MultiplicationEvaluator.Operator.DIVISION;
             case MODULO -> MultiplicationEvaluator.Operator.MODULO;
         };
-        value = new MultiplicationEvaluator(leftHandSide, value, operator).evaluate();
+        try {
+            value = new MultiplicationEvaluator(leftHandSide, value, operator).evaluate();
+        } catch (ValueTypeException | ExpressionEvaluationException e) {
+            throw new InterpretationException(e.getMessage(), multiplication.getPosition());
+        }
     }
 
     @Override
     public void visit(Negation negation) {
         visit(negation.getExpression());
-        value = new NegationEvaluator(value).evaluate();
+        try {
+            value = new NegationEvaluator(value).evaluate();
+        } catch (ValueTypeException e) {
+            throw new InterpretationException(e.getMessage(), negation.getPosition());
+        }
     }
 
     @Override
@@ -154,7 +188,11 @@ public class ExpressionEvaluatingVisitor implements ExpressionVisitor {
             case LESS_THAN_OR_EQUALS -> RelationEvaluator.Operator.LESS_THAN_OR_EQUAL;
             case GREATER_THAN_OR_EQUALS -> RelationEvaluator.Operator.GREATER_THAN_OR_EQUAL;
         };
-        value = new RelationEvaluator(leftHandSide, value, operator).evaluate();
+        try {
+            value = new RelationEvaluator(leftHandSide, value, operator).evaluate();
+        } catch (ExpressionEvaluationException e) {
+            throw new InterpretationException(e.getMessage(), relation.getPosition());
+        }
     }
 
     @Override
@@ -171,6 +209,10 @@ public class ExpressionEvaluatingVisitor implements ExpressionVisitor {
             case PLUS -> SumEvaluator.Operator.PLUS;
             case MINUS -> SumEvaluator.Operator.MINUS;
         };
-        value = new SumEvaluator(leftHandSide, value, operator).evaluate();
+        try {
+            value = new SumEvaluator(leftHandSide, value, operator).evaluate();
+        } catch (ExpressionEvaluationException | ValueTypeException e) {
+            throw new InterpretationException(e.getMessage(), sum.getPosition());
+        }
     }
 }

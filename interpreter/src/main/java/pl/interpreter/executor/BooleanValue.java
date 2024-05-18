@@ -10,4 +10,9 @@ import lombok.Setter;
 @EqualsAndHashCode
 public class BooleanValue implements Value {
     private boolean isTruthy;
+
+    @Override
+    public String toString() {
+        return "Boolean(%b)".formatted(isTruthy);
+    }
 }

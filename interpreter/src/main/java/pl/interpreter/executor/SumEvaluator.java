@@ -23,7 +23,7 @@ public class SumEvaluator {
             case StringValue s -> doConcat(s);
             case IntValue i -> doSum(i);
             case FloatValue f -> doSum(f);
-            default -> throw new ExpressionEvaluationException();
+            default -> throw new IllegalStateException("Unknown definition");
         };
     }
 
@@ -73,7 +73,7 @@ public class SumEvaluator {
         return switch (rightHandSide) {
             case IntValue i -> new IntValue(lhs.getValue() + i.getValue());
             case FloatValue f -> new FloatValue(lhs.getValue() + f.getValue());
-            default -> throw new ExpressionEvaluationException();
+            default -> throw new IllegalStateException("Unknown definition");
         };
     }
 
@@ -81,7 +81,7 @@ public class SumEvaluator {
         return switch (rightHandSide) {
             case IntValue i -> new FloatValue(lhs.getValue() + i.getValue());
             case FloatValue f -> new FloatValue(lhs.getValue() + f.getValue());
-            default -> throw new ExpressionEvaluationException();
+            default -> throw new IllegalStateException("Unknown definition");
         };
     }
 
@@ -89,7 +89,7 @@ public class SumEvaluator {
         return switch (rightHandSide) {
             case IntValue i -> new IntValue(lhs.getValue() - i.getValue());
             case FloatValue f -> new FloatValue(lhs.getValue() - f.getValue());
-            default -> throw new ExpressionEvaluationException();
+            default -> throw new IllegalStateException("Unknown definition");
         };
     }
 
@@ -97,7 +97,7 @@ public class SumEvaluator {
         return switch (rightHandSide) {
             case IntValue i -> new FloatValue(lhs.getValue() - i.getValue());
             case FloatValue f -> new FloatValue(lhs.getValue() - f.getValue());
-            default -> throw new ExpressionEvaluationException();
+            default -> throw new IllegalStateException("Unknown definition");
         };
     }
 }

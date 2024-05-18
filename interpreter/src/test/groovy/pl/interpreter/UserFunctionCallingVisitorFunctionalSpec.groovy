@@ -7,6 +7,7 @@ import pl.interpreter.executor.VariantValue
 import pl.interpreter.executor.exceptions.AssignmentException
 import pl.interpreter.executor.exceptions.EnvironmentException
 import pl.interpreter.executor.exceptions.InitializationException
+import pl.interpreter.executor.exceptions.InterpretationException
 import pl.interpreter.lexical_analyzer.LexicalAnalyzer
 import pl.interpreter.parser.Program
 import pl.interpreter.parser.ProgramParser
@@ -54,7 +55,7 @@ return a;
                 , writer)
         environment.runFunction("initializeA", List.of())
         then:
-        InitializationException e = thrown()
+        InterpretationException e = thrown()
     }
 
     def "Should throw when initializing variable with incorrect type"() {
@@ -71,7 +72,7 @@ return a;
                 , writer)
         environment.runFunction("initializeA", List.of())
         then:
-        InitializationException e = thrown()
+        InterpretationException e = thrown()
     }
 
     def "Should assign a correctly"() {
@@ -123,7 +124,7 @@ return a;
                 , writer)
         environment.runFunction("main", List.of())
         then:
-        AssignmentException e = thrown()
+        InterpretationException e = thrown()
     }
 
     def "Should define structures correctly"() {

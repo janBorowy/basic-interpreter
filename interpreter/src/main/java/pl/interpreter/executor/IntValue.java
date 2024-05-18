@@ -10,4 +10,9 @@ import lombok.Setter;
 @EqualsAndHashCode
 public class IntValue implements Value {
     private int value;
+
+    @Override
+    public String toString() {
+        return "Integer(%d)".formatted(value);
+    }
 }

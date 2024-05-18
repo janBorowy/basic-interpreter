@@ -4,8 +4,11 @@ import java.util.List;
 import java.util.Objects;
 import lombok.Getter;
 import pl.interpreter.executor.exceptions.AssignmentException;
+import pl.interpreter.executor.exceptions.FunctionCallException;
 import pl.interpreter.executor.exceptions.InitializationException;
+import pl.interpreter.executor.exceptions.InterpretationException;
 import pl.interpreter.executor.exceptions.MatchStatementException;
+import pl.interpreter.executor.exceptions.ParameterTypeException;
 import pl.interpreter.executor.exceptions.ValueTypeException;
 import pl.interpreter.parser.Assignment;
 import pl.interpreter.parser.Block;
@@ -16,6 +19,8 @@ import pl.interpreter.parser.Initialization;
 import pl.interpreter.parser.Instruction;
 import pl.interpreter.parser.MatchBranch;
 import pl.interpreter.parser.MatchStatement;
+import pl.interpreter.parser.Parameter;
+import pl.interpreter.parser.Position;
 import pl.interpreter.parser.ReturnStatement;
 import pl.interpreter.parser.WhileStatement;
 
@@ -41,21 +46,33 @@ public class UserFunctionCallingVisitor implements FunctionVisitor {
 
     @Override
     public void visit(FunctionCall functionCall) {
-        environment.runFunction(functionCall.getFunctionId(),
-                ExpressionUtils.evaluateExpressionListInEnvironment(functionCall.getArguments(), environment));
+        try {
+            environment.runFunction(functionCall.getFunctionId(),
+                    ExpressionUtils.evaluateExpressionListInEnvironment(functionCall.getArguments(), environment));
+        } catch(FunctionCallException | ParameterTypeException e) {
+            throw new InterpretationException(e.getMessage(), functionCall.getPosition());
+        }
     }
 
     @Override
     public void visit(Assignment assignment) {
         var value = ExpressionUtils.evaluateExpressionInEnvironment(assignment.getExpression(), environment);
-        new AssignmentExecutor(assignment.getId(), value, environment).assign();
+        try {
+            new AssignmentExecutor(assignment.getId(), value, environment).assign();
+        } catch (AssignmentException e) {
+            throw new InterpretationException(e.getMessage(), assignment.getPosition());
+        }
     }
 
     @Override
     public void visit(Initialization initialization) {
         var value = ExpressionUtils.evaluateExpressionInEnvironment(initialization.getExpression(), environment);
         var variableType = ASTUtils.valueTypeFromVariableType(initialization.getType(), initialization.getUserType());
-        new InitializationExecutor(initialization.getId(), variableType, value, initialization.isVar(), environment).execute();
+        try {
+            new InitializationExecutor(initialization.getId(), variableType, value, initialization.isVar(), environment).execute();
+        } catch (InitializationException e) {
+            throw new InterpretationException(e.getMessage(), initialization.getPosition());
+        }
     }
 
     @Override
@@ -66,20 +83,28 @@ public class UserFunctionCallingVisitor implements FunctionVisitor {
 
     @Override
     public void visit(IfStatement statement) {
-        var condition = ExpressionUtils.evaluteExpectingBooleanValue(statement.getExpression(), environment);
-        if (condition.isTruthy()) {
-            openNewScopeAndVisit(statement.getInstruction());
-        } else if (statement.getElseInstruction() != null) {
-            openNewScopeAndVisit(statement.getElseInstruction());
+        try {
+            var condition = ExpressionUtils.evaluteExpectingBooleanValue(statement.getExpression(), environment);
+            if (condition.isTruthy()) {
+                visit(statement.getInstruction());
+            } else if (statement.getElseInstruction() != null) {
+                visit(statement.getElseInstruction());
+            }
+        } catch (ValueTypeException e) {
+            throw new InterpretationException(e.getMessage(), statement.getPosition());
         }
     }
 
     @Override
     public void visit(WhileStatement statement) {
-        var condition = ExpressionUtils.evaluteExpectingBooleanValue(statement.getExpression(), environment);
-        while (condition.isTruthy()) {
-            visit(statement.getInstruction());
-            condition = ExpressionUtils.evaluteExpectingBooleanValue(statement.getExpression(), environment);
+        try {
+            var condition = ExpressionUtils.evaluteExpectingBooleanValue(statement.getExpression(), environment);
+            while (condition.isTruthy()) {
+                visit(statement.getInstruction());
+                condition = ExpressionUtils.evaluteExpectingBooleanValue(statement.getExpression(), environment);
+            }
+        } catch (ValueTypeException e) {
+            throw new InterpretationException(e.getMessage(), statement.getPosition());
         }
     }
 
@@ -87,10 +112,10 @@ public class UserFunctionCallingVisitor implements FunctionVisitor {
     public void visit(MatchStatement statement) {
         var value = ExpressionUtils.evaluateExpressionInEnvironment(statement.getExpression(), environment);
         if (!(value instanceof VariantValue variant)) {
-            throw new ValueTypeException("Expected variant type, but got " + TypeUtils.getTypeOf(value));
+            throw new InterpretationException("Expected variant type, but got " + TypeUtils.getTypeOf(value), statement.getPosition());
         }
 
-        visitMatchBranch(variant, statement.getBranches());
+        visitMatchBranch(variant, statement.getBranches(), statement.getPosition());
     }
 
     @Override
@@ -112,10 +137,13 @@ public class UserFunctionCallingVisitor implements FunctionVisitor {
         }
     }
 
-    private void openNewScopeAndVisit(Instruction instruction) {
-        environment.getCurrentContext().openNewScope();
-        visit(instruction);
-        environment.getCurrentContext().closeClosestScope();
+    private void visitMatchBranch(VariantValue value, List<MatchBranch> branches, Position position) {
+        branches.stream()
+                .filter(it -> it.getStructureId().equals(value.getStructureValue().getStructureId()))
+                .findFirst()
+                .ifPresentOrElse(it -> openNewScopeVisitAndInitializeVariable(it.getInstruction(), it.getFieldName(),
+                                new Variable(value.getStructureValue(), false)),
+                        () -> visitDefaultBranch(value, branches, position));
     }
 
     private void openNewScopeVisitAndInitializeVariable(Instruction instruction, String variableId, Variable variableToSet) {
@@ -125,22 +153,13 @@ public class UserFunctionCallingVisitor implements FunctionVisitor {
         environment.getCurrentContext().closeClosestScope();
     }
 
-    private void visitMatchBranch(VariantValue value, List<MatchBranch> branches) {
-        branches.stream()
-                .filter(it -> it.getStructureId().equals(value.getStructureValue().getStructureId()))
-                .findFirst()
-                .ifPresentOrElse(it -> openNewScopeVisitAndInitializeVariable(it.getInstruction(), it.getFieldName(),
-                                new Variable(value.getStructureValue(), false)),
-                        () -> visitDefaultBranch(value, branches));
-    }
-
-    private void visitDefaultBranch(VariantValue value, List<MatchBranch> branches) {
+    private void visitDefaultBranch(VariantValue value, List<MatchBranch> branches, Position position) {
         branches.stream()
                 .filter(it -> Objects.isNull(it.getStructureId()))
                 .findFirst()
-                .ifPresentOrElse(it -> openNewScopeAndVisit(it.getInstruction()),
+                .ifPresentOrElse(it -> visit(it.getInstruction()),
                         () -> {
-                            throw new MatchStatementException("Value did not match any branch " + value);
+                            throw new InterpretationException("Value did not match any branch " + value, position);
                         });
     }
 }

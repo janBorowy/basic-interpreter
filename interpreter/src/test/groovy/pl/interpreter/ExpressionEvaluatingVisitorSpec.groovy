@@ -10,6 +10,7 @@ import pl.interpreter.executor.StructureValue
 import pl.interpreter.executor.Variable
 import pl.interpreter.executor.exceptions.ExpressionEvaluationException
 import pl.interpreter.executor.exceptions.AccessException
+import pl.interpreter.executor.exceptions.InterpretationException
 import pl.interpreter.executor.exceptions.ValueTypeException
 import pl.interpreter.lexical_analyzer.LexicalAnalyzer
 import pl.interpreter.parser.AdditionOperator
@@ -169,7 +170,7 @@ class ExpressionEvaluatingVisitorSpec extends Specification {
                 )
         )
         then:
-        ExpressionEvaluationException e = thrown()
+        InterpretationException e = thrown()
     }
 
     def "Should throw when summing boolean values"() {
@@ -183,7 +184,7 @@ class ExpressionEvaluatingVisitorSpec extends Specification {
                 )
         )
         then:
-        ValueTypeException e = thrown()
+        InterpretationException e = thrown()
     }
 
     def "Should throw when summing boolean value"() {
@@ -197,7 +198,7 @@ class ExpressionEvaluatingVisitorSpec extends Specification {
                 )
         )
         then:
-        ValueTypeException e = thrown()
+        InterpretationException e = thrown()
     }
 
     def "Should multiply integers correctly"() {
@@ -295,7 +296,7 @@ class ExpressionEvaluatingVisitorSpec extends Specification {
                 )
         )
         then:
-        ExpressionEvaluationException e = thrown()
+        InterpretationException e = thrown()
     }
 
     def "Should throw when modulo by zero"() {
@@ -309,7 +310,7 @@ class ExpressionEvaluatingVisitorSpec extends Specification {
                 )
         )
         then:
-        ExpressionEvaluationException e = thrown()
+        InterpretationException e = thrown()
     }
 
     def "Should evaluate sum and mul correctly"() {
@@ -434,7 +435,7 @@ class ExpressionEvaluatingVisitorSpec extends Specification {
         when:
         evaluateExpression("1 as bool")
         then:
-        ValueTypeException e = thrown()
+        InterpretationException e = thrown()
     }
 
     def "Should evaluate dot access correctly"() {
@@ -450,6 +451,6 @@ class ExpressionEvaluatingVisitorSpec extends Specification {
         when:
         evaluateExpression("point.z")
         then:
-        AccessException e = thrown()
+        InterpretationException e = thrown()
     }
 }

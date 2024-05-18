@@ -25,9 +25,9 @@ public class Interpreter {
         this.program = new ProgramParser(new TokenManager(new LexicalAnalyzer(source))).parse();
     }
 
-    public void run(String mainFunctionId, List<String> arguments) {
+    public Value run(String mainFunctionId, List<String> arguments) {
         var environment = new Environment(program, output);
-        environment.runFunction(mainFunctionId, parseArguments(arguments));
+        return environment.runFunction(mainFunctionId, parseArguments(arguments));
     }
 
     private List<Value> parseArguments(List<String> arguments) {
@@ -37,10 +37,10 @@ public class Interpreter {
     }
 
     private Value parseSingleArgument(String argument) {
-        if (argument.matches("/[-+]?[1-9]\\d*$")) {
+        if (argument.matches("^[-+]?[1-9]\\d*$")) {
             return new IntValue(Integer.parseInt(argument));
         }
-        if (argument.matches("/[-+]?\\d*\\.?\\d+$")) {
+        if (argument.matches("^[-+]?\\d*\\.?\\d+$")) {
             return new FloatValue(Float.parseFloat(argument));
         }
         if (argument.equals("false") || argument.equals("true")) {

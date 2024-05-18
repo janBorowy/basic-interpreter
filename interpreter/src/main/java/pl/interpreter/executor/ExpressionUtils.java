@@ -2,6 +2,8 @@ package pl.interpreter.executor;
 
 import java.util.List;
 import lombok.experimental.UtilityClass;
+import pl.interpreter.executor.exceptions.ExpressionEvaluationException;
+import pl.interpreter.executor.exceptions.InterpretationException;
 import pl.interpreter.executor.exceptions.ValueTypeException;
 import pl.interpreter.parser.Expression;
 
