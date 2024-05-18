@@ -5,6 +5,7 @@ import pl.interpreter.executor.StringValue
 import pl.interpreter.executor.StructureValue
 import pl.interpreter.executor.VariantValue
 import pl.interpreter.executor.exceptions.AssignmentException
+import pl.interpreter.executor.exceptions.EnvironmentException
 import pl.interpreter.executor.exceptions.InitializationException
 import pl.interpreter.lexical_analyzer.LexicalAnalyzer
 import pl.interpreter.parser.Program
@@ -104,7 +105,7 @@ return a;
                 , writer)
         environment.runFunction("main", List.of())
         then:
-        AssignmentException e = thrown()
+        EnvironmentException e = thrown()
     }
 
     def "Should throw when assigning variable with incorrect value type"() {

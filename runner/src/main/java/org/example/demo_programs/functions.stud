@@ -38,7 +38,7 @@ float getCoordinatesSum(Point p) {
 }
 
 int main() {
-    var Point point = FloatPoint(5.5, 5.0);
+    Point point = FloatPoint(5.5, 5.0);
     println(getCoordinatesSum(point) as string);
     return 0;
 }

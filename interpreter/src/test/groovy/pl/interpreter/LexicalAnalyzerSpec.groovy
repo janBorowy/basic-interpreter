@@ -2,11 +2,12 @@ package pl.interpreter
 
 import pl.interpreter.lexical_analyzer.LexicalAnalyzer
 import pl.interpreter.lexical_analyzer.LexicalAnalyzerException
+import pl.interpreter.lexical_analyzer.Token
+import pl.interpreter.lexical_analyzer.TokenType
 import spock.lang.Specification
 
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.stream.IntStream
 
 class LexicalAnalyzerSpec extends Specification {
     def static sourceCode1 = Path.of(

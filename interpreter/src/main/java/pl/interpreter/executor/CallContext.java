@@ -7,7 +7,7 @@ import pl.interpreter.executor.exceptions.EnvironmentException;
 
 public class CallContext {
     private final List<Scope> scopes;
-    private final String MISSING_SCOPE_MESSAGE = "Call context does not contain any scope";
+    private static final String MISSING_SCOPE_MESSAGE = "Call context does not contain any scope";
 
     public CallContext(List<Scope> scopes) {
         this.scopes = scopes;
@@ -26,13 +26,6 @@ public class CallContext {
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException(MISSING_SCOPE_MESSAGE))
                 .initializeVariable(id, variable);
-    }
-
-    public void setVariableForClosestScope(String id, Value value) {
-        scopes.reversed().stream()
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException(MISSING_SCOPE_MESSAGE))
-                .setVariable(id, value);
     }
 
     public Variable resolveVariable(String id) {

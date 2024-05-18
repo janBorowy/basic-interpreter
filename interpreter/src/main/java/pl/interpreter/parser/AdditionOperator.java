@@ -1,7 +1,7 @@
 package pl.interpreter.parser;
 
 import java.util.Optional;
-import pl.interpreter.Token;
+import pl.interpreter.lexical_analyzer.Token;
 
 public enum AdditionOperator {
     PLUS("+"),

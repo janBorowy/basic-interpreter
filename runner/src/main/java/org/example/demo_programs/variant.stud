@@ -31,8 +31,8 @@ void printPublication(Publication pub) {
 int main() {
     Person robert = Person("Robert", "Jordan");
     Person neil = Person("Neil", "Postman");
-    Publication book = Book("The Wheel Of Time: Eye Of The World", "123", robert);
-    Publication article = Article("Amusing ourselves to death", "New York Times", neil);
+    Book book = Book("The Wheel Of Time: Eye Of The World", "123", robert);
+    Article article = Article("Amusing ourselves to death", "New York Times", neil);
     printPublication(book);
     printPublication(article);
     return 0;

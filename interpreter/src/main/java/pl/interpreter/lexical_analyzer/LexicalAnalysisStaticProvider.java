@@ -2,7 +2,6 @@ package pl.interpreter.lexical_analyzer;
 
 import java.util.HashMap;
 import java.util.Map;
-import pl.interpreter.TokenType;
 
 public class LexicalAnalysisStaticProvider {
 

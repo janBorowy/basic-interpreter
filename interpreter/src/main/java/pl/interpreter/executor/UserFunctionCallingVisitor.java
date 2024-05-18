@@ -48,43 +48,14 @@ public class UserFunctionCallingVisitor implements FunctionVisitor {
     @Override
     public void visit(Assignment assignment) {
         var value = ExpressionUtils.evaluateExpressionInEnvironment(assignment.getExpression(), environment);
-        if (value instanceof StructureValue structure) {
-            var type = TypeUtils.getTypeOf(environment.getCurrentContext().resolveVariable(assignment.getId()).getValue());
-            if (TypeUtils.isVariant(type, environment)) {
-                if (TypeUtils.structureIsVariant(structure, type.getUserType(), environment)) {
-                    environment.getCurrentContext().setVariableForClosestScope(assignment.getId(), new VariantValue(type.getUserType(), structure));
-                    return;
-                } else {
-                    throw new AssignmentException("Value type %s does not match variable type %s".formatted(TypeUtils.getTypeOf(value), type));
-                }
-            } else {
-                if (type.getType() == ValueType.Type.USER_TYPE && Objects.equals(structure.getStructureId(), type.getUserType())) {
-                    throw new AssignmentException("Value type %s does not match variable type %s".formatted(TypeUtils.getTypeOf(value), type));
-                }
-            }
-        }
-        if (value instanceof VariantValue variant) {
-            var type = TypeUtils.getTypeOf(environment.getCurrentContext().resolveVariable(assignment.getId()).getValue());
-            if (!Objects.equals(type.getUserType(), variant.getVariantId())) {
-                throw new AssignmentException("Value type %s does not match variable type %s".formatted(TypeUtils.getTypeOf(value), type));
-            }
-        }
-        environment.getCurrentContext().setVariableForClosestScope(assignment.getId(), value);
+        new AssignmentExecutor(assignment.getId(), value, environment).assign();
     }
 
     @Override
     public void visit(Initialization initialization) {
         var value = ExpressionUtils.evaluateExpressionInEnvironment(initialization.getExpression(), environment);
         var variableType = ASTUtils.valueTypeFromVariableType(initialization.getType(), initialization.getUserType());
-        if (!variableType.isTypeOf(value)) {
-            throw new InitializationException("Value type %s does not match variable type %s".formatted(TypeUtils.getTypeOf(value), variableType));
-        }
-        // TODO: refactor this
-        if (TypeUtils.isVariant(variableType, environment)) {
-            initializeForVariant(value, variableType, initialization.getId(), initialization.isVar());
-            return;
-        }
-        environment.getCurrentContext().initializeVariableForClosestScope(initialization.getId(), new Variable(value, initialization.isVar()));
+        new InitializationExecutor(initialization.getId(), variableType, value, initialization.isVar(), environment).execute();
     }
 
     @Override
@@ -107,7 +78,7 @@ public class UserFunctionCallingVisitor implements FunctionVisitor {
     public void visit(WhileStatement statement) {
         var condition = ExpressionUtils.evaluteExpectingBooleanValue(statement.getExpression(), environment);
         while (condition.isTruthy()) {
-            openNewScopeAndVisit(statement.getInstruction());
+            visit(statement.getInstruction());
             condition = ExpressionUtils.evaluteExpectingBooleanValue(statement.getExpression(), environment);
         }
     }
@@ -171,20 +142,5 @@ public class UserFunctionCallingVisitor implements FunctionVisitor {
                         () -> {
                             throw new MatchStatementException("Value did not match any branch " + value);
                         });
-    }
-
-    private void initializeForVariant(Value value, ValueType variantType, String id, boolean isVar) {
-        if (value instanceof StructureValue structure) {
-            if (TypeUtils.structureIsVariant(structure, variantType.getUserType(), environment)) {
-                environment.getCurrentContext().initializeVariableForClosestScope(id,
-                        new Variable(new VariantValue(variantType.getUserType(), structure), isVar));
-            } else {
-                throw new InitializationException(
-                        "Value type %s does not belong to variant %s".formatted(TypeUtils.getTypeOf(value), variantType));
-            }
-        } else if (value instanceof VariantValue variant && !(variant.getVariantId().equals(variantType.getUserType()))) {
-            throw new InitializationException(
-                    "Value type %s does not match variable type %s".formatted(TypeUtils.getTypeOf(value), variantType));
-        }
     }
 }

@@ -1,7 +1,7 @@
 package pl.interpreter.parser;
 
-import pl.interpreter.Token;
-import pl.interpreter.TokenType;
+import pl.interpreter.lexical_analyzer.Token;
+import pl.interpreter.lexical_analyzer.TokenType;
 import pl.interpreter.lexical_analyzer.LexicalAnalyzer;
 
 public class TokenManager {

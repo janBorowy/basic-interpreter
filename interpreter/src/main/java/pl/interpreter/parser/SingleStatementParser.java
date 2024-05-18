@@ -2,7 +2,7 @@ package pl.interpreter.parser;
 
 import java.util.ArrayList;
 import java.util.Optional;
-import pl.interpreter.TokenType;
+import pl.interpreter.lexical_analyzer.TokenType;
 
 public class SingleStatementParser extends Parser {
 

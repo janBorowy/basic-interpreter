@@ -7,8 +7,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 import lombok.NonNull;
-import pl.interpreter.Token;
-import pl.interpreter.TokenType;
 
 public class LexicalAnalyzer {
 

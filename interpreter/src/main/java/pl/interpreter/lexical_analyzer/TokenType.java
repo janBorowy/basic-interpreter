@@ -1,4 +1,4 @@
-package pl.interpreter;
+package pl.interpreter.lexical_analyzer;
 
 public enum TokenType {
     KW_STRUCT,

@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import pl.interpreter.TokenType;
+import pl.interpreter.lexical_analyzer.TokenType;
 
 public class ProgramParser extends Parser {
 
