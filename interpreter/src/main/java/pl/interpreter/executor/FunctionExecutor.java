@@ -86,23 +86,18 @@ public class FunctionExecutor {
         if (arguments.size() != expectedParameterTypes.size()) {
             throw new FunctionCallException("Expected " + expectedParameterTypes.size() + " arguments, got " + arguments.size());
         }
-        if (argumentTypesDontMatch(expectedParameterTypes, arguments)) {
-            throw new ParameterTypeException("Invalid parameter type");
+        validateArgumentsMatchParameterTypes(arguments, expectedParameterTypes);
+    }
+
+    private void validateArgumentsMatchParameterTypes(List<Value> arguments, List<ValueType> expectedParameterTypes) {
+        IntStream.range(0, arguments.size())
+                .forEach(i -> validateSingleArgumentType(arguments.get(i), expectedParameterTypes.get(i)));
+    }
+
+    private void validateSingleArgumentType(Value argument, ValueType parameterType) {
+        if (!ValueMatcher.valueMatchesType(argument, parameterType, environment)) {
+            throw new ParameterTypeException("Expected %s value, but was given %s".formatted(parameterType, argument));
         }
-    }
-
-    private boolean argumentTypesDontMatch(List<ValueType> expectedParameterTypes, List<Value> arguments) {
-        return !IntStream.range(0, arguments.size())
-                .allMatch(i -> expectedParameterTypes.get(i).isTypeOf(arguments.get(i)) &&
-                        userTypesMatch(expectedParameterTypes.get(i), arguments.get(i)));
-    }
-
-    private boolean userTypesMatch(ValueType type, Value value) {
-        return switch (value) {
-            case StructureValue s -> Objects.equals(s.getStructureId(), type.getUserType()) || TypeUtils.structureIsVariant(s, type.getUserType(), environment);
-            case VariantValue v -> Objects.equals(v.getVariantId(), type.getUserType());
-            default -> true;
-        };
     }
 
     private Map<String, Value> getStructureFields(List<String> fieldNames, List<Value> arguments) {

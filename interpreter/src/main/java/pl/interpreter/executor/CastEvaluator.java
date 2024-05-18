@@ -48,7 +48,9 @@ public class CastEvaluator {
             case FloatValue f -> new StringValue(getFormattedFloatString(f.getValue()));
             case StringValue s -> leftHandSide;
             case BooleanValue b -> new StringValue(b.isTruthy() ? "true" : "false");
-            default -> throw new ValueTypeException("Conversion of structure and variant types is not allowed");
+            case StructureValue s -> new StringValue(s.toString());
+            case VariantValue v -> new StringValue(v.toString());
+            default -> throw new IllegalStateException("Unknown value implementation");
         };
     }
 

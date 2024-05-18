@@ -37,7 +37,7 @@ public class RelationEvaluator {
 
     private Value doValidateRhs(FloatValue lhs) {
         return switch (rightHandSide) {
-            case IntValue i -> doCompare(i, lhs);
+            case IntValue i -> doCompare(lhs, i);
             case FloatValue f -> doCompare(lhs, f);
             default -> throw new IllegalStateException("Unexpected value: " + rightHandSide);
         };
@@ -76,4 +76,14 @@ public class RelationEvaluator {
         };
     }
 
+    private Value doCompare(FloatValue lhs, IntValue rhs) {
+        return switch (operator) {
+            case EQUAL -> new BooleanValue(lhs.getValue() == rhs.getValue());
+            case NOT_EQUAL -> new BooleanValue(lhs.getValue() != rhs.getValue());
+            case GREATER_THAN -> new BooleanValue(lhs.getValue() > rhs.getValue());
+            case GREATER_THAN_OR_EQUAL -> new BooleanValue(lhs.getValue() >= rhs.getValue());
+            case LESS_THAN -> new BooleanValue(lhs.getValue() < rhs.getValue());
+            case LESS_THAN_OR_EQUAL -> new BooleanValue(lhs.getValue() <= rhs.getValue());
+        };
+    }
 }

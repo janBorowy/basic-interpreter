@@ -1,5 +1,6 @@
 package pl.interpreter.executor;
 
+import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -13,6 +14,6 @@ public class FloatValue implements Value {
 
     @Override
     public String toString() {
-        return "Float(%f)".formatted(value);
+        return "float(%s)".formatted(BigDecimal.valueOf(value).stripTrailingZeros().toPlainString());
     }
 }

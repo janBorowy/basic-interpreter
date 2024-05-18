@@ -1,0 +1,32 @@
+struct Point {
+    float x,
+    float y
+}
+
+struct Vector {
+    Point beginning,
+    Point end
+}
+
+struct Plane {
+    Vector xVector,
+    Vector yVector
+}
+
+
+int main() {
+    Point beginning = Point(1.5, 1.25);
+    Point end = Point(3.5, 0.5);
+    Vector force = Vector(beginning, end);
+    println("Force:" + (force as string));
+
+    Point xStart = Point(10.0, 25.0);
+    Point xEnd = Point(0.0, 0.0);
+    Point yStart = Point(150.435, 2423.123);
+    Point yEnd = Point(1234.6243, 7564.132);
+    Vector xVec = Vector(xStart, xEnd);
+    Vector yVec = Vector(yStart, yEnd);
+    Plane plane = Plane(xVec, yVec);
+    println("Plane:" + (plane as string));
+    return 0;
+}

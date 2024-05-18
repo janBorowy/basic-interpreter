@@ -375,13 +375,13 @@ inicjalizacji struktur, zmienne są klonowane - wszystkie ich pola są kopiowane
 jest nowa struktura o identycznych polach.
 ```
 struct Point {
-    float x;
-    float y;
+    float x,
+    float y
 }
 
 struct Vector {
-    Point beginning;
-    Point end;
+    Point beginning,
+    Point end
 }
 
 
@@ -450,15 +450,9 @@ Słowo kluczowe `default` dopasowuje każdy wariant i nie inizcjalizuje zmiennej
 z wariantem. Należy obsłużyć wszystkie możliwe warianty, inaczej interpretacja kończy się błędem.
 
 ## Obsługa błędów
-W przypadku błędu interpretacji, program powinien natychmiastowo zakończyć działanie i wskazać adekwadtny błąd.
+W przypadku błędu interpretacji, program powinien natychmiastowo zakończyć działanie i wskazać adekwatny błąd.
 Struktura wiadomości błędu zawiera komunikat czytelny dla człowieka oraz dokładne miejsce w strumieniu
-danych, w którym błąd wystąpił. Miejsce określane jest przez linię i kolumnę, gdzie następne linie wyznaczane są przez
-znak nowej linii (najczęściej jest to `"\n"`), a kolumna to pozycja znaku w aktualnej linii.
-Jeśli błąd jest obsługiwalny, czyli kod może być dalej interpretowany bez konieczności zakończenia interpretacji
-z błędem, zastosuje on domyślne działanie pozwalające na dalsze wykonanie kodu.
-
-### Obsługiwalne przypadki i działanie
-- Brak `;` na końcu wyrażenia - dodanie `;` przez interpreter i kontynuacja interpretacji
+danych, w którym błąd wystąpił. Miejsce określane jest przez linię i kolumnę.
 
 ### Przykładowe komunikaty błędu:
 - `Error at line 5, col 10: "a.bc" is not convertable.`

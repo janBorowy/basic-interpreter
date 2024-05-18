@@ -13,6 +13,6 @@ public class StringValue implements Value {
 
     @Override
     public String toString() {
-        return "String(%s)".formatted(value);
+        return "string(%s)".formatted(value);
     }
 }

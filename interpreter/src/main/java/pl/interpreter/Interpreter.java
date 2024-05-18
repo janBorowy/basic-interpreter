@@ -10,7 +10,11 @@ import pl.interpreter.executor.FloatValue;
 import pl.interpreter.executor.IntValue;
 import pl.interpreter.executor.StringValue;
 import pl.interpreter.executor.Value;
+import pl.interpreter.executor.exceptions.FunctionCallException;
+import pl.interpreter.executor.exceptions.InterpretationException;
 import pl.interpreter.lexical_analyzer.LexicalAnalyzer;
+import pl.interpreter.parser.FunctionCall;
+import pl.interpreter.parser.Position;
 import pl.interpreter.parser.Program;
 import pl.interpreter.parser.ProgramParser;
 import pl.interpreter.parser.TokenManager;
@@ -26,8 +30,13 @@ public class Interpreter {
     }
 
     public Value run(String mainFunctionId, List<String> arguments) {
-        var environment = new Environment(program, output);
-        return environment.runFunction(mainFunctionId, parseArguments(arguments));
+        try {
+            var environment = new Environment(program, output);
+            return environment.runFunction(mainFunctionId, parseArguments(arguments));
+        } catch(FunctionCallException e) {
+            // TODO: function positon
+            throw new InterpretationException(e.getMessage(), new Position(0,0));
+        }
     }
 
     private List<Value> parseArguments(List<String> arguments) {

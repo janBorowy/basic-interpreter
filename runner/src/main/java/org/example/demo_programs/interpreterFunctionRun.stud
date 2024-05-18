@@ -1,3 +1,18 @@
-int add(int a, int b) {
-    return a + b;
+void main() {
+    Juice grape = Juice(15.0);
+    Juice orange = Juice(11.0);
+    println(howMuchSugarFor(12.5, 5.0, grape) as string);
+    println(howMuchSugarFor(15.5, 5.0, orange) as string);
+}
+
+struct Juice {
+    float sugarForHundredMilliliters
+}
+
+float howMuchSugarFor(float alcoholPercentage, float litres, Juice juice) {
+    float delta = litres * (alcoholPercentage * 17 - juice.sugarForHundredMilliliters * 10);
+    if (delta < 0) {
+        return 0.0;
+    }
+    return delta;
 }

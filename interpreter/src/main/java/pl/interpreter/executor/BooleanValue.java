@@ -13,6 +13,6 @@ public class BooleanValue implements Value {
 
     @Override
     public String toString() {
-        return "Boolean(%b)".formatted(isTruthy);
+        return "boolean(%b)".formatted(isTruthy);
     }
 }

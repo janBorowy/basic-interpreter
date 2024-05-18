@@ -40,5 +40,5 @@ float getCoordinatesSum(Point p) {
 int main() {
     Point point = FloatPoint(5.5, 5.0);
     println(getCoordinatesSum(point) as string);
-    return 0;
+    return fasdf(0);
 }
