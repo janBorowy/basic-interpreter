@@ -30,26 +30,23 @@ Przykładowe programy napisane w języku:
     example of
     multiline comment
 */
-int main() { // main is an entry point of every program
+void main() { // main is an entry point of every program
     int a = 2; // Initialize immutable integer
     int b = 2;
     int sum = a + b; // Binary(two argument) addition function
     string str = (2 + 2) as string; // immutable string initialization
-    print(str); // Built-in standard output function
-    
-    return 0; // main return exit code
+    println(str); // Built-in standard output function
 }
 ```
 
 ### Niemutowalność i mutowalność
 
 ```
-int main () {
+void main () {
     int a = 2;
     var int b = 2;
     // a = 3; ERROR!
     b = 3;
-    return 0;
 }
 ```
 
@@ -60,9 +57,9 @@ int main () {
     int a = 2;
     int b = 3;
     if(a % 2 == 0) {
-        print("a variable's value is even");
+        println("a variable's value is even");
     } else {
-        print("a variable's value is uneven");
+        println("a variable's value is uneven");
     }
     return 0;
 }
@@ -70,13 +67,12 @@ int main () {
 
 ### Pętla while
 ```
-int main() {
-    int i = 0;
+void main() {
+    var int i = 0;
     while(i < 10) {
-        print(i as string);
+        println(i as string);
         i = i + 1;
     }
-    return 0;
 }
 ```
 
@@ -88,11 +84,10 @@ struct Point {
     float y
 }
 
-int main() {
+void main() {
     Point point = Point(1.5, 2.25);
     // point.x = 2; ERROR!
     print(point.x as string); // point.x is read-only
-    return 0;
 }
 ```
 
@@ -106,7 +101,6 @@ struct Book {
     Person author,
     string title
 }
-
 ```
 
 ### Rekord wariantowy
@@ -136,10 +130,17 @@ variant Publication {
 
 void printPublication(Publication pub) {
     match(pub) {
-        Book book -> print("Book with title - " + book.title);
-        Article article -> print("Article with headline - " + article.headline);
-        default -> print("Unknown publication");
+        Book book -> println("Book with title - " + book.title);
+        Article article -> println("Article with headline - " + article.headline);
+        default -> println("Unknown publication");
     }
+}
+
+void main() {
+    Article article = Article("Czy jutro jest niedziela handlowa?", "Gazeta wyborcza", Person("nie wiem", "może"));
+    Book book = Book("Kroniki Jakuba Wędrowycza", "123", Person("Andrzej", "Pilipiuk"));
+    printPublication(article);
+    printPublication(book);
 }
 ```
 
@@ -165,26 +166,32 @@ float getCoordinatesSum(Point p) {
     match(p) {
         IntPoint ip -> {
             int sum = ip.ix + ip.iy;
-            return sum as float; 
+            return sum as float;
         }
         FloatPoint fp -> return fp.fx + fp.fy;
     }
+}
+
+void main() {
+    FloatPoint fp = FloatPoint(1.5, 2.0);
+    IntPoint ip = IntPoint(3, 3);
+
+    println("Float point: " + (getCoordinatesSum(fp) as string));
+    println("Int point: " + (getCoordinatesSum(ip) as string));
 }
 ```
 
 ### Przykrywanie zmiennych
 
 ```
-
-int main() {
+void main() {
     int a = 2;
     if(true) {
         int a = 3;
-        print(a as string); // 3
+        println(a as string); // 3
     }
-    print(a as string); // 2
+    println(a as string); // 2
 }
-
 ```
 
 ### Rekurencja

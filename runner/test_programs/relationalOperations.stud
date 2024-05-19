@@ -1,0 +1,31 @@
+void main() {
+    if (1 == 1) {
+        println("one equals one");
+    } else {
+        println("one does not equal one");
+    }
+
+    if (1 > 0) {
+        println("one is greater than zero");
+    } else {
+        println("one is lower or equal to zero");
+    }
+
+    if (2 < 1) {
+        println("two is lower than one");
+    } else {
+        println("two is greater or equal to one");
+    }
+
+    if (3 >= 3) {
+        println("three is greater or equal to three");
+    } else {
+        println("three is lower than three");
+    }
+
+    if (4 <= 5) {
+        println("four is lower or equal to five");
+    } else {
+        println("five is greater than five");
+    }
+}

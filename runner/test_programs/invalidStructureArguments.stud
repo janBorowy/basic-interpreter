@@ -1,0 +1,7 @@
+struct Circle {
+    float radius
+}
+
+void main() {
+    Circle c = Circle("abc");
+}

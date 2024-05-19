@@ -1,0 +1,6 @@
+void main () {
+    int a = 2;
+    var int b = 2;
+    // a = 3; ERROR!
+    b = 3;
+}

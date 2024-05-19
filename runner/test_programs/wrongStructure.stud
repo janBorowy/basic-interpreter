@@ -1,0 +1,29 @@
+variant Figure {
+    Circle,
+    Square
+}
+
+variant MeasurementUnit {
+    Inches,
+    Meters
+}
+
+struct Circle {
+    float radius
+}
+
+struct Square {
+    float edgeLength
+}
+
+struct Inches {
+    float measure
+}
+
+struct Meters {
+    float measure
+}
+
+int main() {
+    MeasurementUnit m = Circle(0.5);
+}

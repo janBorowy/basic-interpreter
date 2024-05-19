@@ -28,12 +28,9 @@ void printPublication(Publication pub) {
     }
 }
 
-int main() {
-    Person robert = Person("Robert", "Jordan");
-    Person neil = Person("Neil", "Postman");
-    Book book = Book("The Wheel Of Time: Eye Of The World", "123", robert);
-    Article article = Article("Amusing ourselves to death", "New York Times", neil);
-    printPublication(book);
+void main() {
+    Article article = Article("Czy jutro jest niedziela handlowa?", "Gazeta wyborcza", Person("nie wiem", "może"));
+    Book book = Book("Kroniki Jakuba Wędrowycza", "123", Person("Andrzej", "Pilipiuk"));
     printPublication(article);
-    return 0;
+    printPublication(book);
 }

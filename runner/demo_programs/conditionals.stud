@@ -1,0 +1,9 @@
+void main () {
+    int a = 2;
+    int b = 3;
+    if(a % 2 == 0) {
+        println("a variable's value is even");
+    } else {
+        println("a variable's value is uneven");
+    }
+}

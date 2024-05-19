@@ -10,4 +10,9 @@ public class Variable {
     @Setter
     private Value value;
     private final boolean mutable;
+
+    @Override
+    public String toString() {
+        return "Variant(%s, mutable=%b)".formatted(value, mutable);
+    }
 }

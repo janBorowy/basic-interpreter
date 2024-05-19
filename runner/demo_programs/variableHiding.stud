@@ -1,9 +1,8 @@
-int main() {
+void main() {
     int a = 2;
     if(true) {
         int a = 3;
         println(a as string); // 3
     }
     println(a as string); // 2
-    return 0;
 }

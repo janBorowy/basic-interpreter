@@ -257,7 +257,7 @@ public class LexicalAnalyzer {
                 continue;
             }
             if(lastCharacterRead == 0xFFFF || lastCharacterRead == '\n') {
-                throw new LexicalAnalyzerException("Expected '\"'" , cursorCol, cursorRow);
+                throw new LexicalAnalyzerException("Expected '\"'" , cursorRow, cursorCol);
             }
             if (escapeNext && lastCharacterRead == 'n') {
                 lastCharacterRead = '\n';

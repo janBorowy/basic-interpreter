@@ -1,0 +1,5 @@
+struct main {
+    int returnCode
+}
+
+void main() {}

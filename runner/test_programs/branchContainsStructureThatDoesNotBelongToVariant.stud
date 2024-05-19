@@ -1,0 +1,41 @@
+struct Robot {
+    string name
+}
+
+variant Person {
+    Author,
+    Musician
+}
+
+variant Reader {
+    Author
+}
+
+variant Player {
+    Musician
+}
+
+struct Author {
+    string name,
+    string knownFor
+}
+
+struct Musician {
+    string name,
+    string instrument
+}
+
+void printPerson(Person p) {
+    match(p) {
+        Author a -> println(a.name + " is an author and is known for " + a.knownFor);
+        Musician m -> println(m.name + " is a musician and plays " + m.instrument);
+        Robot r -> println(r.name + " is a robot");
+    }
+}
+
+void main() {
+    Author author = Author("Jacek", "historyjka");
+    Musician musician = Musician("Luki", "klarnet");
+    printPerson(author);
+    printPerson(musician);
+}

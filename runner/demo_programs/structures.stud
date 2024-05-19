@@ -3,9 +3,8 @@ struct Point {
     float y
 }
 
-int main() {
+void main() {
     Point point = Point(1.5, 2.25);
     // point.x = 2; ERROR!
     print(point.x as string); // point.x is read-only
-    return 0;
 }

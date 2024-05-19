@@ -13,6 +13,7 @@ import pl.interpreter.executor.built_in_functions.BuiltInFunctionRegistry;
 import pl.interpreter.executor.exceptions.EnvironmentException;
 import pl.interpreter.executor.exceptions.FunctionCallException;
 import pl.interpreter.executor.exceptions.InterpretationException;
+import pl.interpreter.executor.exceptions.ParameterTypeException;
 import pl.interpreter.executor.exceptions.VariantException;
 import pl.interpreter.parser.Definition;
 import pl.interpreter.parser.FunctionDefinition;
@@ -70,7 +71,11 @@ public class Environment {
     }
 
     public Value runFunction(String functionId, List<Value> arguments) {
-        return new FunctionExecutor(this).executeFunction(functionId, arguments);
+        try {
+            return new FunctionExecutor(this).executeFunction(functionId, arguments);
+        } catch (ParameterTypeException e) {
+            throw new InterpretationException(e.getMessage());
+        }
     }
 
     private void loadDefinitions(Program program) {

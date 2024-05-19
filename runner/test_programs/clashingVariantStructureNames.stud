@@ -1,0 +1,13 @@
+struct Rectangle {
+    float a,
+    float b
+}
+
+struct Square {
+    float edgeLength
+}
+
+variant Rectangle {
+    Square,
+    Rectangle
+}

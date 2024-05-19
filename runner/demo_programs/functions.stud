@@ -13,20 +13,6 @@ variant Point {
     FloatPoint
 }
 
-struct Circle {
-    float radius
-}
-
-struct Square {
-    float width,
-    float height
-}
-
-variant Figure {
-    Square,
-    Circle
-}
-
 float getCoordinatesSum(Point p) {
     match(p) {
         IntPoint ip -> {
@@ -37,8 +23,10 @@ float getCoordinatesSum(Point p) {
     }
 }
 
-int main() {
-    Point point = FloatPoint(5.5, 5.0);
-    println(getCoordinatesSum(point) as string);
-    return fasdf(0);
+void main() {
+    FloatPoint fp = FloatPoint(1.5, 2.0);
+    IntPoint ip = IntPoint(3, 3);
+
+    println("Float point: " + (getCoordinatesSum(fp) as string));
+    println("Int point: " + (getCoordinatesSum(ip) as string));
 }

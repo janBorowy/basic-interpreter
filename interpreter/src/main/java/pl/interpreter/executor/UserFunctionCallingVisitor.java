@@ -139,18 +139,21 @@ public class UserFunctionCallingVisitor implements FunctionVisitor {
 
     private void visitMatchBranch(VariantValue value, List<MatchBranch> branches, Position position) {
         branches.stream()
+                .filter(it -> Objects.nonNull(it.getStructureId()))
                 .filter(it -> it.getStructureId().equals(value.getStructureValue().getStructureId()))
                 .findFirst()
-                .ifPresentOrElse(it -> openNewScopeVisitAndInitializeVariable(it.getInstruction(), it.getFieldName(),
-                                new Variable(value.getStructureValue(), false)),
+                .ifPresentOrElse(it -> initializeNewVariableAndVisit(it.getInstruction(), it.getFieldName(),
+                                new Variable(value.getStructureValue(), false), position),
                         () -> visitDefaultBranch(value, branches, position));
     }
 
-    private void openNewScopeVisitAndInitializeVariable(Instruction instruction, String variableId, Variable variableToSet) {
-        environment.getCurrentContext().openNewScope();
-        environment.getCurrentContext().initializeVariableForClosestScope(variableId, variableToSet);
-        visit(instruction);
-        environment.getCurrentContext().closeClosestScope();
+    private void initializeNewVariableAndVisit(Instruction instruction, String variableId, Variable variableToSet, Position position) {
+        try {
+            environment.getCurrentContext().initializeVariableForClosestScope(variableId, variableToSet);
+            visit(instruction);
+        } catch (InitializationException e) {
+            throw new InterpretationException(e.getMessage(), position);
+        }
     }
 
     private void visitDefaultBranch(VariantValue value, List<MatchBranch> branches, Position position) {

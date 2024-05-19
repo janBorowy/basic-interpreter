@@ -1,0 +1,40 @@
+variant Person {
+    Author,
+    Musician
+}
+
+variant Reader {
+    Author
+}
+
+variant Player {
+    Musician
+}
+
+struct Author {
+    string name,
+    string knownFor
+}
+
+struct Musician {
+    string name,
+    string instrument
+}
+
+void printPerson(Person p) {
+    match(p) {
+        Author a -> println(a.name + " is an author and is known for " + a.knownFor);
+        Musician m -> println(m.name + " is a musician and plays " + m.instrument);
+    }
+}
+
+void main() {
+    /*  If author was initialized as Reader author = ..., then printPerson(author) would fail, because
+        it has been explicitly initialized as that variant and you could, if it was a var, do this - author = Robot(..),
+        where Robot is another structure, but obviously not a person. Function printPerson(author) would then fail.
+    */
+    Author author = Author("Jacek", "historyjka");
+    Musician musician = Musician("Luki", "klarnet");
+    printPerson(author);
+    printPerson(musician);
+}

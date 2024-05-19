@@ -14,5 +14,5 @@ Specify program arguments in args as usual.
 ## example
 
 ```
-./gradlew run --args="-f /home/janek/studia/tkom/tkom-24l/runner/src/main/java/org/example/demo_programs/add.stud -m add -p 1,100" 
+./gradlew run --args="-f /home/janek/add.stud -m add -p 1,100" 
 ```

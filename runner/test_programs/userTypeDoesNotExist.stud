@@ -1,0 +1,3 @@
+void main() {
+    Square s = Square(5.0);
+}
