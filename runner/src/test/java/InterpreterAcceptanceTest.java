@@ -158,6 +158,51 @@ class InterpreterAcceptanceTest {
     }
 
     @Test
+    void returnInLoop() {
+        commandLine.execute(getFileParameter("returnInLoop"), "-m=main");
+        assertEquals("""
+                Should be 4: 4
+                Should be 5: 5
+
+                """, out.toString());
+        assertEquals("", err.toString());
+    }
+
+    @Test
+    void returnTest() {
+        commandLine.execute(getFileParameter("return"), "-m=main");
+        assertEquals("""
+                Hello world!
+
+                """, out.toString());
+        assertEquals("", err.toString());
+    }
+
+    @Test
+    void doubleNestedFunctionReturn() {
+        commandLine.execute(getFileParameter("doubleNestedFunctionReturn"), "-m=main");
+        assertEquals("""
+                should print this
+
+                """, out.toString());
+        assertEquals("", err.toString());
+    }
+
+    @Test
+    void divideByZero() {
+        commandLine.execute(getFileParameter("divideByZero"), "-m=main");
+        assertEquals("", out.toString());
+        assertEquals("Semantic error at line 2, col 11: Division by zero is forbidden\n", err.toString());
+    }
+
+    @Test
+    void divideByZeroFloat() {
+        commandLine.execute(getFileParameter("divideByZeroFloat"), "-m=main");
+        assertEquals("", out.toString());
+        assertEquals("Semantic error at line 2, col 12: Division by zero is forbidden\n", err.toString());
+    }
+
+    @Test
     void sumAndIODemo() {
         commandLine.execute(getDemoFileParameter("sumAndIO"), "-m=main");
         assertEquals("4\n\n", out.toString());

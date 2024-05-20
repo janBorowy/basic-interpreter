@@ -1,0 +1,5 @@
+void main() {
+    println("Hello world!");
+    return;
+    println("This should not be printed!");
+}

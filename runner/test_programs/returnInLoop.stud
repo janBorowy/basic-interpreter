@@ -1,0 +1,15 @@
+int getAtMax5(int a) {
+    var int i = 1;
+    while (i < a) {
+        i = i + 1;
+        if (i >= 5) {
+            return 5;
+        }
+    }
+    return i;
+}
+
+void main() {
+    println("Should be 4: " + (getAtMax5(4) as string));
+    println("Should be 5: " + (getAtMax5(10) as string));
+}

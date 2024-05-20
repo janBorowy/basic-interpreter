@@ -1,0 +1,12 @@
+void main() {
+    var int i = 0;
+    while (i < 5) {
+        while(true) {
+           println("should print this");
+           return;
+           println("should not print this");
+        }
+        println("should not print this");
+    }
+    println("should not print this");
+}

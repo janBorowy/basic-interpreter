@@ -272,12 +272,16 @@ public class LexicalAnalyzer {
         return Optional.of(token);
     }
 
-    private boolean isLegalWordCharacter(Character c) {
+    private boolean isLegalWordFirstCharacter(Character c) {
         return c == '_' || Character.isLetter(c);
     }
 
+    private boolean isLegalWordCharacter(Character c) {
+        return c == '_' || Character.isLetterOrDigit(c);
+    }
+
     private Optional<Token> tryToBuildWordToken() {
-        if(!isLegalWordCharacter(lastCharacterRead)) {
+        if(!isLegalWordFirstCharacter(lastCharacterRead)) {
             return Optional.empty();
         }
         var builder = new StringBuilder();

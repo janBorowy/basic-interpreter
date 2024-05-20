@@ -2,12 +2,12 @@ package pl.interpreter.executor;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import lombok.Getter;
 import pl.interpreter.executor.exceptions.AssignmentException;
 import pl.interpreter.executor.exceptions.FunctionCallException;
 import pl.interpreter.executor.exceptions.InitializationException;
 import pl.interpreter.executor.exceptions.InterpretationException;
-import pl.interpreter.executor.exceptions.MatchStatementException;
 import pl.interpreter.executor.exceptions.ParameterTypeException;
 import pl.interpreter.executor.exceptions.ValueTypeException;
 import pl.interpreter.parser.Assignment;
@@ -19,7 +19,6 @@ import pl.interpreter.parser.Initialization;
 import pl.interpreter.parser.Instruction;
 import pl.interpreter.parser.MatchBranch;
 import pl.interpreter.parser.MatchStatement;
-import pl.interpreter.parser.Parameter;
 import pl.interpreter.parser.Position;
 import pl.interpreter.parser.ReturnStatement;
 import pl.interpreter.parser.WhileStatement;
@@ -77,7 +76,9 @@ public class UserFunctionCallingVisitor implements FunctionVisitor {
 
     @Override
     public void visit(ReturnStatement statement) {
-        returnedValue = ExpressionUtils.evaluateExpressionInEnvironment(statement.getExpression(), environment);
+        returnedValue = Optional.ofNullable(statement.getExpression())
+                .map(it -> ExpressionUtils.evaluateExpressionInEnvironment(statement.getExpression(), environment))
+                .orElse(null);
         functionReturned = true;
     }
 
@@ -99,7 +100,7 @@ public class UserFunctionCallingVisitor implements FunctionVisitor {
     public void visit(WhileStatement statement) {
         try {
             var condition = ExpressionUtils.evaluteExpectingBooleanValue(statement.getExpression(), environment);
-            while (condition.isTruthy()) {
+            while (condition.isTruthy() && !functionReturned) {
                 visit(statement.getInstruction());
                 condition = ExpressionUtils.evaluteExpectingBooleanValue(statement.getExpression(), environment);
             }
