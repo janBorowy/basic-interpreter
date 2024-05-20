@@ -13,7 +13,6 @@ import pl.interpreter.executor.Value;
 import pl.interpreter.executor.exceptions.FunctionCallException;
 import pl.interpreter.executor.exceptions.InterpretationException;
 import pl.interpreter.lexical_analyzer.LexicalAnalyzer;
-import pl.interpreter.parser.FunctionCall;
 import pl.interpreter.parser.Position;
 import pl.interpreter.parser.Program;
 import pl.interpreter.parser.ProgramParser;
@@ -34,7 +33,6 @@ public class Interpreter {
             var environment = new Environment(program, output);
             return environment.runFunction(mainFunctionId, parseArguments(arguments));
         } catch(FunctionCallException e) {
-            // TODO: function positon
             throw new InterpretationException(e.getMessage(), new Position(0,0));
         }
     }

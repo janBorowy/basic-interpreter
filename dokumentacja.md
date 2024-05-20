@@ -473,11 +473,26 @@ danych, w którym błąd wystąpił. Miejsce określane jest przez linię i kolu
 flowchart TD
     sourceCode((Kod źródłowy))
     lexicalAnalyzer(Analizator leksykalny)
-    syntaxAnalyzer(Analizator składniowy)
-    executor(Wykonawca)
+    parser(Analizator składniowy)
+    interpreter(Wykonawca)
     errorHandling(Obsługa błędów)
 
-    sourceCode --> lexicalAnalyzer --> syntaxAnalyzer  --> executor
-    errorHandling --> sourceCode & lexicalAnalyzer & syntaxAnalyzer & executor
+    sourceCode --> lexicalAnalyzer --> parser  --> interpreter
+    errorHandling --> sourceCode & lexicalAnalyzer & parser & interpreter
 
 ```
+
+## Opis implementacji
+Projekt został zaimplementowany w dwóch różnych modułach - interpreter i runner. Moduł interpreter jest częścią
+odpowiadająca za interpretacje ciągu znaków. Moduł runner to prosta aplikacja cli pozwalająca na interpretacje pliku
+w terminalu.
+
+Interpreter składa się z 3 pakietów odpowiadających poszczególnym etapom potoku interpretacyjnego - tak jak
+na schemacie wyżej. Klasa Interpreter pozwala na interpretację kodu bez znajomości szczegółów implementacyjnych
+języka.
+
+## Opis testowania
+Każdy etap został odpowiednio przetestowany. Analizator leksykalny zawiera testy jednostkowe sprawdzające typowe,
+nietypowe i graniczne przypadki użycia. Parser zawiera test na każdą alternatywę każdego słowa. Wykonawca
+zawiera testy jednostkowe, które w części testują napisany kod. Większa część kodu jest przetestowana przez
+testy akceptacyjne.
