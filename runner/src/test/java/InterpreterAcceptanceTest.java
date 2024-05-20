@@ -203,6 +203,49 @@ class InterpreterAcceptanceTest {
     }
 
     @Test
+    void printStructure() {
+        commandLine.execute(getFileParameter("printStructure"), "-m=main");
+        assertEquals("""
+                Author(knownFor: string(historyjka), name: string(Jacek))
+                Musician(name: string(Luki), instrument: string(klarnet))
+
+                """, out.toString());
+        assertEquals("", err.toString());
+    }
+
+    @Test
+    void voidReturnInExpression() {
+        commandLine.execute(getFileParameter("voidReturnInExpression"), "-m=main");
+        assertEquals("""
+                Hello World!
+
+                """, out.toString());
+        assertEquals("Semantic error at line 6, col 17: Function returns void, but value is expected\n", err.toString());
+    }
+
+    @Test
+    void structureInitializedWithVarVariable() {
+        commandLine.execute(getFileParameter("structureInitializedWithVarVariable"), "-m=main");
+        assertEquals("""
+                Author(knownFor: string(historyjka), name: string(Jacek))
+                Author(knownFor: string(historyjka), name: string(Jacek))
+
+                """, out.toString());
+        assertEquals("", err.toString());
+    }
+
+    @Test
+    void stringToIntFloatCast() {
+        commandLine.execute(getFileParameter("stringToIntFloatCast"), "-m=main");
+        assertEquals("""
+                6
+                3
+
+                """, out.toString());
+        assertEquals("Semantic error at line 9, col 26: Number format error for input string: \"5.5\"\n", err.toString());
+    }
+
+    @Test
     void sumAndIODemo() {
         commandLine.execute(getDemoFileParameter("sumAndIO"), "-m=main");
         assertEquals("4\n\n", out.toString());

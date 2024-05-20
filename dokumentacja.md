@@ -16,7 +16,7 @@ Język powinien spełniać narzucone wymagania:
 Przyjęte wymagania:
 - Język będzie typowany statycznie.
 - Zmienne domyślnie są niemutowalne, ale mogą być oznaczone jako mutowalne za
-pośrednictwem słowa kluczowego `var`.
+  pośrednictwem słowa kluczowego `var`.
 - Przykrywanie zmiennych w wypadku konfliktu nazw identyfikatorów.
 - Przeciążanie funkcji nie jest możliwe.
 
@@ -322,8 +322,6 @@ tego samego typu. Przy czym:
 | boolean       | `and` `or`                        |
 | string        | `+`                               |
 
-W przypadku struktur operatory są niedozwolone.
-
 ## Funkcje
 Funkcje definiuje się w następujący sposób:
 ``` 
@@ -391,7 +389,6 @@ struct Vector {
     Point end
 }
 
-
 int main() {
     Point beginning = Point(1.5, 1.25);
     Point end = Point(3.5, 0.5);
@@ -417,7 +414,7 @@ Konwersja typów odbywa się przez słowo kluczowe `as`.
 
 - W wypadku błędnej konwersji, zostanie zgłoszony błąd interpretacji i koniec programu, np. konwersja `"abc" as int`.
 - Konwersja liczby zmiennoprzecinkowej na całkowitą powoduje zaokrąglenie liczby w dół do liczby jedności.
-- Konwersja nie jest dozwolona między strukturami.
+- Możliwa jest konwersja struktur do typu string.
 
 ## Rekord wariantowy
 Typ zmiennej, który przechowuje wartość jednego z wariantów - struktur.
@@ -440,6 +437,9 @@ variant Point {
     FloatPoint
 }
 ```
+
+Jedna struktura może należeć do wielu wariantów.
+
 ### Słowo kluczowe match
 Rekord wariantowy nie posiada żadnych pól. Należy uprzednio dopasować typ struktury przy
 pomocy słowa kluczowego `match`:
@@ -447,9 +447,9 @@ pomocy słowa kluczowego `match`:
 ```
 void printPoint(Point p) {
     match(p) {
-        IntPoint intPoint -> print("x: " + ix as string + " y: " + iy as string);
-        FloatPoint floatPoint -> print("x: " + fx as string + " y: " + fy as string);
-        default -> print("Hard to tell");
+        IntPoint intPoint -> println("x: " + ix as string + " y: " + (iy as string));
+        FloatPoint floatPoint -> println("x: " + fx as string + " y: " + (fy as string));
+        default -> println("Hard to tell");
     }
 }
 ```
@@ -476,8 +476,8 @@ flowchart TD
     syntaxAnalyzer(Analizator składniowy)
     executor(Wykonawca)
     errorHandling(Obsługa błędów)
-    
+
     sourceCode --> lexicalAnalyzer --> syntaxAnalyzer  --> executor
     errorHandling --> sourceCode & lexicalAnalyzer & syntaxAnalyzer & executor
-    
+
 ```

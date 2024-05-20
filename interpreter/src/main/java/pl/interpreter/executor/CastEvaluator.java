@@ -30,7 +30,8 @@ public class CastEvaluator {
         return switch (leftHandSide) {
             case IntValue i -> leftHandSide;
             case FloatValue f -> new IntValue((int) f.getValue());
-            default -> throw new ValueTypeException("Conversion to integer is only allowed for integer and float types");
+            case StringValue s -> new IntValue(Integer.parseInt(s.getValue()));
+            default -> throw new ValueTypeException("Conversion to integer is only allowed for integer, float and string types");
         };
     }
 
@@ -38,7 +39,8 @@ public class CastEvaluator {
         return switch (leftHandSide) {
             case IntValue i -> new FloatValue(i.getValue());
             case FloatValue f -> leftHandSide;
-            default -> throw new ValueTypeException("Conversion to integer is only allowed for integer and float types");
+            case StringValue s -> new FloatValue(Float.parseFloat(s.getValue()));
+            default -> throw new ValueTypeException("Conversion to integer is only allowed for integer, float and string types");
         };
     }
 

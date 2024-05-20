@@ -1,0 +1,29 @@
+variant Person {
+    Author,
+    Musician
+}
+
+variant Reader {
+    Author
+}
+
+variant Player {
+    Musician
+}
+
+struct Author {
+    string name,
+    string knownFor
+}
+
+struct Musician {
+    string name,
+    string instrument
+}
+
+void main() {
+    Author author = Author("Jacek", "historyjka");
+    Musician musician = Musician("Luki", "klarnet");
+    println(author as string);
+    println(musician as string);
+}

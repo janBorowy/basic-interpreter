@@ -1,0 +1,10 @@
+int main () {
+    string inputInt = "5";
+    int intSum = 1 + (inputInt as int);
+    println(intSum as string);
+    string inputFloat = "1.5";
+    float floatSum = 1.5 + (inputFloat as float);
+    println(floatSum as string);
+    string errorInput = "5.5";
+    float error = 1.5 + (errorInput as int);
+}

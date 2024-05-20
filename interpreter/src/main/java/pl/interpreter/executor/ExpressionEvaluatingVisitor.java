@@ -2,6 +2,7 @@ package pl.interpreter.executor;
 
 import lombok.Getter;
 import pl.interpreter.executor.exceptions.AccessException;
+import pl.interpreter.executor.exceptions.EnvironmentException;
 import pl.interpreter.executor.exceptions.ExpressionEvaluationException;
 import pl.interpreter.executor.exceptions.FunctionCallException;
 import pl.interpreter.executor.exceptions.InterpretationException;
@@ -91,6 +92,8 @@ public class ExpressionEvaluatingVisitor implements ExpressionVisitor {
             value = new CastEvaluator(value, castType).evaluate();
         } catch (ValueTypeException e) {
             throw new InterpretationException(e.getMessage(), cast.getPosition());
+        } catch (NumberFormatException e) {
+            throw new InterpretationException("Number format error " + e.getMessage().toLowerCase(), cast.getPosition());
         }
     }
 
@@ -140,7 +143,11 @@ public class ExpressionEvaluatingVisitor implements ExpressionVisitor {
 
     @Override
     public void visit(Identifier identifier) {
-        value = environment.getCurrentContext().resolveVariable(identifier.getValue()).getValue();
+        try {
+            value = environment.getCurrentContext().resolveVariable(identifier.getValue()).getValue();
+        } catch (EnvironmentException e) {
+            throw new InterpretationException(e.getMessage(), identifier.getPosition());
+        }
     }
 
     @Override
