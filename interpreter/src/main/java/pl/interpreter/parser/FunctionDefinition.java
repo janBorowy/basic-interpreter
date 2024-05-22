@@ -8,12 +8,12 @@ public class FunctionDefinition extends Statement implements Definition {
 
     private final FunctionReturnType returnType;
     private final String id;
-    private final List<Parameter> parameters;
+    private final List<AstFunctionParameter> parameters;
     private final Block block;
 
     public FunctionDefinition(FunctionReturnType returnType,
                               String id,
-                              List<Parameter> parameters,
+                              List<AstFunctionParameter> parameters,
                               Block block,
                               Position tokenPosition) {
         super(tokenPosition);

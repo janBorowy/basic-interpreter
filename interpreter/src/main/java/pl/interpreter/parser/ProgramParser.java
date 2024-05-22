@@ -54,7 +54,7 @@ public class ProgramParser extends Parser {
         var id = parseMustBeIdentifier();
         mustBe(TokenType.LEFT_PARENTHESES);
         consumeToken();
-        var parameters = parseParameterList();
+        var parameters = parseFunctionParameterList();
         mustBe(TokenType.RIGHT_PARENTHESES);
         consumeToken();
         var block = parseBlock()
@@ -107,7 +107,7 @@ public class ProgramParser extends Parser {
         return Optional.of(new StructureDefinition(id, parameters, position));
     }
 
-    // parameters ::= [ parameterType, identifier { "," parameterType, identifier } ];
+    // parameters ::= [variableType, identifier { "," variableType, identifier } ];
     private List<Parameter> parseParameterList() {
         var position = getTokenPosition();
         List<Parameter> parameters = new ArrayList<>();
@@ -129,6 +129,39 @@ public class ProgramParser extends Parser {
             consumeToken();
             id = parseMustBeIdentifier();
             parameters.add(new Parameter(new ParameterType(parameterTypeEnum.get(), userType), id, position));
+        }
+        return parameters;
+    }
+
+    // functionParameters ::= [ ["var"] variableType, identifier { "," ["var"] variableType, identifier } ];
+    private List<AstFunctionParameter> parseFunctionParameterList() {
+        var position = getTokenPosition();
+        List<AstFunctionParameter> parameters = new ArrayList<>();
+        var isVar = tokenIsOfType(TokenType.KW_VAR);
+        if (isVar) consumeToken();
+        var parameterTypeEnum = VariableType.parse(token());
+        if (parameterTypeEnum.isEmpty()) {
+            if (isVar) {
+                throwParserException("Expected variable type");
+            }
+            return parameters;
+        }
+        var userType = getUserType(parameterTypeEnum.get());
+        consumeToken();
+        var id = parseMustBeIdentifier();
+        parameters.add(new AstFunctionParameter(new ParameterType(parameterTypeEnum.get(), userType), id, isVar, position));
+        while (tokenIsOfType(TokenType.COMMA)) {
+            consumeToken();
+            isVar = tokenIsOfType(TokenType.KW_VAR);
+            if (isVar) consumeToken();
+            parameterTypeEnum = VariableType.parse(token());
+            if (parameterTypeEnum.isEmpty()) {
+                throwParserException("Expected type");
+            }
+            userType = getUserType(parameterTypeEnum.get());
+            consumeToken();
+            id = parseMustBeIdentifier();
+            parameters.add(new AstFunctionParameter(new ParameterType(parameterTypeEnum.get(), userType), id, isVar, position));
         }
         return parameters;
     }

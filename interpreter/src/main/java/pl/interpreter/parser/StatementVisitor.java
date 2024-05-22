@@ -60,5 +60,7 @@ public interface StatementVisitor {
 
     void visit(MatchBranch matchBranch);
 
+    void visit(AstFunctionParameter parameter);
+
     void visit(Parameter parameter);
 }

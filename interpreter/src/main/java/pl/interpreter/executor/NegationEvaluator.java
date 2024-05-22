@@ -3,10 +3,13 @@ package pl.interpreter.executor;
 import lombok.AllArgsConstructor;
 import pl.interpreter.executor.exceptions.ValueTypeException;
 
-@AllArgsConstructor
 public class NegationEvaluator {
 
     private final Value operand;
+
+    public NegationEvaluator(Value operand) {
+        this.operand = ReferenceUtils.getReferencedValue(operand);
+    }
 
     public Value evaluate() {
         return switch (operand) {

@@ -4,7 +4,7 @@ import java.util.List;
 import lombok.experimental.UtilityClass;
 import pl.interpreter.parser.FunctionDefinition;
 import pl.interpreter.parser.FunctionReturnType;
-import pl.interpreter.parser.Parameter;
+import pl.interpreter.parser.AstFunctionParameter;
 import pl.interpreter.parser.ParameterType;
 
 @UtilityClass
@@ -28,8 +28,8 @@ public class UserFunctionDefinitionMapper {
         };
     }
 
-    private List<FunctionParameter> mapParameters(List<Parameter> astParameters) {
-        return astParameters.stream().map((param) -> new FunctionParameter(param.getId(), mapParameterType(param.getType()))).toList();
+    private List<FunctionParameter> mapParameters(List<AstFunctionParameter> astParameters) {
+        return astParameters.stream().map(param -> new FunctionParameter(param.getId(), mapParameterType(param.getType()), param.isVar())).toList();
     }
 
     private ValueType mapParameterType(ParameterType parameterType) {

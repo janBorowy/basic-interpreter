@@ -4,11 +4,15 @@ import lombok.AllArgsConstructor;
 import pl.interpreter.executor.exceptions.AccessException;
 import pl.interpreter.executor.exceptions.ValueTypeException;
 
-@AllArgsConstructor
 public class DotAccessEvaluator {
 
     private Value leftHandSide;
     private String fieldName;
+
+    public DotAccessEvaluator(Value leftHandSide, String fieldName) {
+        this.leftHandSide = ReferenceUtils.getReferencedValue(leftHandSide);
+        this.fieldName = fieldName;
+    }
 
     public Value evaluate() {
         return switch (leftHandSide) {

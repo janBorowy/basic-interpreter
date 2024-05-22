@@ -1,3 +1,3 @@
 package pl.interpreter.executor;
 
-public record FunctionParameter(String id, ValueType valueType) {}
+public record FunctionParameter(String id, ValueType valueType, boolean isVar) {}

@@ -1,0 +1,37 @@
+variant Person {
+    Author,
+    Musician
+}
+
+struct Author {
+    string name,
+    string knownFor
+}
+
+struct Musician {
+    string name,
+    string instrument
+}
+
+void makeClarinetPlayer(var Person p) {
+    match(p) {
+        Author a -> p = Musician(a.name, "klarnet");
+        Musician m -> p = Musician(m.name, "klarnet");
+    }
+}
+
+void printPerson(Person p) {
+    match(p) {
+        Author a -> println(a.name + " is an author and is known for " + a.knownFor);
+        Musician m -> println(m.name + " is a musician and plays " + m.instrument);
+    }
+}
+
+void main() {
+    var Person author = Author("Jacek", "historyjka");
+    var Person musician = Musician("Luki", "fortepian");
+    makeClarinetPlayer(author);
+    makeClarinetPlayer(musician);
+    printPerson(author);
+    printPerson(musician);
+}

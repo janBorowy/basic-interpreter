@@ -1,9 +1,7 @@
 package pl.interpreter.executor;
 
-import lombok.AllArgsConstructor;
 import pl.interpreter.executor.exceptions.ValueTypeException;
 
-@AllArgsConstructor
 public class ConjunctionOrAlternativeEvaluator {
 
     enum Operator {
@@ -14,6 +12,12 @@ public class ConjunctionOrAlternativeEvaluator {
     private final Value leftHandSide;
     private final Value rightHandSide;
     private final Operator operator;
+
+    public ConjunctionOrAlternativeEvaluator(Value leftHandSide, Value rightHandSide, Operator operator) {
+        this.leftHandSide = ReferenceUtils.getReferencedValue(leftHandSide);
+        this.rightHandSide = ReferenceUtils.getReferencedValue(rightHandSide);
+        this.operator = operator;
+    }
 
     public Value evaluate() {
         return switch (leftHandSide) {

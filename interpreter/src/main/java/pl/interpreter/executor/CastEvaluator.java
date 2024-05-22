@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import pl.interpreter.executor.exceptions.ValueTypeException;
 
-@AllArgsConstructor
 public class CastEvaluator {
 
     enum LegalCastType {
@@ -16,6 +15,11 @@ public class CastEvaluator {
 
     private final Value leftHandSide;
     private final LegalCastType toType;
+
+    public CastEvaluator(Value leftHandSide, LegalCastType toType) {
+        this.leftHandSide = ReferenceUtils.getReferencedValue(leftHandSide);
+        this.toType = toType;
+    }
 
     public Value evaluate() {
         return switch (toType) {

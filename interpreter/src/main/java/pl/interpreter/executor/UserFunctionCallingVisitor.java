@@ -8,7 +8,6 @@ import pl.interpreter.executor.exceptions.AssignmentException;
 import pl.interpreter.executor.exceptions.FunctionCallException;
 import pl.interpreter.executor.exceptions.InitializationException;
 import pl.interpreter.executor.exceptions.InterpretationException;
-import pl.interpreter.executor.exceptions.ParameterTypeException;
 import pl.interpreter.executor.exceptions.ValueTypeException;
 import pl.interpreter.parser.Assignment;
 import pl.interpreter.parser.Block;
@@ -48,7 +47,7 @@ public class UserFunctionCallingVisitor implements FunctionVisitor {
         try {
             environment.runFunction(functionCall.getFunctionId(),
                     ExpressionUtils.evaluateExpressionListInEnvironment(functionCall.getArguments(), environment));
-        } catch(FunctionCallException | ParameterTypeException e) {
+        } catch(FunctionCallException e) {
             throw new InterpretationException(e.getMessage(), functionCall.getPosition());
         }
     }
@@ -112,11 +111,10 @@ public class UserFunctionCallingVisitor implements FunctionVisitor {
     @Override
     public void visit(MatchStatement statement) {
         var value = ExpressionUtils.evaluateExpressionInEnvironment(statement.getExpression(), environment);
-        if (!(value instanceof VariantValue variant)) {
+        if (!(ReferenceUtils.getReferencedValue(value) instanceof VariantValue)) {
             throw new InterpretationException("Expected variant type, but got " + TypeUtils.getTypeOf(value), statement.getPosition());
         }
-
-        visitMatchBranch(variant, statement.getBranches(), statement.getPosition());
+        visitMatchBranch(value, statement.getBranches(), statement.getPosition());
     }
 
     @Override
@@ -138,14 +136,18 @@ public class UserFunctionCallingVisitor implements FunctionVisitor {
         }
     }
 
-    private void visitMatchBranch(VariantValue value, List<MatchBranch> branches, Position position) {
+    private void visitMatchBranch(Value value, List<MatchBranch> branches, Position position) {
         branches.stream()
                 .filter(it -> Objects.nonNull(it.getStructureId()))
-                .filter(it -> it.getStructureId().equals(value.getStructureValue().getStructureId()))
+                .filter(it -> it.getStructureId().equals(getReferencedStructureValue(value).getStructureId()))
                 .findFirst()
                 .ifPresentOrElse(it -> initializeNewVariableAndVisit(it.getInstruction(), it.getFieldName(),
-                                new Variable(value.getStructureValue(), false), position),
-                        () -> visitDefaultBranch(value, branches, position));
+                                new Variable(getReferencedStructureValue(value), false), position),
+                        () -> visitDefaultBranch((VariantValue) ReferenceUtils.getReferencedValue(value), branches, position));
+    }
+
+    private StructureValue getReferencedStructureValue(Value value) {
+        return (((VariantValue) ReferenceUtils.getReferencedValue(value)).getStructureValue());
     }
 
     private void initializeNewVariableAndVisit(Instruction instruction, String variableId, Variable variableToSet, Position position) {

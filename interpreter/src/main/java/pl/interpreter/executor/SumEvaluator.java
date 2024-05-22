@@ -1,10 +1,8 @@
 package pl.interpreter.executor;
 
-import lombok.AllArgsConstructor;
 import pl.interpreter.executor.exceptions.ExpressionEvaluationException;
 import pl.interpreter.executor.exceptions.ValueTypeException;
 
-@AllArgsConstructor
 public class SumEvaluator {
 
     private final static String ONLY_INT_FLOAT_ALLOWED_MSG = "Only int and float sum operations are allowed";
@@ -16,6 +14,12 @@ public class SumEvaluator {
     private final Value leftHandSide;
     private final Value rightHandSide;
     private Operator operator;
+
+    public SumEvaluator(Value leftHandSide, Value rightHandSide, Operator operator) {
+        this.leftHandSide = ReferenceUtils.getReferencedValue(leftHandSide);
+        this.rightHandSide = ReferenceUtils.getReferencedValue(rightHandSide);
+        this.operator = operator;
+    }
 
     public Value evaluate() {
         validate();

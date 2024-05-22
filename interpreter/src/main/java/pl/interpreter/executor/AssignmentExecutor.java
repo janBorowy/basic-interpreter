@@ -1,25 +1,52 @@
 package pl.interpreter.executor;
 
-import lombok.RequiredArgsConstructor;
+import java.sql.Ref;
 import pl.interpreter.executor.exceptions.AssignmentException;
 
-
-@RequiredArgsConstructor
 public class AssignmentExecutor {
     private final String variableId;
     private final Value valueToAssign;
     private final Environment environment;
     private ValueType expectedType;
 
+    public AssignmentExecutor(String variableId, Value valueToAssign, Environment environment) {
+        this.variableId = variableId;
+        this.valueToAssign = ReferenceUtils.getReferencedValue(valueToAssign);
+        this.environment = environment;
+    }
+
     public void assign() {
         var variable = environment.getCurrentContext().resolveVariable(variableId);
-        expectedType = TypeUtils.getTypeOf(variable.getValue());
+        var variableValue = variable.getValue();
+        expectedType = TypeUtils.getTypeOf(variableValue);
         validate(variable);
+        if (variableValue instanceof Reference ref) {
+            assignForReference(ref, valueToAssign);
+            return;
+        }
         if (TypeUtils.isVariant(expectedType, environment)) {
             assignForVariant(variable);
             return;
         }
         variable.setValue(valueToAssign);
+    }
+
+    private void assignForReference(Reference reference, Value valueToAssign) {
+        switch (reference.getReferencedValue()) {
+            case IntValue i -> i.setValue(((IntValue)valueToAssign).getValue());
+            case FloatValue f -> f.setValue(((FloatValue)valueToAssign).getValue());
+            case StringValue s -> s.setValue(((StringValue)valueToAssign).getValue());
+            case BooleanValue b -> b.setTruthy(((BooleanValue)valueToAssign).isTruthy());
+            case StructureValue s -> s.setFields(((StructureValue) valueToAssign).getFields());
+            case VariantValue v -> {
+                if (valueToAssign instanceof VariantValue var) {
+                    v.setStructureValue((var.getStructureValue()));
+                } else {
+                    v.setStructureValue((StructureValue) valueToAssign);
+                }
+            }
+            default -> throw new IllegalStateException("Unimplemented value definition: " + valueToAssign);
+        }
     }
 
     private void validate(Variable variable) {
@@ -35,7 +62,7 @@ public class AssignmentExecutor {
 
     private void validateIsMutable(Variable variable) {
         if (!variable.isMutable()) {
-            throw new AssignmentException("Variable(%s) is not mutable".formatted(variable));
+            throw new AssignmentException("%s is not mutable".formatted(variable));
         }
     }
 

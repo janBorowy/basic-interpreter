@@ -13,6 +13,6 @@ public class Variable {
 
     @Override
     public String toString() {
-        return "Variant(%s, mutable=%b)".formatted(value, mutable);
+        return "Variable(%s, mutable=%b)".formatted(value, mutable);
     }
 }

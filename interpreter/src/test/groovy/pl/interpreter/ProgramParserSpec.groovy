@@ -151,7 +151,7 @@ c
 """
             treeStr("float square(float a) { return a * a; }") == """Program <row: 1, col: 1> 
 |-FunctionDefinition <row: 1, col: 1> id=square, return_type=float
-  |-Parameter id=a, type=float
+  |-Parameter id=a, type=float, isVar=false
   |-Block <row: 1, col: 23> 
     |-ReturnStatement <row: 1, col: 25> 
       |-Multiplication <row: 1, col: 32> operator="*"
@@ -160,8 +160,8 @@ c
 """
             treeStr("string sum(int a, bool b) { return a + b as string; }") == """Program <row: 1, col: 1> 
 |-FunctionDefinition <row: 1, col: 1> id=sum, return_type=string
-  |-Parameter id=a, type=int
-  |-Parameter id=b, type=boolean
+  |-Parameter id=a, type=int, isVar=false
+  |-Parameter id=b, type=boolean, isVar=false
   |-Block <row: 1, col: 27> 
     |-ReturnStatement <row: 1, col: 29> 
       |-Cast <row: 1, col: 36> type=string
@@ -294,7 +294,7 @@ string getDateString(MetaData meta) {
 }
 """) == """Program <row: 1, col: 1> 
 |-FunctionDefinition <row: 2, col: 1> id=getDateString, return_type=string
-  |-Parameter id=meta, type=user_type, userType=MetaData
+  |-Parameter id=meta, type=user_type, userType=MetaData, isVar=false
   |-Block <row: 2, col: 37> 
     |-Initialization <row: 3, col: 5> id=dateStr, var=true, type=string
       |-StringLiteral <row: 3, col: 26> value=
@@ -325,7 +325,7 @@ string getDateString(MetaData meta) {
 }
 """) == """Program <row: 1, col: 1> 
 |-FunctionDefinition <row: 2, col: 1> id=getDateString, return_type=string
-  |-Parameter id=meta, type=user_type, userType=MetaData
+  |-Parameter id=meta, type=user_type, userType=MetaData, isVar=false
   |-Block <row: 2, col: 37> 
     |-Initialization <row: 3, col: 5> id=dateStr, var=true, type=string
       |-StringLiteral <row: 3, col: 26> value=
@@ -558,7 +558,7 @@ void printPublication(Publication pub) {
   |-Type id=Book
   |-Type id=Article
 |-FunctionDefinition <row: 23, col: 1> id=printPublication, return_type=void
-  |-Parameter id=pub, type=user_type, userType=Publication
+  |-Parameter id=pub, type=user_type, userType=Publication, isVar=false
   |-Block <row: 23, col: 40> 
     |-MatchStatement <row: 24, col: 5> 
       |-Identifier <row: 24, col: 11> id=pub
@@ -614,7 +614,7 @@ float getCoordinatesSum(Point p) {
   |-Type id=IntPoint
   |-Type id=FloatPoint
 |-FunctionDefinition <row: 16, col: 1> id=getCoordinatesSum, return_type=float
-  |-Parameter id=p, type=user_type, userType=Point
+  |-Parameter id=p, type=user_type, userType=Point, isVar=false
   |-Block <row: 16, col: 34> 
     |-MatchStatement <row: 17, col: 5> 
       |-Identifier <row: 17, col: 11> id=p
@@ -646,7 +646,7 @@ float getCoordinatesSum(Point p) {
 }
 """) == """Program <row: 1, col: 1> 
 |-FunctionDefinition <row: 1, col: 1> id=getNthFibonacciNumber, return_type=int
-  |-Parameter id=n, type=int
+  |-Parameter id=n, type=int, isVar=false
   |-Block <row: 1, col: 34> 
     |-IfStatement <row: 2, col: 5> 
       |-Alternative <row: 2, col: 8> 
@@ -669,6 +669,59 @@ float getCoordinatesSum(Point p) {
           |-Sum <row: 5, col: 65> operator="-"
             |-Identifier <row: 5, col: 65> id=n
             |-IntLiteral <row: 5, col: 69> value=2
+"""
+
+        treeStr("""
+void multiplyByFour(var int a, int b, var float c) {
+  a = a * 4;
+  // b = b * 4; ERRROR!
+  c = c * 4;
+}
+
+void main() {
+  var int a = 5;
+  int b = 10;
+  var float c = 15.0;
+  multiplyByFour(a, b, c);
+  println(a as string); // 20
+  println(b as string); // 10
+  println(c as string); // 60
+}
+""") == """Program <row: 1, col: 1> 
+|-FunctionDefinition <row: 8, col: 1> id=main, return_type=void
+  |-Block <row: 8, col: 13> 
+    |-Initialization <row: 9, col: 3> id=a, var=true, type=int
+      |-IntLiteral <row: 9, col: 15> value=5
+    |-Initialization <row: 10, col: 3> id=b, var=false, type=int
+      |-IntLiteral <row: 10, col: 11> value=10
+    |-Initialization <row: 11, col: 3> id=c, var=true, type=float
+      |-FloatLiteral <row: 11, col: 17> value=15.0
+    |-FunctionCall <row: 12, col: 17> function_id=multiplyByFour
+      |-Identifier <row: 12, col: 18> id=a
+      |-Identifier <row: 12, col: 21> id=b
+      |-Identifier <row: 12, col: 24> id=c
+    |-FunctionCall <row: 13, col: 10> function_id=println
+      |-Cast <row: 13, col: 11> type=string
+        |-Identifier <row: 13, col: 11> id=a
+    |-FunctionCall <row: 14, col: 10> function_id=println
+      |-Cast <row: 14, col: 11> type=string
+        |-Identifier <row: 14, col: 11> id=b
+    |-FunctionCall <row: 15, col: 10> function_id=println
+      |-Cast <row: 15, col: 11> type=string
+        |-Identifier <row: 15, col: 11> id=c
+|-FunctionDefinition <row: 2, col: 1> id=multiplyByFour, return_type=void
+  |-Parameter id=a, type=int, isVar=true
+  |-Parameter id=b, type=int, isVar=false
+  |-Parameter id=c, type=float, isVar=true
+  |-Block <row: 2, col: 52> 
+    |-Assignment <row: 3, col: 5> id=a
+      |-Multiplication <row: 3, col: 7> operator="*"
+        |-Identifier <row: 3, col: 7> id=a
+        |-IntLiteral <row: 3, col: 11> value=4
+    |-Assignment <row: 5, col: 5> id=c
+      |-Multiplication <row: 5, col: 7> operator="*"
+        |-Identifier <row: 5, col: 7> id=c
+        |-IntLiteral <row: 5, col: 11> value=4
 """
     }
 

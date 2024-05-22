@@ -3,7 +3,6 @@ package pl.interpreter.executor;
 import lombok.AllArgsConstructor;
 import pl.interpreter.executor.exceptions.InitializationException;
 
-@AllArgsConstructor
 public class InitializationExecutor {
 
     private final String variableId;
@@ -11,6 +10,14 @@ public class InitializationExecutor {
     private final Value valueToAssign;
     private final boolean isVar;
     private final Environment environment;
+
+    public InitializationExecutor(String variableId, ValueType type, Value valueToAssign, boolean isVar, Environment environment) {
+        this.variableId = variableId;
+        this.type = type;
+        this.valueToAssign = ReferenceUtils.getReferencedValue(valueToAssign);
+        this.isVar = isVar;
+        this.environment = environment;
+    }
 
     public void execute() {
         validateType();

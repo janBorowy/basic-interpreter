@@ -6,6 +6,7 @@ import pl.interpreter.executor.exceptions.ExpressionEvaluationException;
 import pl.interpreter.executor.exceptions.InterpretationException;
 import pl.interpreter.executor.exceptions.ValueTypeException;
 import pl.interpreter.parser.Expression;
+import pl.interpreter.parser.Identifier;
 
 @UtilityClass
 public class ExpressionUtils {
@@ -25,8 +26,16 @@ public class ExpressionUtils {
     }
 
     public Value evaluateExpressionInEnvironment(Expression expression, Environment environment) {
+        if (returnsReference(expression)) {
+            var variable = environment.getCurrentContext().resolveVariable(((Identifier)expression).getValue());
+            return new Reference(variable.getValue(), variable.isMutable());
+        }
         var visitor = new ExpressionEvaluatingVisitor(environment);
         visitor.visit(expression);
         return visitor.getValue();
+    }
+
+    private boolean returnsReference(Expression expression) {
+        return expression instanceof Identifier;
     }
 }

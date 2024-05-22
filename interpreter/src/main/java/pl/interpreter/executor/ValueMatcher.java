@@ -12,17 +12,18 @@ public class ValueMatcher {
             case BooleanValue b -> type.getType() == ValueType.Type.BOOLEAN;
             case StructureValue s -> structureValueMatchesType(s, type, environment);
             case VariantValue v -> type.getType() == ValueType.Type.USER_TYPE && v.getVariantId().equals(type.getUserType());
+            case Reference r -> valueMatchesType(r.getReferencedValue(), type, environment);
             default -> throw new IllegalStateException("Unexpected value: " + value);
         };
     }
 
     private boolean structureValueMatchesType(StructureValue value, ValueType type, Environment environment) {
         var variant = environment.getVariant(type.getUserType());
-        return variant.map(variant1 -> structureValueMatchesVariantType(value, variant1))
+        return variant.map(v -> structureValueIsOfVariant(value, v))
                 .orElseGet(() -> type.getType() == ValueType.Type.USER_TYPE && value.getStructureId().equals(type.getUserType()));
     }
 
-    public boolean structureValueMatchesVariantType(StructureValue value, Variant variant) {
+    public boolean structureValueIsOfVariant(StructureValue value, Variant variant) {
         return variant.getStructures()
                 .contains(value.getStructureId());
     }

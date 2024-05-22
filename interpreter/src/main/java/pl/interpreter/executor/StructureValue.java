@@ -1,16 +1,25 @@
 package pl.interpreter.executor;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 
-@AllArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 @Getter
-public class StructureValue implements Value {
+@Setter
+public class StructureValue extends Value {
+
     private final String structureId;
-    private final Map<String, Value> fields;
+    private Map<String, Value> fields;
+
+    public StructureValue(String structureId, Map<String, Value> fields) {
+        this.structureId = structureId;
+        this.fields = fields;
+    }
 
     public Optional<Value> getField(String id) {
         return Optional.ofNullable(fields.get(id));
@@ -32,4 +41,8 @@ public class StructureValue implements Value {
         return field.getKey() + ": " + field.getValue();
     }
 
+    @Override
+    public Value clone() {
+        return new StructureValue(structureId, new HashMap<>(fields));
+    }
 }

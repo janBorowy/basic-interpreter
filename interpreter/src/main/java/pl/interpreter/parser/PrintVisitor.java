@@ -282,8 +282,13 @@ public class PrintVisitor implements StatementVisitor {
     }
 
     @Override
+    public void visit(AstFunctionParameter parameter) {
+        printParameter(parameter);
+    }
+
+    @Override
     public void visit(Parameter parameter) {
-        printParameter(parameter.getId(), parameter.getType());
+        printParameter(parameter);
     }
 
     @Override
@@ -345,16 +350,32 @@ public class PrintVisitor implements StatementVisitor {
                 '\n');
     }
 
-    private void printParameter(String id, ParameterType parameter) {
+    private void printParameter(AstFunctionParameter parameter) {
         var userTypeStr = "";
-        if (Objects.nonNull(parameter.userType())) {
-            userTypeStr = ", userType=" + parameter.userType();
+        if (Objects.nonNull(parameter.getType().userType())) {
+            userTypeStr = ", userType=" + parameter.getType().userType();
         }
         write(getPrefix() +
                 "Parameter" +
                 ' ' +
-                "id=" + id +
-                ", type=" + parameter.variableType().toString() +
+                "id=" + parameter.getId() +
+                ", type=" + parameter.getType().variableType().toString() +
+                userTypeStr +
+                ", isVar=" +
+                parameter.isVar() +
+                '\n');
+    }
+
+    private void printParameter(Parameter parameter) {
+        var userTypeStr = "";
+        if (Objects.nonNull(parameter.getType().userType())) {
+            userTypeStr = ", userType=" + parameter.getType().userType();
+        }
+        write(getPrefix() +
+                "Parameter" +
+                ' ' +
+                "id=" + parameter.getId() +
+                ", type=" + parameter.getType().variableType().toString() +
                 userTypeStr +
                 '\n');
     }

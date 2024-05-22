@@ -3,7 +3,6 @@ package pl.interpreter.executor;
 import lombok.AllArgsConstructor;
 import pl.interpreter.executor.exceptions.ExpressionEvaluationException;
 
-@AllArgsConstructor
 public class RelationEvaluator {
 
     public enum Operator {
@@ -13,6 +12,12 @@ public class RelationEvaluator {
         GREATER_THAN_OR_EQUAL,
         LESS_THAN,
         LESS_THAN_OR_EQUAL
+    }
+
+    public RelationEvaluator(Value leftHandSide, Value rightHandSide, Operator operator) {
+        this.leftHandSide = ReferenceUtils.getReferencedValue(leftHandSide);
+        this.rightHandSide = ReferenceUtils.getReferencedValue(rightHandSide);
+        this.operator = operator;
     }
 
     private final Value leftHandSide;

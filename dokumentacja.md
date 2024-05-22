@@ -204,6 +204,25 @@ int getNthFibonacciNumber(int n) {
 }
 ```
 
+### Przekazywanie argumentu przez referencję
+```
+void multiplyByFour(var int a, int b, var float c) {
+  a = a * 4;
+  // b = b * 4; ERRROR!
+  c = c * 4;
+}
+
+void main() {
+  var int a = 5;
+  int b = 10;
+  var float c = 15.0;
+  multiplyByFour(a, b, c);
+  println(a as string); // 20
+  println(b as string); // 10
+  println(c as string); // 60
+}
+```
+
 ## Gramatyka języka
 
 ```
@@ -268,7 +287,8 @@ arguments                ::= "(", [ expression {"," expression } ], ")";
 functionReturnType       ::= "void"
                            | primitiveType
                            | identifier;
-parameters               ::= [ variableType, identifier { "," variableType, identifier } ];
+parameters               ::= [variableType, identifier { "," variableType, identifier } ];
+functionParameters       ::= [ ["var"] variableType, identifier { "," ["var"] variableType, identifier } ];
 variableType             ::= primitiveType
                            | identifier;
 primitiveType            ::= "int"

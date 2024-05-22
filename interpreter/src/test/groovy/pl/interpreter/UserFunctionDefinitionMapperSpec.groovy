@@ -9,7 +9,7 @@ import pl.interpreter.parser.FunctionCall
 import pl.interpreter.parser.FunctionDefinition
 import pl.interpreter.parser.FunctionReturnType
 import pl.interpreter.parser.FunctionReturnTypeEnum
-import pl.interpreter.parser.Parameter
+import pl.interpreter.parser.AstFunctionParameter
 import pl.interpreter.parser.ParameterType
 import pl.interpreter.parser.StringLiteral
 import pl.interpreter.parser.VariableType
@@ -31,7 +31,7 @@ class UserFunctionDefinitionMapperSpec extends Specification {
         var definition = new FunctionDefinition(
                 new FunctionReturnType(FunctionReturnTypeEnum.INT, null),
                 "main",
-                List.of(new Parameter(new ParameterType(VariableType.INT, null), "argc", null)),
+                List.of(new AstFunctionParameter(new ParameterType(VariableType.INT, null), "argc", false, null)),
                 block,
                 null
         )
@@ -40,7 +40,7 @@ class UserFunctionDefinitionMapperSpec extends Specification {
         expect:
         function as UserFunction
         function.getReturnType() == new ValueType(ValueType.Type.INT)
-        function.getParameters().get(0) == new FunctionParameter("argc", new ValueType(ValueType.Type.INT))
+        function.getParameters()[0] == new FunctionParameter("argc", new ValueType(ValueType.Type.INT), false)
         function.getBlock() == block
     }
 }

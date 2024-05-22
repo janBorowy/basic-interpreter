@@ -154,7 +154,7 @@ class InterpreterAcceptanceTest {
     void invalidStructureArguments() {
         commandLine.execute(getFileParameter("invalidStructureArguments"), "-m=main");
         assertEquals("", out.toString());
-        assertEquals("Semantic error at line 0, col 0: Expected float value, but was given string(abc)\n", err.toString());
+        assertEquals("Semantic error at line 6, col 16: Expected float value, but was given string(abc)\n", err.toString());
     }
 
     @Test
@@ -224,17 +224,6 @@ class InterpreterAcceptanceTest {
     }
 
     @Test
-    void structureInitializedWithVarVariable() {
-        commandLine.execute(getFileParameter("structureInitializedWithVarVariable"), "-m=main");
-        assertEquals("""
-                Author(knownFor: string(historyjka), name: string(Jacek))
-                Author(knownFor: string(historyjka), name: string(Jacek))
-
-                """, out.toString());
-        assertEquals("", err.toString());
-    }
-
-    @Test
     void stringToIntFloatCast() {
         commandLine.execute(getFileParameter("stringToIntFloatCast"), "-m=main");
         assertEquals("""
@@ -248,7 +237,10 @@ class InterpreterAcceptanceTest {
     @Test
     void sumAndIODemo() {
         commandLine.execute(getDemoFileParameter("sumAndIO"), "-m=main");
-        assertEquals("4\n\n", out.toString());
+        assertEquals("""
+                4
+
+                """, out.toString());
         assertEquals("", err.toString());
     }
 
@@ -333,5 +325,42 @@ class InterpreterAcceptanceTest {
         commandLine.execute(getDemoFileParameter("recursion"), "-m=getNthFibonacciNumber", "-p=6");
         assertEquals("Program returned: integer(8)\n", out.toString());
         assertEquals("", err.toString());
+    }
+
+    @Test
+    void passByReference() {
+        commandLine.execute(getDemoFileParameter("passByReference"), "-m=main");
+        assertEquals("""
+                20
+                10
+                60
+
+                """, out.toString());
+        assertEquals("", err.toString());
+    }
+
+    @Test
+    void passByReferenceError() {
+        commandLine.execute(getFileParameter("passByReferenceError"), "-m=main");
+        assertEquals("", out.toString());
+        assertEquals("Semantic error at line 3, col 5: Variable(reference(integer(10)), mutable=false) is not mutable\n", err.toString());
+    }
+
+    @Test
+    void passStructureByReference() {
+        commandLine.execute(getFileParameter("passStructureByReference"), "-m=main");
+        assertEquals("""
+                Jacek is a musician and plays klarnet
+                Luki is a musician and plays klarnet
+
+                """, out.toString());
+        assertEquals("", err.toString());
+    }
+
+    @Test
+    void passStructToVarVariant() {
+        commandLine.execute(getFileParameter("passStructToVarVariant"), "-m=main");
+        assertEquals("", out.toString());
+        assertEquals("Semantic error at line 34, col 23: Expected Person, but got reference(Author(knownFor: string(historyjka), name: string(Jacek)))\n", err.toString());
     }
 }

@@ -14,6 +14,7 @@ public class TypeUtils {
             case BooleanValue b -> new ValueType(ValueType.Type.BOOLEAN);
             case StructureValue sv -> new ValueType(ValueType.Type.USER_TYPE, sv.getStructureId());
             case VariantValue vv -> new ValueType(ValueType.Type.USER_TYPE, vv.getVariantId());
+            case Reference r -> getTypeOf(r.getReferencedValue());
             case null, default -> null;
         };
     }

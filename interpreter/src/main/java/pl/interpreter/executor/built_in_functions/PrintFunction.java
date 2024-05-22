@@ -3,6 +3,7 @@ package pl.interpreter.executor.built_in_functions;
 import java.io.IOException;
 import java.util.List;
 import pl.interpreter.executor.Environment;
+import pl.interpreter.executor.ReferenceUtils;
 import pl.interpreter.executor.StringValue;
 import pl.interpreter.executor.Value;
 import pl.interpreter.executor.ValueType;
@@ -15,7 +16,8 @@ public class PrintFunction extends BuiltInFunction {
 
     @Override
     public Value execute(List<Value> arguments) throws IOException {
-        switch (arguments.getFirst()) {
+        var value = ReferenceUtils.getReferencedValue(arguments.getFirst());
+        switch (value) {
             case StringValue s -> environment.getStandardOutput().write(s.getValue());
             default -> throw new IllegalStateException("Argument should have been validated");
         }

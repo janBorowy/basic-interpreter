@@ -9,7 +9,6 @@ import java.util.stream.IntStream;
 import lombok.AllArgsConstructor;
 import pl.interpreter.executor.built_in_functions.BuiltInFunction;
 import pl.interpreter.executor.exceptions.FunctionCallException;
-import pl.interpreter.executor.exceptions.ParameterTypeException;
 import pl.interpreter.executor.exceptions.StandardOutputException;
 
 @AllArgsConstructor
@@ -43,7 +42,7 @@ public class FunctionExecutor {
         if (Objects.nonNull(returnType) && Objects.isNull(typeReturned)) {
             throw new FunctionCallException("Function did not return, but was expected to return " + returnType);
         }
-        if (Objects.isNull(returnType) && Objects.isNull(typeReturned)) {
+        if (Objects.isNull(returnType)) {
             return;
         }
         if (returnType.getType() == ValueType.Type.USER_TYPE && typeReturned.getType() == ValueType.Type.USER_TYPE) {
@@ -58,12 +57,12 @@ public class FunctionExecutor {
     }
 
     private Value executeStructureConstructor(StructureConstructor structureConstructor, List<Value> arguments) {
-        validateFunctionCall(structureConstructor.getExpectedParameterTypes(), arguments);
+        validateFunctionCall(mapValueTypesToImmutableParameters(structureConstructor.getExpectedParameterTypes()), arguments);
         return new StructureValue(structureConstructor.getStructureName(), getStructureFields(structureConstructor.getFieldNames(), arguments));
     }
 
     private Value executeBuiltInFunction(BuiltInFunction builtInFunction, List<Value> arguments) {
-        validateFunctionCall(builtInFunction.getExpectedParameterTypes(), arguments);
+        validateFunctionCall(mapValueTypesToImmutableParameters(builtInFunction.getExpectedParameterTypes()), arguments);
         try {
             return builtInFunction.execute(arguments);
         } catch (IOException e) {
@@ -71,9 +70,15 @@ public class FunctionExecutor {
         }
     }
 
+    private List<FunctionParameter> mapValueTypesToImmutableParameters(List<ValueType> types) {
+        return types.stream()
+                .map(it -> new FunctionParameter("", it, false))
+                .toList();
+    }
+
     private Value executeFunctionBody(UserFunction function, List<Value> arguments) {
         environment.getCurrentContext().openNewScope();
-        var parameterValueTypes = function.getParameters().stream().map(FunctionParameter::valueType).toList();
+        var parameterValueTypes = function.getParameters();
         validateFunctionCall(parameterValueTypes, arguments);
         setFunctionArguments(function.getParameters(), arguments);
         var visitor = new UserFunctionCallingVisitor(environment);
@@ -82,21 +87,33 @@ public class FunctionExecutor {
         return visitor.getReturnedValue();
     }
 
-    private void validateFunctionCall(List<ValueType> expectedParameterTypes, List<Value> arguments) {
+    private void validateFunctionCall(List<FunctionParameter> expectedParameterTypes, List<Value> arguments) {
         if (arguments.size() != expectedParameterTypes.size()) {
             throw new FunctionCallException("Expected " + expectedParameterTypes.size() + " arguments, got " + arguments.size());
         }
         validateArgumentsMatchParameterTypes(arguments, expectedParameterTypes);
     }
 
-    private void validateArgumentsMatchParameterTypes(List<Value> arguments, List<ValueType> expectedParameterTypes) {
+    private void validateArgumentsMatchParameterTypes(List<Value> arguments, List<FunctionParameter> expectedParameterTypes) {
         IntStream.range(0, arguments.size())
-                .forEach(i -> validateSingleArgumentType(arguments.get(i), expectedParameterTypes.get(i)));
+                .forEach(i -> {
+                    validateSingleArgumentType(arguments.get(i), expectedParameterTypes.get(i));
+                    validateSingleArgumentReference(arguments.get(i), expectedParameterTypes.get(i).isVar());
+                });
     }
 
-    private void validateSingleArgumentType(Value argument, ValueType parameterType) {
-        if (!ValueMatcher.valueMatchesType(argument, parameterType, environment)) {
-            throw new ParameterTypeException("Expected %s value, but was given %s".formatted(parameterType, argument));
+    private void validateSingleArgumentType(Value argument, FunctionParameter parameter) {
+        if (parameter.isVar() && TypeUtils.isVariant(parameter.valueType(), environment) && !(ReferenceUtils.getReferencedValue(argument) instanceof VariantValue)) {
+            throw new FunctionCallException("Expected %s, but got %s".formatted(parameter.valueType(), argument));
+        }
+        if (!ValueMatcher.valueMatchesType(argument, parameter.valueType(), environment)) {
+            throw new FunctionCallException("Expected %s value, but was given %s".formatted(parameter.valueType(), argument));
+        }
+    }
+
+    private void validateSingleArgumentReference(Value argument, boolean isVar) {
+        if (isVar && argument instanceof Reference ref && !ref.isMutable()) {
+            throw new FunctionCallException("Function expects mutable reference");
         }
     }
 
@@ -113,18 +130,24 @@ public class FunctionExecutor {
     }
 
     private void initializeVariable(FunctionParameter parameter, Value argument) {
+        if (!(argument instanceof Reference)) {
+            argument = argument.clone();
+        }
         if (TypeUtils.isVariant(parameter.valueType(), environment)) {
             environment.getCurrentContext()
-                    .initializeVariableForClosestScope(parameter.id(), new Variable(getStructAsVariant(argument, parameter.valueType()), false));
+                    .initializeVariableForClosestScope(parameter.id(), new Variable(getStructAsVariant(argument, parameter), parameter.isVar()));
         } else {
             environment.getCurrentContext()
-                    .initializeVariableForClosestScope(parameter.id(), new Variable(argument, false));
+                    .initializeVariableForClosestScope(parameter.id(), new Variable(argument, parameter.isVar()));
         }
     }
 
-    private Value getStructAsVariant(Value value, ValueType parameterType) {
+    private Value getStructAsVariant(Value value, FunctionParameter parameter) {
+        if (value instanceof Reference reference) {
+            return new Reference(getStructAsVariant(reference.getReferencedValue(), parameter), parameter.isVar());
+        }
         if (value instanceof StructureValue structureValue) {
-            return new VariantValue(parameterType.getUserType(), structureValue);
+            return new VariantValue(parameter.valueType().getUserType(), structureValue);
         }
         return value;
     }

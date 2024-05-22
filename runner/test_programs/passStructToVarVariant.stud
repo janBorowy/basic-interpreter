@@ -1,0 +1,38 @@
+variant Person {
+    Author,
+    Musician
+}
+
+struct Author {
+    string name,
+    string knownFor
+}
+
+struct Musician {
+    string name,
+    string instrument
+}
+
+void makeClarinetPlayer(var Person p) {
+    match(p) {
+        Author a -> p = Musician(a.name, "klarnet");
+        Musician m -> p = Musician(m.name, "klarnet");
+    }
+}
+
+void printPerson(Person p) {
+    match(p) {
+        Author a -> println(a.name + " is an author and is known for " + a.knownFor);
+        Musician m -> println(m.name + " is a musician and plays " + m.instrument);
+    }
+}
+
+void main() {
+    var Author author = Author("Jacek", "historyjka");
+    var Musician musician = Musician("Luki", "fortepian");
+    // this should be forbidden, because user could change type declared at line 31
+    makeClarinetPlayer(author);
+    makeClarinetPlayer(musician);
+    printPerson(author);
+    printPerson(musician);
+}
