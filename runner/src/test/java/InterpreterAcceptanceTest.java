@@ -365,4 +365,18 @@ class InterpreterAcceptanceTest {
         assertEquals("a\n\n", out.toString());
         assertEquals("", err.toString());
     }
+
+    @Test
+    void nestedStructureReference() {
+        commandLine.execute(getFileParameter("nestedStructureReference"), "-m=main");
+        assertEquals("Person(surname: string(Black), name: string(Jack))\n\n", out.toString());
+        assertEquals("", err.toString());
+    }
+
+    @Test
+    void nestedVariantReference() {
+        commandLine.execute(getFileParameter("nestedVariantReference"), "-m=main");
+        assertEquals("true\n\n", out.toString());
+        assertEquals("", err.toString());
+    }
 }

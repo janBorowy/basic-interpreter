@@ -1,0 +1,24 @@
+struct Person {
+    string name,
+    string surname
+}
+
+void change(var Person p) {
+    p = Person("b", "c");
+    the(p);
+}
+
+void the(var Person p) {
+    p = Person("c", "d");
+    person(p);
+}
+
+void person(var Person p) {
+    p = Person("Jack", "Black");
+}
+
+void main() {
+    var Person p = Person("a", "b");
+    change(p);
+    println(p as string);
+}

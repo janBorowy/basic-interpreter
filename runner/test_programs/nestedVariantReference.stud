@@ -1,0 +1,42 @@
+struct A {
+    int a
+}
+
+struct B {
+    float b
+}
+
+struct C {
+    string c
+}
+
+struct D {
+    bool d
+}
+
+variant V {
+    A, B, C, D
+}
+
+void b(var V variantB) {
+    variantB = B(0.5);
+    c(variantB);
+}
+
+void c(var V variantC) {
+    variantC = C("abc");
+    d(variantC);
+}
+
+void d(var V variantD) {
+    variantD = D(true);
+}
+
+void main() {
+    var V variantA = A(1);
+    b(variantA);
+    match (variantA) {
+        D d -> println(d.d as string);
+        default -> println("this should not happen");
+    }
+}
