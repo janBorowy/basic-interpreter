@@ -31,14 +31,6 @@ public class TypeUtils {
         }
     }
 
-    public boolean structureIsVariant(StructureValue value, String variantId, Environment environment) {
-        var variant = environment.getVariant(variantId);
-        if (variant.isEmpty()) {
-            return false;
-        }
-        return variant.map(it -> it.getStructures().contains(value.getStructureId())).get();
-    }
-
     public boolean isVariant(ValueType type, Environment environment) {
         if (type.getType() != ValueType.Type.USER_TYPE) {
             return false;

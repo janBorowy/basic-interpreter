@@ -8,6 +8,7 @@ import pl.interpreter.executor.exceptions.AssignmentException;
 import pl.interpreter.executor.exceptions.FunctionCallException;
 import pl.interpreter.executor.exceptions.InitializationException;
 import pl.interpreter.executor.exceptions.InterpretationException;
+import pl.interpreter.executor.exceptions.MatchStatementException;
 import pl.interpreter.executor.exceptions.ValueTypeException;
 import pl.interpreter.parser.Assignment;
 import pl.interpreter.parser.Block;
@@ -111,10 +112,28 @@ public class UserFunctionCallingVisitor implements FunctionVisitor {
     @Override
     public void visit(MatchStatement statement) {
         var value = ExpressionUtils.evaluateExpressionInEnvironment(statement.getExpression(), environment);
-        if (!(ReferenceUtils.getReferencedValue(value) instanceof VariantValue)) {
+        var referencedValue = (ReferenceUtils.getReferencedValue(value));
+        if (!(referencedValue instanceof VariantValue variantValue)) {
             throw new InterpretationException("Expected variant type, but got " + TypeUtils.getTypeOf(value), statement.getPosition());
         }
+        statement.getBranches().stream()
+                        .forEach(it -> checkIfStructureBelongsToVariant(it, variantValue.getVariantId()));
         visitMatchBranch(value, statement.getBranches(), statement.getPosition());
+    }
+
+    private void checkIfStructureBelongsToVariant(MatchBranch branch, String variantId) {
+        if (Objects.isNull(branch.getStructureId())) {
+            return;
+        }
+        var function = environment.getFunction(branch.getStructureId())
+                .orElseThrow(() -> new InterpretationException("Structure %s does not exist".formatted(branch.getStructureId()), branch.getPosition()));
+        if (!(function instanceof StructureConstructor sc)) {
+            throw new InterpretationException("Structure %s does not exist".formatted(branch.getStructureId()), branch.getPosition());
+        }
+        var variant = environment.getVariant(variantId).get();
+        if (!ValueMatcher.structureValueIsOfVariant(sc.getStructureName(), variant)) {
+            throw new InterpretationException("Structure %s does not belong to variant %s".formatted(branch.getStructureId(), variantId), branch.getPosition());
+        }
     }
 
     @Override

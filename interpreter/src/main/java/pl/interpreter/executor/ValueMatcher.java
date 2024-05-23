@@ -24,7 +24,11 @@ public class ValueMatcher {
     }
 
     public boolean structureValueIsOfVariant(StructureValue value, Variant variant) {
+        return structureValueIsOfVariant(value.getStructureId(), variant);
+    }
+
+    public boolean structureValueIsOfVariant(String structureId, Variant variant) {
         return variant.getStructures()
-                .contains(value.getStructureId());
+                .contains(structureId);
     }
 }

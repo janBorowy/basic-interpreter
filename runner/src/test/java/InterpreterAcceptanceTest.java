@@ -142,12 +142,8 @@ class InterpreterAcceptanceTest {
     void branchContainsStructureThatDoesNotBelongToVariant() {
         commandLine.execute(getFileParameter("branchContainsStructureThatDoesNotBelongToVariant"), "-m=main");
         // I don't think this should throw an error, it's not fatal.
-        assertEquals("""
-                Jacek is an author and is known for historyjka
-                Luki is a musician and plays klarnet
-
-                """, out.toString());
-        assertEquals("", err.toString());
+        assertEquals("", out.toString());
+        assertEquals("Semantic error at line 32, col 9: Structure Robot does not belong to variant Person\n", err.toString());
     }
 
     @Test
