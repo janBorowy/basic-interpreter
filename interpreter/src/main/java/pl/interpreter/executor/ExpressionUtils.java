@@ -28,7 +28,7 @@ public class ExpressionUtils {
     public Value evaluateExpressionInEnvironment(Expression expression, Environment environment) {
         if (returnsReference(expression)) {
             var variable = environment.getCurrentContext().resolveVariable(((Identifier)expression).getValue());
-            return new Reference(variable.getValue(), variable.isMutable());
+            return new Reference(ReferenceUtils.getReferencedValue(variable.getValue()), variable.isMutable());
         }
         var visitor = new ExpressionEvaluatingVisitor(environment);
         visitor.visit(expression);

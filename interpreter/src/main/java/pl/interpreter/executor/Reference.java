@@ -13,7 +13,7 @@ public class Reference extends Value {
 
     @Override
     public Value clone() {
-        return new Reference(referencedValue, mutable);
+        throw new IllegalStateException("Reference can't be cloned");
     }
 
     @Override

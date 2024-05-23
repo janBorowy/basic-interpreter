@@ -359,4 +359,10 @@ class InterpreterAcceptanceTest {
         assertEquals("", out.toString());
         assertEquals("Semantic error at line 34, col 23: Expected Person, but got reference(Author(knownFor: string(historyjka), name: string(Jacek)))\n", err.toString());
     }
+    @Test
+    void nestedReferences() {
+        commandLine.execute(getFileParameter("nestedReferences"), "-m=main");
+        assertEquals("a\n\n", out.toString());
+        assertEquals("", err.toString());
+    }
 }

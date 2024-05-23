@@ -1,0 +1,19 @@
+void fun(var string a) {
+    a = "there";
+    funa(a);
+}
+
+void funa(var string a) {
+    a = "you";
+    funb(a);
+}
+
+void funb(var string a) {
+    a = "a";
+}
+
+void main() {
+    var string a = "hello";
+    fun(a);
+    println(a);
+}

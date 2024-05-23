@@ -6,7 +6,7 @@ import lombok.experimental.UtilityClass;
 public class ReferenceUtils {
 
     public Value getReferencedValue(Value value) {
-        while (value instanceof Reference ref) {
+        if (value instanceof Reference ref) {
             value = ref.getReferencedValue();
         }
         return value;
